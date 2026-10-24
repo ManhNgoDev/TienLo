@@ -12,6 +12,7 @@ class QuestItem {
   final IconData icon;
   final Color iconColor;
   bool isCompleted;
+  bool isXpClaimed;
 
   QuestItem({
     required this.id,
@@ -21,6 +22,7 @@ class QuestItem {
     required this.icon,
     required this.iconColor,
     this.isCompleted = false,
+    this.isXpClaimed = false,
   });
 }
 
@@ -51,20 +53,22 @@ class _HomeScreenState extends State<HomeScreen> {
     QuestItem(
       id: '1',
       title: 'Tập Core 15 phút',
-      subtitle: '3 hiệp • Cường độ vừa',
+      subtitle: '3 hiệp · Cường độ vừa',
       xp: 120,
       icon: Icons.fitness_center_rounded,
-      iconColor: const Color(0xFFE5B869),
+      iconColor: const Color(0xFFF2C465),
       isCompleted: false,
+      isXpClaimed: false,
     ),
     QuestItem(
       id: '2',
       title: 'Uống đủ 2L nước',
       subtitle: 'Còn 800ml hôm nay',
       xp: 60,
-      icon: Icons.water_drop_rounded,
+      icon: Icons.water_drop_outlined,
       iconColor: const Color(0xFF38BDF8),
-      isCompleted: true,
+      isCompleted: false,
+      isXpClaimed: true,
     ),
     QuestItem(
       id: '3',
@@ -72,17 +76,19 @@ class _HomeScreenState extends State<HomeScreen> {
       subtitle: '3.840 / 6.000 bước',
       xp: 80,
       icon: Icons.directions_walk_rounded,
-      iconColor: const Color(0xFFFBBF24),
+      iconColor: const Color(0xFFF2C465),
       isCompleted: false,
+      isXpClaimed: false,
     ),
   ];
 
-  int get _completedCount => _quests.where((q) => q.isCompleted).length;
+  int get _completedCount => _quests.where((q) => q.isCompleted || q.isXpClaimed).length;
 
   void _toggleQuest(QuestItem quest) {
     setState(() {
       quest.isCompleted = !quest.isCompleted;
       if (quest.isCompleted) {
+        quest.isXpClaimed = true;
         _currentExp += quest.xp;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -106,6 +112,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       } else {
+        quest.isXpClaimed = false;
         _currentExp = (_currentExp - quest.xp).clamp(0, 10000);
       }
     });
@@ -759,112 +766,154 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildQuestCard(QuestItem quest) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F1E2E).withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: quest.isCompleted
-              ? const Color(0xFF10B981).withValues(alpha: 0.35)
-              : const Color(0xFF283B4F).withValues(alpha: 0.7),
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          // Quest Icon Badge
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: const Color(0xFF132233),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: quest.iconColor.withValues(alpha: 0.5),
-                width: 1.2,
-              ),
-            ),
-            child: Icon(quest.icon, color: quest.iconColor, size: 22),
-          ),
-          const SizedBox(width: 14),
+    final bool hasStrikethrough = quest.isXpClaimed || quest.isCompleted;
 
-          // Title & Subtitle
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  quest.title,
-                  style: TextStyle(
-                    color: quest.isCompleted ? const Color(0xFF94A3B8) : Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    decoration:
-                        quest.isCompleted ? TextDecoration.lineThrough : TextDecoration.none,
-                    decorationColor: const Color(0xFF94A3B8),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  quest.subtitle,
-                  style: const TextStyle(
-                    color: Color(0xFF64748B),
-                    fontSize: 11.5,
-                  ),
-                ),
-              ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: const Color(0xFF07121E).withValues(alpha: 0.88),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: const Color(0xFFC59A44),
+              width: 1.3,
             ),
-          ),
-
-          // XP Badge & Checkbox
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                '+${quest.xp} XP',
-                style: TextStyle(
-                  color: quest.isCompleted
-                      ? const Color(0xFF10B981)
-                      : const Color(0xFFF3C766),
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              GestureDetector(
-                onTap: () => _toggleQuest(quest),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: quest.isCompleted
-                        ? const Color(0xFF10B981).withValues(alpha: 0.2)
-                        : Colors.transparent,
-                    border: Border.all(
-                      color: quest.isCompleted
-                          ? const Color(0xFF10B981)
-                          : const Color(0xFF64748B),
-                      width: 1.8,
-                    ),
-                  ),
-                  child: quest.isCompleted
-                      ? const Icon(
-                          Icons.check_rounded,
-                          color: Color(0xFF10B981),
-                          size: 16,
-                        )
-                      : null,
-                ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
-        ],
+          child: Row(
+            children: [
+              // Left: Icon Box
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF0A1422),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: quest.iconColor,
+                    width: 1.3,
+                  ),
+                ),
+                child: Center(
+                  child: _buildQuestIcon(quest),
+                ),
+              ),
+              const SizedBox(width: 14),
+
+              // Middle: Title & Subtitle
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      quest.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      quest.subtitle,
+                      style: const TextStyle(
+                        color: Color(0xFF8BA5BA),
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              // Right: XP & Checkbox Circle
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '+${quest.xp} XP',
+                    style: TextStyle(
+                      color: const Color(0xFFF2C465),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      decoration: hasStrikethrough
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
+                      decorationColor: const Color(0xFFF2C465),
+                      decorationThickness: 2.0,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  GestureDetector(
+                    onTap: () => _toggleQuest(quest),
+                    child: Container(
+                      width: 26,
+                      height: 26,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: quest.isCompleted
+                            ? const Color(0xFFF2C465).withValues(alpha: 0.15)
+                            : Colors.transparent,
+                        border: Border.all(
+                          color: quest.isCompleted
+                              ? const Color(0xFFF2C465)
+                              : const Color(0xFF5A758D),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: quest.isCompleted
+                          ? const Center(
+                              child: Icon(
+                                Icons.check_rounded,
+                                color: Color(0xFFF2C465),
+                                size: 16,
+                              ),
+                            )
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
+  }
+
+  Widget _buildQuestIcon(QuestItem quest) {
+    if (quest.id == '1') {
+      return CustomPaint(
+        size: const Size(26, 26),
+        painter: BarbellIconPainter(color: quest.iconColor),
+      );
+    } else if (quest.id == '2') {
+      return Icon(
+        Icons.water_drop_outlined,
+        color: quest.iconColor,
+        size: 24,
+      );
+    } else if (quest.id == '3') {
+      return CustomPaint(
+        size: const Size(24, 24),
+        painter: FootprintIconPainter(color: quest.iconColor),
+      );
+    }
+    return Icon(quest.icon, color: quest.iconColor, size: 22);
   }
 
   // Section 4: Quick Actions
@@ -1150,4 +1199,89 @@ class LotusFlowerPainter extends CustomPainter {
   bool shouldRepaint(covariant LotusFlowerPainter oldDelegate) {
     return oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
   }
+}
+
+class BarbellIconPainter extends CustomPainter {
+  final Color color;
+
+  const BarbellIconPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final w = size.width;
+    final h = size.height;
+    final cy = h / 2;
+
+    // Horizontal bar
+    paint.strokeWidth = 2.4;
+    paint.style = PaintingStyle.stroke;
+    canvas.drawLine(Offset(w * 0.16, cy), Offset(w * 0.84, cy), paint);
+
+    // Left outer plate
+    paint.strokeWidth = 3.2;
+    canvas.drawLine(Offset(w * 0.22, cy - h * 0.28), Offset(w * 0.22, cy + h * 0.28), paint);
+
+    // Left inner plate
+    paint.strokeWidth = 2.4;
+    canvas.drawLine(Offset(w * 0.32, cy - h * 0.20), Offset(w * 0.32, cy + h * 0.20), paint);
+
+    // Right inner plate
+    canvas.drawLine(Offset(w * 0.68, cy - h * 0.20), Offset(w * 0.68, cy + h * 0.20), paint);
+
+    // Right outer plate
+    paint.strokeWidth = 3.2;
+    canvas.drawLine(Offset(w * 0.78, cy - h * 0.28), Offset(w * 0.78, cy + h * 0.28), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant BarbellIconPainter oldDelegate) => oldDelegate.color != color;
+}
+
+class FootprintIconPainter extends CustomPainter {
+  final Color color;
+
+  const FootprintIconPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+    final cy = h / 2;
+
+    canvas.save();
+    canvas.translate(cx, cy);
+    canvas.rotate(-0.35); // tilt ~20 degrees
+
+    final path = Path();
+    // Top loop (toe area)
+    path.moveTo(0, -h * 0.32);
+    path.cubicTo(w * 0.20, -h * 0.32, w * 0.22, -h * 0.08, w * 0.08, 0);
+    // Waist curve
+    path.cubicTo(w * 0.04, h * 0.04, w * 0.22, h * 0.12, w * 0.20, h * 0.30);
+    // Bottom heel curve
+    path.cubicTo(w * 0.18, h * 0.38, -w * 0.18, h * 0.38, -w * 0.20, h * 0.30);
+    // Waist curve back
+    path.cubicTo(-w * 0.22, h * 0.12, -w * 0.04, h * 0.04, -w * 0.08, 0);
+    // Top curve back
+    path.cubicTo(-w * 0.22, -h * 0.08, -w * 0.20, -h * 0.32, 0, -h * 0.32);
+
+    canvas.drawPath(path, paint);
+    canvas.restore();
+  }
+
+  @override
+  bool shouldRepaint(covariant FootprintIconPainter oldDelegate) => oldDelegate.color != color;
 }
