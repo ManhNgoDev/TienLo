@@ -76,7 +76,7 @@ class CustomBottomNavBar extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 _buildNavItem(index: 0, icon: Icons.home_rounded, label: 'Hôm nay'),
-                _buildNavItem(index: 1, icon: Icons.explore_outlined, label: 'Bản đồ'),
+                _buildNavItem(index: 1, icon: Icons.insights_rounded, label: 'Thống kê'),
 
                 // Center Floating Celestial Sparkle Button
                 GestureDetector(

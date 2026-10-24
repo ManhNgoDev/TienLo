@@ -14,6 +14,7 @@ import '../widgets/cultivation_realms_modal.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import '../widgets/daily_quests_section.dart';
 import '../widgets/profile_modal.dart';
+import '../widgets/statistics_view.dart';
 
 class HomeScreen extends StatefulWidget {
   final UserModel user;
@@ -389,126 +390,143 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // Top Header: Title & Avatar
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _currentChapterText,
-                                  style: const TextStyle(
-                                    color: Color(0xFFE8B95E),
-                                    fontSize: 10.5,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 1.8,
-                                  ),
-                                ),
-                                const SizedBox(height: 3),
-                                ShaderMask(
-                                  shaderCallback: (bounds) => const LinearGradient(
-                                    colors: [
-                                      Color(0xFFFFFFFF),
-                                      Color(0xFFFFF2D1),
-                                      Color(0xFFF6CE70),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ).createShader(bounds),
-                                  child: Text(
-                                    _currentStoryTitle,
-                                    style: GoogleFonts.dancingScript(
-                                      color: Colors.white,
-                                      fontSize: 34,
-                                      fontWeight: FontWeight.bold,
-                                      height: 1.15,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          // Avatar Icon
-                          GestureDetector(
-                            onTap: _showProfileModal,
-                            child: Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: const Color(0xFF141F30),
-                                border: Border.all(
-                                  color: const Color(0xFFE5B869),
-                                  width: 1.8,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFFE5B869).withValues(alpha: 0.35),
-                                    blurRadius: 10,
-                                  ),
-                                ],
-                              ),
-                              child: Center(
-                                child: widget.user.photoUrl != null
-                                    ? ClipOval(
-                                        child: Image.network(
-                                          widget.user.photoUrl!,
-                                          width: 40,
-                                          height: 40,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) => _buildAvatarText(),
-                                        ),
-                                      )
-                                    : _buildAvatarText(),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 22),
-
-                      // Card 1: NHÂN VẬT CỦA BẠN
-                      CharacterCard(
-                        profile: _cultivationProfile,
-                        currentExp: _currentExp,
-                        maxExp: _maxExp,
-                        streakDays: _streakDays,
-                        spiritStones: _spiritStones,
-                        onTap: () {
-                          if (_cultivationProfile != null) {
-                            CultivationRealmsModal.show(context, _cultivationProfile!);
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Card: THẺ XÁC ĐỊNH SESSION (Chiến dịch đang thực hiện)
-                      if (_activeCampaignTitle != null && _activeCampaignTitle!.isNotEmpty) ...[
-                        ActiveSessionCard(
-                          activeCampaignTitle: _activeCampaignTitle!,
+                      if (_currentNavIndex == 1) ...[
+                        // Tab 1: THỐNG KÊ & HÀNH TRÌNH
+                        StatisticsView(
+                          profile: _cultivationProfile,
+                          currentExp: _currentExp,
+                          maxExp: _maxExp,
+                          streakDays: _streakDays,
+                          spiritStones: _spiritStones,
+                          activeCampaignTitle: _activeCampaignTitle,
                           campaignCurrentDay: _campaignCurrentDay,
                           campaignTotalDays: _campaignTotalDays,
                           completedCount: _completedCount,
+                          totalQuestsCount: _quests.length,
+                        ),
+                      ] else ...[
+                        // Tab 0: HÔM NAY (DASHBOARD)
+                        // Top Header: Title & Avatar
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _currentChapterText,
+                                    style: const TextStyle(
+                                      color: Color(0xFFE8B95E),
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.8,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  ShaderMask(
+                                    shaderCallback: (bounds) => const LinearGradient(
+                                      colors: [
+                                        Color(0xFFFFFFFF),
+                                        Color(0xFFFFF2D1),
+                                        Color(0xFFF6CE70),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ).createShader(bounds),
+                                    child: Text(
+                                      _currentStoryTitle,
+                                      style: GoogleFonts.dancingScript(
+                                        color: Colors.white,
+                                        fontSize: 34,
+                                        fontWeight: FontWeight.bold,
+                                        height: 1.15,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            // Avatar Icon
+                            GestureDetector(
+                              onTap: _showProfileModal,
+                              child: Container(
+                                width: 44,
+                                height: 44,
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: const Color(0xFF141F30),
+                                  border: Border.all(
+                                    color: const Color(0xFFE5B869),
+                                    width: 1.8,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFFE5B869).withValues(alpha: 0.35),
+                                      blurRadius: 10,
+                                    ),
+                                  ],
+                                ),
+                                child: Center(
+                                  child: widget.user.photoUrl != null
+                                      ? ClipOval(
+                                          child: Image.network(
+                                            widget.user.photoUrl!,
+                                            width: 40,
+                                            height: 40,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) => _buildAvatarText(),
+                                          ),
+                                        )
+                                      : _buildAvatarText(),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 22),
+
+                        // Card 1: NHÂN VẬT CỦA BẠN
+                        CharacterCard(
+                          profile: _cultivationProfile,
+                          currentExp: _currentExp,
+                          maxExp: _maxExp,
+                          streakDays: _streakDays,
+                          spiritStones: _spiritStones,
+                          onTap: () {
+                            if (_cultivationProfile != null) {
+                              CultivationRealmsModal.show(context, _cultivationProfile!);
+                            }
+                          },
                         ),
                         const SizedBox(height: 16),
+
+                        // Card: THẺ XÁC ĐỊNH SESSION (Chiến dịch đang thực hiện)
+                        if (_activeCampaignTitle != null && _activeCampaignTitle!.isNotEmpty) ...[
+                          ActiveSessionCard(
+                            activeCampaignTitle: _activeCampaignTitle!,
+                            campaignCurrentDay: _campaignCurrentDay,
+                            campaignTotalDays: _campaignTotalDays,
+                            completedCount: _completedCount,
+                          ),
+                          const SizedBox(height: 16),
+                        ],
+
+                        // Card 2: Tạo chiến dịch mới
+                        CreateCampaignCard(
+                          controller: _campaignController,
+                          isGeneratingAi: _isGeneratingAi,
+                          onSubmitted: _addCampaign,
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Section 3: DAILY QUESTS
+                        DailyQuestsSection(
+                          quests: _quests,
+                          completedCount: _completedCount,
+                          onToggleQuest: _toggleQuest,
+                        ),
                       ],
-
-                      // Card 2: Tạo chiến dịch mới
-                      CreateCampaignCard(
-                        controller: _campaignController,
-                        isGeneratingAi: _isGeneratingAi,
-                        onSubmitted: _addCampaign,
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Section 3: DAILY QUESTS
-                      DailyQuestsSection(
-                        quests: _quests,
-                        completedCount: _completedCount,
-                        onToggleQuest: _toggleQuest,
-                      ),
                     ],
                   ),
                 ),
@@ -524,6 +542,16 @@ class _HomeScreenState extends State<HomeScreen> {
             child: CustomBottomNavBar(
               currentIndex: _currentNavIndex,
               onIndexChanged: (index) {
+                if (index == 2) {
+                  if (_cultivationProfile != null) {
+                    CultivationRealmsModal.show(context, _cultivationProfile!);
+                  }
+                  return;
+                }
+                if (index == 3) {
+                  _showProfileModal();
+                  return;
+                }
                 setState(() {
                   _currentNavIndex = index;
                 });
