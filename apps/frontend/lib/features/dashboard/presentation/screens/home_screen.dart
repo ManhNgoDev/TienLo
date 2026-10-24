@@ -35,12 +35,13 @@ class HomeScreen extends StatelessWidget {
             ),
             const SizedBox(width: 10),
             const Text(
-              'TienLo • Phát Triển Bản Thân',
+              'Tiên Lộ • Hành Trình Tu Thân',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
             ),
+
           ],
         ),
         actions: [

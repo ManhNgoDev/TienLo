@@ -51,7 +51,7 @@ class _TienLoAppState extends State<TienLoApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'TienLo App',
+      title: 'Tiên Lộ',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       home: _isCheckingAuth

@@ -9,7 +9,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
   });
 
-  testWidgets('TienLoApp login screen smoke test', (WidgetTester tester) async {
+  testWidgets('Tiên Lộ login screen smoke test', (WidgetTester tester) async {
     // Set viewport dimensions
     tester.view.physicalSize = const Size(1200, 1000);
     tester.view.devicePixelRatio = 1.0;
@@ -20,8 +20,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify key titles and widgets exist on login screen
-    expect(find.text('TienLo App'), findsOneWidget);
-    expect(find.text('Đăng nhập với Google'), findsOneWidget);
-    expect(find.text('Đăng nhập Thử nghiệm (Dev Demo)'), findsOneWidget);
+    expect(find.text('TIÊN LỘ'), findsOneWidget);
+    expect(find.text('SẴN SÀNG NHẬP VAI?'), findsOneWidget);
+    expect(find.text('Tạo nhân vật với Google'), findsOneWidget);
+    expect(find.text('Tiến trình được đồng bộ'), findsOneWidget);
   });
 }
