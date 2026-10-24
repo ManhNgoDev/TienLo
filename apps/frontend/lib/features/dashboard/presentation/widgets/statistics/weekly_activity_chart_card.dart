@@ -2,12 +2,21 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class WeeklyActivityChartCard extends StatelessWidget {
-  const WeeklyActivityChartCard({super.key});
+  final List<int>? weeklyActivity;
+
+  const WeeklyActivityChartCard({
+    super.key,
+    this.weeklyActivity,
+  });
 
   @override
   Widget build(BuildContext context) {
     const days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-    const questValues = [3, 2, 3, 3, 2, 3, 1]; // daily completed counts
+    final List<int> questValues = (weeklyActivity != null && weeklyActivity!.length == 7)
+        ? weeklyActivity!
+        : [3, 2, 3, 3, 2, 3, 1];
+
+    final totalCompleted = questValues.fold<int>(0, (a, b) => a + b);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
@@ -39,7 +48,7 @@ class WeeklyActivityChartCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${questValues.reduce((a, b) => a + b)}/21 nhiệm vụ',
+                    '$totalCompleted/21 nhiệm vụ',
                     style: const TextStyle(
                       color: Color(0xFF8BA5BA),
                       fontSize: 11.5,

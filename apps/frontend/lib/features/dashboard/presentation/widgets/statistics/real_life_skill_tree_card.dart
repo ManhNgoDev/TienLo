@@ -3,7 +3,145 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class RealLifeSkillTreeCard extends StatelessWidget {
-  const RealLifeSkillTreeCard({super.key});
+  final Map<String, dynamic>? attributes;
+
+  const RealLifeSkillTreeCard({
+    super.key,
+    this.attributes,
+  });
+
+  void _showAnalysisDialog(BuildContext context, int physical, int intellect, int focus, int social) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0C1929).withValues(alpha: 0.95),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              border: Border.all(
+                color: const Color(0xFFC59A44).withValues(alpha: 0.7),
+                width: 1.5,
+              ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF8BA5BA).withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: [
+                    const Icon(Icons.auto_awesome, color: Color(0xFFFBBF24), size: 22),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Thiên Đạo AI • Phân Tích Căn Cốt',
+                      style: GoogleFonts.playfairDisplay(
+                        color: const Color(0xFFFFF6DF),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Hệ thống tự động lượng hóa 4 thuộc tính căn cốt dựa trên thói quen và quest hoàn thành mỗi ngày của đạo hữu:',
+                  style: TextStyle(
+                    color: Color(0xFFBAC7D5),
+                    fontSize: 13,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildAnalysisItem('Thể chất', '$physical%', 'Cơ bắp, thể lực, vận động, chế độ dinh dưỡng và giấc ngủ.', const Color(0xFFFB923C)),
+                const SizedBox(height: 10),
+                _buildAnalysisItem('Trí thức', '$intellect%', 'Đọc sách, nghiên cứu, trau dồi chuyên môn và tiếp nhận tri thức.', const Color(0xFFFDE047)),
+                const SizedBox(height: 10),
+                _buildAnalysisItem('Tập trung', '$focus%', 'Định lực, học sâu (Deep Work), kỷ luật, giảm phân tâm xao nhãng.', const Color(0xFF2DD4BF)),
+                const SizedBox(height: 10),
+                _buildAnalysisItem('Giao tiếp', '$social%', 'Tâm thái, chia sẻ, kết nối các mối quan hệ xã hội trong đời sống.', const Color(0xFFA78BFA)),
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1E3A5F),
+                      foregroundColor: const Color(0xFFFBBF24),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        side: BorderSide(color: const Color(0xFFC59A44).withValues(alpha: 0.6)),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                    child: const Text('Đã hiểu', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildAnalysisItem(String title, String percent, String desc, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFF132235).withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              percent,
+              style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13.5),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  desc,
+                  style: const TextStyle(color: Color(0xFF8BA5BA), fontSize: 11.5),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _buildSkillRow({
     required String label,
@@ -37,7 +175,7 @@ class RealLifeSkillTreeCard extends StatelessWidget {
                 return Stack(
                   children: [
                     Container(
-                      width: constraints.maxWidth * percent,
+                      width: constraints.maxWidth * percent.clamp(0.0, 1.0),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(colors: gradientColors),
                         borderRadius: BorderRadius.circular(2.5),
@@ -74,6 +212,11 @@ class RealLifeSkillTreeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final physical = (attributes?['physical'] as num?)?.toInt() ?? 82;
+    final intellect = (attributes?['intellect'] as num?)?.toInt() ?? 64;
+    final focus = (attributes?['focus'] as num?)?.toInt() ?? 71;
+    final social = (attributes?['social'] as num?)?.toInt() ?? 38;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -103,12 +246,33 @@ class RealLifeSkillTreeCard extends StatelessWidget {
                 ),
               ],
             ),
-            const Text(
-              'Phân tích',
-              style: TextStyle(
-                color: Color(0xFFE8B95E),
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+            GestureDetector(
+              onTap: () => _showAnalysisDialog(context, physical, intellect, focus, social),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE8B95E).withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFE8B95E).withValues(alpha: 0.5),
+                    width: 1,
+                  ),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.insights, color: Color(0xFFE8B95E), size: 13),
+                    SizedBox(width: 4),
+                    Text(
+                      'Phân tích',
+                      style: TextStyle(
+                        color: Color(0xFFE8B95E),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -133,29 +297,29 @@ class RealLifeSkillTreeCard extends StatelessWidget {
                 children: [
                   _buildSkillRow(
                     label: 'Thể chất',
-                    percent: 0.82,
-                    percentText: '82%',
+                    percent: physical / 100.0,
+                    percentText: '$physical%',
                     gradientColors: [const Color(0xFFEA580C), const Color(0xFFFB923C)],
                   ),
                   const SizedBox(height: 14),
                   _buildSkillRow(
                     label: 'Trí thức',
-                    percent: 0.64,
-                    percentText: '64%',
+                    percent: intellect / 100.0,
+                    percentText: '$intellect%',
                     gradientColors: [const Color(0xFFCA8A04), const Color(0xFFFDE047)],
                   ),
                   const SizedBox(height: 14),
                   _buildSkillRow(
                     label: 'Tập trung',
-                    percent: 0.71,
-                    percentText: '71%',
+                    percent: focus / 100.0,
+                    percentText: '$focus%',
                     gradientColors: [const Color(0xFF0D9488), const Color(0xFF2DD4BF)],
                   ),
                   const SizedBox(height: 14),
                   _buildSkillRow(
                     label: 'Giao tiếp',
-                    percent: 0.38,
-                    percentText: '38%',
+                    percent: social / 100.0,
+                    percentText: '$social%',
                     gradientColors: [const Color(0xFF7C3AED), const Color(0xFFA78BFA)],
                   ),
                 ],

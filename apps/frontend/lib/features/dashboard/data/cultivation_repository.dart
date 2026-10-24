@@ -188,4 +188,20 @@ class CultivationRepository {
       return null;
     }
   }
+
+  Future<Map<String, dynamic>?> getStatistics() async {
+    final token = await _getToken();
+    try {
+      final res = await _apiClient.get(
+        ApiConstants.campaignsStatistics,
+        token: token,
+      );
+      if (res is Map<String, dynamic>) {
+        return res;
+      }
+    } catch (e) {
+      debugPrint('Error getStatistics: $e');
+    }
+    return null;
+  }
 }

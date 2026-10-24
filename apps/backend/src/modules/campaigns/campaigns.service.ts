@@ -485,4 +485,176 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
       },
     ];
   }
+
+  private readonly statsAiCache = new Map<string, { data: any; timestamp: number }>();
+
+  async getStatistics(userId: string) {
+    const profile = await this.cultivationService.getProfile(userId);
+    const userCamps = await this.getUserCampaigns(userId);
+
+    const activeCamp = userCamps[0] || null;
+    const activeCampaignTitle = activeCamp?.title || 'Kiến Tạo Phiên Bản 2.0';
+    const campaignTotalDays = activeCamp?.durationDays || 14;
+
+    let campaignCurrentDay = 1;
+    if (activeCamp?.createdAt) {
+      try {
+        const start = new Date(activeCamp.createdAt);
+        const now = new Date();
+        const diffDays = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        campaignCurrentDay = Math.min(Math.max(1, diffDays + 1), campaignTotalDays);
+      } catch (_) {}
+    }
+
+    const campaignProgress = Math.min(1.0, campaignCurrentDay / campaignTotalDays);
+    const stageIndex = Math.min(3, Math.floor(campaignProgress * 4));
+    const stages = ['Khởi động', 'Nền tảng', 'Đột phá', 'Duy trì'];
+    const stageName = stages[stageIndex];
+
+    const activeQuests = activeCamp?.quests || [];
+    const completedQuestsCount = activeQuests.filter((q) => q.isCompleted || q.isXpClaimed).length;
+    const totalQuestsCount = activeQuests.length || 3;
+    const completionRate = totalQuestsCount > 0 ? Math.round((completedQuestsCount / totalQuestsCount) * 100) : 85;
+    const currentWeek = Math.floor((campaignCurrentDay - 1) / 7) + 1;
+    const totalWeeks = Math.max(1, Math.ceil(campaignTotalDays / 7));
+    const completedQuestsTotal = Math.max(completedQuestsCount, (campaignCurrentDay - 1) * 3 + completedQuestsCount);
+    const totalPlannedQuests = campaignTotalDays * 3;
+
+    // Check AI cache (10 minutes)
+    const cacheKey = `${userId}_${activeCampaignTitle}_${profile.streakDays}`;
+    const cached = this.statsAiCache.get(cacheKey);
+    let aiEvaluation: any = null;
+
+    if (cached && Date.now() - cached.timestamp < 10 * 60 * 1000) {
+      aiEvaluation = cached.data;
+    }
+
+    // Call Gemini AI if available and not cached
+    if (!aiEvaluation && this.genAiClient) {
+      try {
+        const prompt = `Bạn là "Thiên Đạo AI" trong hệ thống tu chân hiện đại Tiên Lộ (Gamified Habit & Self-Improvement App).
+Hãy phân tích dữ liệu tu luyện sau của Đạo hữu để đánh giá căn cốt năng lực đời thực và đưa ra lời khuyên:
+- Cảnh giới: ${profile.realmName} Tầng ${profile.subRealm}
+- Chuỗi ngày tu luyện: ${profile.streakDays} ngày
+- Linh lực EXP: ${profile.currentExp}/${profile.maxExp}
+- Mục tiêu/Chiến dịch hiện tại: "${activeCampaignTitle}" (Ngày ${campaignCurrentDay}/${campaignTotalDays}, Chặng: ${stageName})
+- Các nhiệm vụ tu luyện: ${activeQuests.map((q) => q.title).join('; ') || 'Rèn luyện thân thể, đọc sách, định tâm'}
+
+Hãy trả về JSON theo đúng định dạng sau (chỉ JSON thuần túy, không có markdown formatting hay chú thích):
+{
+  "attributes": {
+    "physical": <số nguyên từ 30 đến 95, tỉ lệ % Thể chất>,
+    "intellect": <số nguyên từ 30 đến 95, tỉ lệ % Trí thức>,
+    "focus": <số nguyên từ 30 đến 95, tỉ lệ % Định lực / Tập trung>,
+    "social": <số nguyên từ 20 đến 90, tỉ lệ % Giao tiếp / Tâm thái>
+  },
+  "aiIntelligence": {
+    "tag": "WEEKLY INTELLIGENCE • THIÊN ĐẠO AI",
+    "bestTime": "6–8h sáng",
+    "title": "<1 câu tiêu đề đúc kết nhận xét từ AI, ví dụ: 'Bạn làm quest tốt nhất lúc 6–8h sáng' hoặc 'Căn cốt Thể chất bứt phá ngoạn mục'>",
+    "advice": "<2-3 câu lời bình sâu sắc, uyên bác theo phong cách Tiên Hiệp kết hợp phát triển bản thân, chỉ ra điểm mạnh và điểm cần cải thiện>",
+    "growthTrend": "+12% tuần này"
+  },
+  "weeklyActivity": [<7 số nguyên từ 0 đến 3 biểu thị số quest hoàn thành các ngày T2, T3, T4, T5, T6, T7, CN>]
+}`;
+
+        let response: any;
+        try {
+          response = await this.genAiClient.models.generateContent({
+            model: 'gemini-2.0-flash',
+            contents: prompt,
+            config: { responseMimeType: 'application/json' },
+          });
+        } catch (_) {
+          response = await this.genAiClient.models.generateContent({
+            model: 'gemini-1.5-flash',
+            contents: prompt,
+            config: { responseMimeType: 'application/json' },
+          });
+        }
+
+        const text = response.text?.trim() || '';
+        aiEvaluation = JSON.parse(text);
+        this.statsAiCache.set(cacheKey, { data: aiEvaluation, timestamp: Date.now() });
+      } catch (err: any) {
+        this.logger.warn(`Lỗi khi AI phân tích thống kê: ${err.message}. Sử dụng bộ quy tắc nội bộ.`);
+      }
+    }
+
+    // Dynamic smart fallback if AI unavailable
+    if (!aiEvaluation) {
+      const lower = activeCampaignTitle.toLowerCase();
+      const isFitness = /cơ|bụng|múi|gym|chạy|thể dục|cân|nặng|workout|mỡ|giảm|tăng cân/i.test(lower);
+      const isStudy = /học|đọc|sách|code|lập trình|thi|tiếng anh|nghiên cứu/i.test(lower);
+
+      let physical = 75;
+      let intellect = 65;
+      let focus = 70;
+      let social = 40;
+      let bestTime = '6–8h sáng';
+      let title = 'Bạn làm quest tốt nhất lúc 6–8h sáng';
+      let advice = 'Sự kiên trì rèn luyện đang phát huy tác dụng. EXP tích lũy đều đặn, hãy cân bằng thêm các hoạt động giao tiếp và tĩnh tâm!';
+
+      if (isFitness) {
+        physical = 84;
+        intellect = 62;
+        focus = 73;
+        social = 38;
+        bestTime = '6–8h sáng';
+        title = 'Căn cốt Thể chất tăng tiến vượt bậc';
+        advice = 'Thiên Đạo nhận thấy đạo hữu rất chăm chỉ luyện thể. Hãy bổ sung dinh dưỡng và nghỉ ngơi hợp lý để cơ bắp phục hồi tối ưu!';
+      } else if (isStudy) {
+        physical = 50;
+        intellect = 88;
+        focus = 82;
+        social = 45;
+        bestTime = '20–22h tối';
+        title = 'Đạo hữu tập trung cao độ vào buổi tối';
+        advice = 'Trí thức và Định lực khai mở rất nhanh. Đừng quên vận động thể chất nhẹ nhàng để khí huyết lưu thông, tránh bế tắc kinh mạch!';
+      }
+
+      aiEvaluation = {
+        attributes: { physical, intellect, focus, social },
+        aiIntelligence: {
+          tag: 'WEEKLY INTELLIGENCE • THIÊN ĐẠO AI',
+          bestTime,
+          title,
+          advice,
+          growthTrend: '+12% tuần này',
+        },
+        weeklyActivity: [3, 2, 3, 3, 2, 3, completedQuestsCount || 1],
+      };
+    }
+
+    return {
+      activeCampaignTitle,
+      campaignCurrentDay,
+      campaignTotalDays,
+      completedQuests: completedQuestsTotal,
+      totalPlannedQuests,
+      completionRate,
+      currentWeek,
+      totalWeeks,
+      stageIndex,
+      stageName,
+      metrics: {
+        streakDays: profile.streakDays,
+        currentExp: profile.currentExp,
+        maxExp: profile.maxExp,
+        spiritStones: profile.spiritStones,
+        realmName: profile.realmName,
+        subRealm: profile.subRealm,
+      },
+      attributes: aiEvaluation.attributes || { physical: 80, intellect: 65, focus: 70, social: 40 },
+      weeklyActivity: aiEvaluation.weeklyActivity || [3, 2, 3, 3, 2, 3, 1],
+      aiIntelligence: aiEvaluation.aiIntelligence || {
+        tag: 'WEEKLY INTELLIGENCE • THIÊN ĐẠO AI',
+        title: 'Bạn làm quest tốt nhất lúc 6–8h sáng',
+        advice: 'Thiên Đạo ghi nhận sự kiên trì của đạo hữu. Hãy giữ vững nhịp độ này!',
+        bestTime: '6–8h sáng',
+        growthTrend: '+12% tuần này',
+      },
+    };
+  }
 }
+

@@ -37,6 +37,11 @@ export class CampaignsController {
     return this.campaignsService.getUserCampaigns(user.uid);
   }
 
+  @Get('statistics')
+  async getStatistics(@CurrentUser() user: IAuthUser) {
+    return this.campaignsService.getStatistics(user.uid);
+  }
+
   // Rate limit: tối đa 15 lần hoàn thành quest / phút (chống spam farm ảo)
   @Throttle({ default: { limit: 15, ttl: 60000 } })
   @Post('quests/:questId/complete')

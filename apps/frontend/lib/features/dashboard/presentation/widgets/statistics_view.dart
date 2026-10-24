@@ -19,6 +19,9 @@ class StatisticsView extends StatelessWidget {
   final int campaignTotalDays;
   final int completedCount;
   final int totalQuestsCount;
+  final Map<String, dynamic>? statisticsData;
+  final bool isLoading;
+  final VoidCallback? onRefresh;
 
   const StatisticsView({
     super.key,
@@ -32,29 +35,71 @@ class StatisticsView extends StatelessWidget {
     required this.campaignTotalDays,
     required this.completedCount,
     required this.totalQuestsCount,
+    this.statisticsData,
+    this.isLoading = false,
+    this.onRefresh,
   });
 
   @override
   Widget build(BuildContext context) {
-    final title = (activeCampaignTitle != null && activeCampaignTitle!.isNotEmpty)
-        ? activeCampaignTitle!
-        : 'Kiến Tạo Phiên Bản 2.0';
+    final title = (statisticsData?['activeCampaignTitle'] != null &&
+            (statisticsData!['activeCampaignTitle'] as String).isNotEmpty)
+        ? statisticsData!['activeCampaignTitle'] as String
+        : ((activeCampaignTitle != null && activeCampaignTitle!.isNotEmpty)
+            ? activeCampaignTitle!
+            : 'Kiến Tạo Phiên Bản 2.0');
 
-    final int currentWeek = ((campaignCurrentDay - 1) ~/ 7) + 1;
-    final int totalWeeks = (campaignTotalDays / 7).ceil().clamp(1, 52);
+    final int calculatedWeek = ((campaignCurrentDay - 1) ~/ 7) + 1;
+    final int currentWeek = (statisticsData?['currentWeek'] as num?)?.toInt() ?? calculatedWeek;
+
+    final int calculatedTotalWeeks = (campaignTotalDays / 7).ceil().clamp(1, 52);
+    final int totalWeeks = (statisticsData?['totalWeeks'] as num?)?.toInt() ?? calculatedTotalWeeks;
+
     final double campaignProgress = (campaignCurrentDay / campaignTotalDays).clamp(0.0, 1.0);
-    final int completionRate = totalQuestsCount > 0
+
+    final int calculatedRate = totalQuestsCount > 0
         ? ((completedCount / totalQuestsCount) * 100).toInt()
         : 85;
+    final int completionRate = (statisticsData?['completionRate'] as num?)?.toInt() ?? calculatedRate;
 
-    final int completedQuests = (completedCount + (campaignCurrentDay - 1) * 3).clamp(0, 999);
-    final int totalPlannedQuests = campaignTotalDays * 3;
+    final int calculatedCompletedQuests = (completedCount + (campaignCurrentDay - 1) * 3).clamp(0, 999);
+    final int completedQuests = (statisticsData?['completedQuests'] as num?)?.toInt() ?? calculatedCompletedQuests;
+
+    final int totalPlannedQuests = (statisticsData?['totalPlannedQuests'] as num?)?.toInt() ?? (campaignTotalDays * 3);
+
+    final attributes = statisticsData?['attributes'] as Map<String, dynamic>?;
+    final aiIntelligence = statisticsData?['aiIntelligence'] as Map<String, dynamic>?;
+    final weeklyActivity = (statisticsData?['weeklyActivity'] as List?)
+        ?.map((e) => (e as num).toInt())
+        .toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 1. Top Header
-        const StatisticsHeader(),
+        // 1. Top Header with optional refresh indicator
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Expanded(child: StatisticsHeader()),
+            if (isLoading)
+              Container(
+                margin: const EdgeInsets.only(top: 12),
+                width: 20,
+                height: 20,
+                child: const CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFE5B869)),
+                ),
+              )
+            else if (onRefresh != null)
+              IconButton(
+                padding: const EdgeInsets.only(top: 12),
+                icon: const Icon(Icons.refresh, color: Color(0xFFE5B869), size: 20),
+                onPressed: onRefresh,
+                tooltip: 'Làm mới thống kê AI',
+              ),
+          ],
+        ),
         const SizedBox(height: 22),
 
         // 2. Main Quest Progress Overview
@@ -83,16 +128,22 @@ class StatisticsView extends StatelessWidget {
         ),
         const SizedBox(height: 22),
 
-        // 5. Real Life Skill Tree Attributes
-        const RealLifeSkillTreeCard(),
+        // 5. Real Life Skill Tree Attributes (Năng Lực Đời Thực AI)
+        RealLifeSkillTreeCard(
+          attributes: attributes,
+        ),
         const SizedBox(height: 22),
 
         // 6. 7-Day Activity Chart
-        const WeeklyActivityChartCard(),
+        WeeklyActivityChartCard(
+          weeklyActivity: weeklyActivity,
+        ),
         const SizedBox(height: 22),
 
-        // 7. Weekly AI Intelligence Card
-        const WeeklyIntelligenceCard(),
+        // 7. Weekly AI Intelligence Card (Thiên Đạo AI)
+        WeeklyIntelligenceCard(
+          aiIntelligence: aiIntelligence,
+        ),
         const SizedBox(height: 20),
       ],
     );

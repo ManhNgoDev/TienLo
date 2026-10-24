@@ -49,6 +49,8 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _campaignStartDate;
 
   final List<QuestItem> _quests = [];
+  Map<String, dynamic>? _statisticsData;
+  bool _isLoadingStats = false;
 
   int get _completedCount => _quests.where((q) => q.isCompleted || q.isXpClaimed).length;
 
@@ -192,7 +194,30 @@ class _HomeScreenState extends State<HomeScreen> {
           _saveLocalQuests();
         }
       }
+      _loadStatistics();
     } catch (_) {}
+  }
+
+  Future<void> _loadStatistics() async {
+    if (_isLoadingStats) return;
+    setState(() {
+      _isLoadingStats = true;
+    });
+    try {
+      final stats = await _cultivationRepository.getStatistics();
+      if (mounted && stats != null) {
+        setState(() {
+          _statisticsData = stats;
+        });
+      }
+    } catch (_) {
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingStats = false;
+        });
+      }
+    }
   }
 
   void _toggleQuest(QuestItem quest) async {
@@ -215,6 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final res = await _cultivationRepository.completeQuest(quest.id);
         if (res != null) {
           await _loadCultivationProfile();
+          _loadStatistics();
         }
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -310,6 +336,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _quests.addAll(newQuests.take(3));
       });
       _saveLocalQuests();
+      _loadStatistics();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -403,6 +430,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           campaignTotalDays: _campaignTotalDays,
                           completedCount: _completedCount,
                           totalQuestsCount: _quests.length,
+                          statisticsData: _statisticsData,
+                          isLoading: _isLoadingStats,
+                          onRefresh: _loadStatistics,
                         ),
                       ] else ...[
                         // Tab 0: HÔM NAY (DASHBOARD)
@@ -555,6 +585,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 setState(() {
                   _currentNavIndex = index;
                 });
+                if (index == 1) {
+                  _loadStatistics();
+                }
               },
               onSparkleTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(

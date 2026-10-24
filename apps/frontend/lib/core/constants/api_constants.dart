@@ -22,6 +22,7 @@ class ApiConstants {
   static const String cultivationAddStones = '/cultivation/add-stones';
   static const String campaignsAiGenerate = '/campaigns/ai-generate';
   static const String campaignsList = '/campaigns';
+  static const String campaignsStatistics = '/campaigns/statistics';
   static String campaignQuestComplete(String questId) =>
       '/campaigns/quests/$questId/complete';
 }
