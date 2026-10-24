@@ -356,11 +356,11 @@ class CultivationRepository {
     final prevSubRealm = subRealm;
 
     final penaltyExp = customPenalty != null && customPenalty > 0
-        ? customPenalty
-        : (uncompletedCount * 150).clamp(100, 999999999);
+        ? customPenalty.clamp(10, 300)
+        : (uncompletedCount * 80).clamp(50, 300);
 
     final actualReason = reason ??
-        'Chưa hoàn thành $uncompletedCount nhiệm vụ hôm qua, tâm ma quấy nhiễu!';
+        'Chưa hoàn thành $uncompletedCount nhiệm vụ hôm qua (phạt $penaltyExp Linh Lực)';
 
     currentExp -= penaltyExp;
     totalExp = (totalExp - penaltyExp).clamp(0, 999999999999);
@@ -407,7 +407,7 @@ class CultivationRepository {
         'maxExp': calculateSubRealmExp(realmIndex, subRealm),
         'totalExp': totalExp,
         'spiritStones': currentProfile.spiritStones,
-        'streakDays': 0,
+        'streakDays': currentProfile.streakDays,
         'title': realmConfig.title,
       },
       'penaltyExp': penaltyExp,

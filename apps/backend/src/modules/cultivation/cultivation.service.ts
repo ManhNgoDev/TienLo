@@ -154,6 +154,8 @@ export class CultivationService {
           current_exp: currentExp,
           max_exp: maxExp,
           total_exp: totalExp,
+          streak_days: profile.streakDays,
+          spirit_stones: profile.spiritStones,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
       } catch (_) {}
@@ -219,21 +221,21 @@ export class CultivationService {
     currentSubRealm: number;
   }> {
     const profile = await this.getProfile(userId);
-    let { realmIndex, subRealm, currentExp, maxExp, totalExp, streakDays } = profile;
+    let { realmIndex, subRealm, currentExp, maxExp, totalExp, streakDays, spiritStones } = profile;
 
     const prevRealmIndex = realmIndex;
     const prevSubRealm = subRealm;
     const prevRealmName = profile.realmName;
 
-    // Tính toán lượng linh lực phạt: mỗi nhiệm vụ chưa làm phạt 150 Linh Lực (hoặc customPenalty)
+    // Tính toán lượng linh lực phạt: nếu có customPenalty thì áp dụng, mặc định giới hạn tối đa 300
     const penaltyExp = customPenalty && customPenalty > 0
       ? customPenalty
-      : Math.max(100, (uncompletedCount || 1) * 150);
+      : Math.min(300, Math.max(50, (uncompletedCount || 1) * 80));
 
-    const actualReason = reason || `Chưa hoàn thành ${uncompletedCount || 1} nhiệm vụ hôm qua, tâm ma quấy nhiễu!`;
+    const actualReason = reason || `Chưa hoàn thành ${uncompletedCount || 1} nhiệm vụ hôm qua, bị trừ ${penaltyExp} Linh Lực!`;
 
-    // Gián đoạn chuỗi ngày tu luyện
-    streakDays = 0;
+    // BẢO TOÀN NGUYÊN VẸN CHUỖI NGÀY VÀ LINH THẠCH CỦA ĐẠO HỮU (TUYỆT ĐỐI KHÔNG RESET):
+    // streakDays và spiritStones giữ nguyên
 
     // Trừ linh lực
     currentExp -= penaltyExp;
@@ -287,6 +289,7 @@ export class CultivationService {
       maxExp,
       totalExp,
       streakDays,
+      spiritStones,
       title: realmConfig.title,
     };
 
@@ -303,6 +306,7 @@ export class CultivationService {
           max_exp: maxExp,
           total_exp: totalExp,
           streak_days: streakDays,
+          spirit_stones: spiritStones,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' });
       } catch (_) {}

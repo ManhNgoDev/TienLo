@@ -168,10 +168,27 @@ class _HomeScreenState extends State<HomeScreen> {
         // Kiểm tra xem hôm trước có nhiệm vụ nào chưa hoàn thành không
         final uncompletedYesterday = loadedQuests.where((q) => !q.isCompleted).toList();
         if (uncompletedYesterday.isNotEmpty) {
+          // Tính điểm trừ theo số nhiệm vụ chưa làm và độ khó:
+          // Nhiệm vụ khó thì trừ ít điểm (50), nhiệm vụ vừa (80), nhiệm vụ dễ thì trừ nhiều điểm (120)
+          // Giới hạn tổng điểm bị trừ từ 300 đổ xuống:
+          int calculatedPenalty = 0;
+          for (final q in uncompletedYesterday) {
+            final diffStr = q.difficulty.toString().toUpperCase();
+            if (diffStr.contains('HARD') || diffStr.contains('KHÓ')) {
+              calculatedPenalty += 50;
+            } else if (diffStr.contains('MEDIUM') || diffStr.contains('VỪA')) {
+              calculatedPenalty += 80;
+            } else {
+              calculatedPenalty += 120;
+            }
+          }
+          final finalPenaltyExp = calculatedPenalty.clamp(50, 300);
+
           try {
             penaltyData = await _cultivationRepository.penalizeExp(
               uncompletedCount: uncompletedYesterday.length,
-              reason: 'Chưa hoàn thành ${uncompletedYesterday.length} nhiệm vụ ngày hôm trước!',
+              customPenalty: finalPenaltyExp,
+              reason: 'Chưa hoàn thành ${uncompletedYesterday.length} nhiệm vụ hôm trước (phạt $finalPenaltyExp Linh Lực)',
             );
           } catch (_) {}
         }

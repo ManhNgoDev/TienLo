@@ -115,5 +115,15 @@ describe('CultivationService', () => {
       expect(penalty.profile.currentExp).toBe(5750);
       expect(penalty.profile.maxExp).toBe(6050);
     });
+
+    it('should NEVER reset spirit stones or streak days when penalized', async () => {
+      await service.addSpiritStones('test-user-preserve', 100, 'Thưởng');
+      const profileBefore = await service.getProfile('test-user-preserve');
+      profileBefore.streakDays = 5;
+
+      const penalty = await service.penalizeExp('test-user-preserve', 1, 100, 'Phạt test');
+      expect(penalty.profile.spiritStones).toBe(100);
+      expect(penalty.profile.streakDays).toBe(5);
+    });
   });
 });
