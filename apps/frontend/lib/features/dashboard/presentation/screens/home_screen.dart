@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/data/auth_repository.dart';
@@ -373,143 +374,180 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  String _formatExp(int value) {
+    return value.toString().replaceAllMapped(
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]}.',
+    );
+  }
+
   // Card: Nhân Vật Của Bạn
   Widget _buildCharacterCard() {
     final expPercent = (_currentExp / _maxExp).clamp(0.0, 1.0);
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F1E2E).withValues(alpha: 0.78),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFE5B869).withValues(alpha: 0.5),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'NHÂN VẬT CỦA BẠN',
-            style: TextStyle(
-              color: Color(0xFFE5B869),
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 1.6,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF07121E).withValues(alpha: 0.88),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: const Color(0xFFC59A44),
+              width: 1.4,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.45),
+                blurRadius: 18,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              // Lotus Avatar Emblem
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: const Color(0xFF142436),
-                  border: Border.all(
-                    color: const Color(0xFFE5B869).withValues(alpha: 0.7),
-                    width: 1.5,
+          padding: const EdgeInsets.all(3.5),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFF091422).withValues(alpha: 0.65),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: const Color(0xFFC59A44).withValues(alpha: 0.75),
+                width: 1.0,
+              ),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // 1. Lotus Badge
+                Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF0A1422),
+                    border: Border.all(
+                      color: const Color(0xFFC59A44),
+                      width: 1.3,
+                    ),
+                  ),
+                  child: const Center(
+                    child: CustomPaint(
+                      size: Size(26, 26),
+                      painter: LotusFlowerPainter(
+                        color: Color(0xFFF2C465),
+                        strokeWidth: 1.6,
+                      ),
+                    ),
                   ),
                 ),
-                child: const Icon(
-                  Icons.spa_rounded,
-                  color: Color(0xFFE5B869),
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 14),
+                const SizedBox(width: 14),
 
-              // Level & Progress
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Cấp 12 • Kẻ Kiến Tạo',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Golden Progress Bar
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: Container(
-                        height: 5,
-                        color: const Color(0xFF1E2E42),
-                        child: FractionallySizedBox(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: expPercent,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFFDE68A), Color(0xFFE5A93C)],
-                              ),
-                              borderRadius: BorderRadius.circular(4),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFFE5A93C).withValues(alpha: 0.8),
-                                  blurRadius: 6,
-                                ),
-                              ],
-                            ),
-                          ),
+                // 2. Character Details
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'NHÂN VẬT CỦA BẠN',
+                        style: TextStyle(
+                          color: Color(0xFF70BFE6),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.4,
                         ),
                       ),
+                      const SizedBox(height: 3),
+                      const Text(
+                        'Cấp 12 • Kẻ Kiến Tạo',
+                        style: TextStyle(
+                          fontFamily: 'serif',
+                          color: Color(0xFFFFF6DF),
+                          fontSize: 17.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      // Progress Bar
+                      Container(
+                        height: 3.5,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0C1624),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                        child: LayoutBuilder(
+                          builder: (context, constraints) {
+                            return Stack(
+                              children: [
+                                Container(
+                                  width: constraints.maxWidth * expPercent,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF2C465),
+                                    borderRadius: BorderRadius.circular(2),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFFF2C465).withValues(alpha: 0.45),
+                                        blurRadius: 4,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '${_formatExp(_currentExp)} / ${_formatExp(_maxExp)} EXP để lên cấp',
+                        style: const TextStyle(
+                          color: Color(0xFF8BA5BA),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 14),
+
+                // 3. Streak Days (Flame + Days)
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.local_fire_department_rounded,
+                      color: Color(0xFFF59E0B),
+                      size: 20,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 1),
                     Text(
-                      '$_currentExp / $_maxExp EXP để lên cấp',
+                      '$_streakDays',
                       style: const TextStyle(
-                        color: Color(0xFF94A3B8),
+                        color: Colors.white,
+                        fontSize: 21,
+                        fontWeight: FontWeight.w800,
+                        height: 1.15,
+                      ),
+                    ),
+                    const SizedBox(height: 1),
+                    const Text(
+                      'ngày',
+                      style: TextStyle(
+                        color: Color(0xFF8BA5BA),
                         fontSize: 11,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(width: 12),
-
-              // Streak Days (Ngọn Lửa)
-              Column(
-                children: [
-                  const Icon(
-                    Icons.local_fire_department_rounded,
-                    color: Color(0xFFF59E0B),
-                    size: 26,
-                  ),
-                  Text(
-                    '$_streakDays',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Text(
-                    'ngày',
-                    style: TextStyle(
-                      color: Color(0xFF94A3B8),
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1017,5 +1055,55 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+}
+
+class LotusFlowerPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+
+  const LotusFlowerPainter({
+    required this.color,
+    this.strokeWidth = 1.6,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final w = size.width;
+    final h = size.height;
+    final cx = w / 2;
+
+    // 1. Center upright almond/lotus petal
+    final centerPetal = Path();
+    centerPetal.moveTo(cx, h * 0.16);
+    centerPetal.cubicTo(cx + w * 0.16, h * 0.38, cx + w * 0.16, h * 0.65, cx, h * 0.80);
+    centerPetal.cubicTo(cx - w * 0.16, h * 0.65, cx - w * 0.16, h * 0.38, cx, h * 0.16);
+    canvas.drawPath(centerPetal, paint);
+
+    // 2. Left petal: flares outwards and up, meeting center at bottom join
+    final leftPetal = Path();
+    leftPetal.moveTo(cx, h * 0.80);
+    leftPetal.cubicTo(cx - w * 0.18, h * 0.82, cx - w * 0.46, h * 0.64, cx - w * 0.40, h * 0.38);
+    leftPetal.cubicTo(cx - w * 0.28, h * 0.48, cx - w * 0.16, h * 0.66, cx, h * 0.80);
+    canvas.drawPath(leftPetal, paint);
+
+    // 3. Right petal: flares outwards and up symmetrically
+    final rightPetal = Path();
+    rightPetal.moveTo(cx, h * 0.80);
+    rightPetal.cubicTo(cx + w * 0.18, h * 0.82, cx + w * 0.46, h * 0.64, cx + w * 0.40, h * 0.38);
+    rightPetal.cubicTo(cx + w * 0.28, h * 0.48, cx + w * 0.16, h * 0.66, cx, h * 0.80);
+    canvas.drawPath(rightPetal, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant LotusFlowerPainter oldDelegate) {
+    return oldDelegate.color != color || oldDelegate.strokeWidth != strokeWidth;
   }
 }
