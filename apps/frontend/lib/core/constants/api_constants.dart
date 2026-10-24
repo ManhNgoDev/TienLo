@@ -15,4 +15,14 @@ class ApiConstants {
   static const String authMe = '/auth/me';
   static const String userProfile = '/users/profile';
   static const String health = '/health';
+
+  // Cultivation & Campaigns
+  static const String cultivationProfile = '/cultivation/profile';
+  static const String cultivationAddExp = '/cultivation/add-exp';
+  static const String cultivationAddStones = '/cultivation/add-stones';
+  static const String campaignsAiGenerate = '/campaigns/ai-generate';
+  static const String campaignsList = '/campaigns';
+  static String campaignQuestComplete(String questId) =>
+      '/campaigns/quests/$questId/complete';
 }
+

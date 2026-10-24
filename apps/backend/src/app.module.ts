@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { DatabaseModule } from './modules/database/database.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { UsersModule } from './modules/users/users.module.js';
+import { CultivationModule } from './modules/cultivation/cultivation.module.js';
+import { CampaignsModule } from './modules/campaigns/campaigns.module.js';
 
 @Module({
   imports: [
@@ -12,11 +15,20 @@ import { UsersModule } from './modules/users/users.module.js';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 60,
+      },
+    ]),
     DatabaseModule,
     AuthModule,
     UsersModule,
+    CultivationModule,
+    CampaignsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
+

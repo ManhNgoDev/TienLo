@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../auth/domain/user_model.dart';
+import '../../data/cultivation_repository.dart';
+import '../widgets/cultivation_realms_modal.dart';
 
 class QuestItem {
   final String id;
@@ -42,12 +44,16 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final AuthRepository _authRepository = AuthRepository();
+  final CultivationRepository _cultivationRepository = CultivationRepository();
   final TextEditingController _campaignController = TextEditingController();
 
   int _currentNavIndex = 0;
   int _currentExp = 680;
-  final int _maxExp = 1000;
+  int _maxExp = 1000;
   final int _streakDays = 12;
+  int _spiritStones = 50;
+  CultivationProfileModel? _cultivationProfile;
+  bool _isGeneratingAi = false;
 
   final List<QuestItem> _quests = [
     QuestItem(
@@ -84,12 +90,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int get _completedCount => _quests.where((q) => q.isCompleted || q.isXpClaimed).length;
 
-  void _toggleQuest(QuestItem quest) {
+  @override
+  void initState() {
+    super.initState();
+    _loadCultivationProfile();
+  }
+
+  Future<void> _loadCultivationProfile() async {
+    try {
+      final profile = await _cultivationRepository.getProfile();
+      if (mounted) {
+        setState(() {
+          _cultivationProfile = profile;
+          _currentExp = profile.currentExp;
+          _maxExp = profile.maxExp;
+          _spiritStones = profile.spiritStones;
+        });
+      }
+    } catch (_) {}
+  }
+
+  void _toggleQuest(QuestItem quest) async {
     setState(() {
       quest.isCompleted = !quest.isCompleted;
       if (quest.isCompleted) {
         quest.isXpClaimed = true;
         _currentExp += quest.xp;
+        _spiritStones += 10;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: const Color(0xFF1E293B),
@@ -98,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Icon(Icons.auto_awesome, color: Color(0xFFF3C766), size: 18),
                 const SizedBox(width: 8),
                 Text(
-                  'Hoàn thành nhiệm vụ! +${quest.xp} EXP',
+                  'Hoàn thành tu luyện! +${quest.xp} Linh Lực, +10 Linh Thạch',
                   style: const TextStyle(
                     color: Color(0xFFFDE68A),
                     fontWeight: FontWeight.bold,
@@ -113,37 +140,109 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       } else {
         quest.isXpClaimed = false;
-        _currentExp = (_currentExp - quest.xp).clamp(0, 10000);
+        _currentExp = (_currentExp - quest.xp).clamp(0, 100000);
+        _spiritStones = (_spiritStones - 10).clamp(0, 100000);
       }
     });
+
+    if (quest.isCompleted) {
+      await _cultivationRepository.completeQuest(quest.id);
+    }
   }
 
-  void _addCampaign() {
+  void _addCampaign() async {
     final text = _campaignController.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty || _isGeneratingAi) return;
 
     setState(() {
-      _quests.add(
-        QuestItem(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          title: text,
-          subtitle: 'Nhiệm vụ chiến dịch mới',
-          xp: 100,
-          icon: Icons.flag_rounded,
-          iconColor: const Color(0xFFF59E0B),
-          isCompleted: false,
-        ),
-      );
-      _campaignController.clear();
+      _isGeneratingAi = true;
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: const Color(0xFF142436),
-        content: Text('Đã tạo nhiệm vụ chiến dịch: "$text"'),
-        behavior: SnackBarBehavior.floating,
+      const SnackBar(
+        backgroundColor: Color(0xFF142436),
+        content: Row(
+          children: [
+            SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFF2C465)),
+            ),
+            SizedBox(width: 12),
+            Text('Thiên Đạo đang diễn toán chiến dịch tu tiên...'),
+          ],
+        ),
+        duration: Duration(seconds: 3),
       ),
     );
+
+    final campaignData = await _cultivationRepository.generateAiCampaign(text);
+
+    if (mounted) {
+      setState(() {
+        _isGeneratingAi = false;
+        _campaignController.clear();
+
+        if (campaignData != null && campaignData['quests'] != null) {
+          final List<dynamic> rawQuests = campaignData['quests'];
+          for (var q in rawQuests) {
+            IconData icon = Icons.fitness_center_rounded;
+            Color iconColor = const Color(0xFFF2C465);
+            final iconType = q['iconType']?.toString().toLowerCase();
+            if (iconType == 'water') {
+              icon = Icons.water_drop_outlined;
+              iconColor = const Color(0xFF38BDF8);
+            } else if (iconType == 'walk') {
+              icon = Icons.directions_walk_rounded;
+              iconColor = const Color(0xFFF2C465);
+            } else if (iconType == 'meditation' || iconType == 'study') {
+              icon = Icons.auto_awesome;
+              iconColor = const Color(0xFFF59E0B);
+            } else if (iconType == 'medal') {
+              icon = Icons.military_tech_rounded;
+              iconColor = const Color(0xFFFBBF24);
+            }
+
+            _quests.insert(
+              0,
+              QuestItem(
+                id: q['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
+                title: q['title'] ?? 'Nhiệm vụ tu tiên',
+                subtitle: q['subtitle'] ?? 'Hàng ngày',
+                xp: q['expReward'] ?? 150,
+                icon: icon,
+                iconColor: iconColor,
+                isCompleted: false,
+                isXpClaimed: false,
+              ),
+            );
+          }
+        } else {
+          // Local fallback
+          _quests.insert(
+            0,
+            QuestItem(
+              id: DateTime.now().millisecondsSinceEpoch.toString(),
+              title: text,
+              subtitle: 'Chiến dịch tu tiên mới · Hàng ngày',
+              xp: 150,
+              icon: Icons.flag_rounded,
+              iconColor: const Color(0xFFF59E0B),
+              isCompleted: false,
+              isXpClaimed: false,
+            ),
+          );
+        }
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF0F261C),
+          content: Text('Thiên Đạo đã kiến tạo thành công: "$text"!'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   void _showProfileModal() {
@@ -392,166 +491,191 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildCharacterCard() {
     final expPercent = (_currentExp / _maxExp).clamp(0.0, 1.0);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(22),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-        child: Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF07121E).withValues(alpha: 0.88),
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(
-              color: const Color(0xFFC59A44),
-              width: 1.4,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.45),
-                blurRadius: 18,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.all(3.5),
+    return GestureDetector(
+      onTap: () {
+        if (_cultivationProfile != null) {
+          CultivationRealmsModal.show(context, _cultivationProfile!);
+        }
+      },
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
-              color: const Color(0xFF091422).withValues(alpha: 0.65),
-              borderRadius: BorderRadius.circular(18),
+              color: const Color(0xFF07121E).withValues(alpha: 0.88),
+              borderRadius: BorderRadius.circular(22),
               border: Border.all(
-                color: const Color(0xFFC59A44).withValues(alpha: 0.75),
-                width: 1.0,
+                color: const Color(0xFFC59A44),
+                width: 1.4,
               ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // 1. Lotus Badge
-                Container(
-                  width: 58,
-                  height: 58,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFF0A1422),
-                    border: Border.all(
-                      color: const Color(0xFFC59A44),
-                      width: 1.3,
-                    ),
-                  ),
-                  child: const Center(
-                    child: CustomPaint(
-                      size: Size(26, 26),
-                      painter: LotusFlowerPainter(
-                        color: Color(0xFFF2C465),
-                        strokeWidth: 1.6,
-                      ),
-                    ),
-                  ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.45),
+                  blurRadius: 18,
+                  offset: const Offset(0, 4),
                 ),
-                const SizedBox(width: 14),
+              ],
+            ),
+            padding: const EdgeInsets.all(3.5),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFF091422).withValues(alpha: 0.65),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(
+                  color: const Color(0xFFC59A44).withValues(alpha: 0.75),
+                  width: 1.0,
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // 1. Lotus Badge
+                  Container(
+                    width: 58,
+                    height: 58,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF0A1422),
+                      border: Border.all(
+                        color: const Color(0xFFC59A44),
+                        width: 1.3,
+                      ),
+                    ),
+                    child: const Center(
+                      child: CustomPaint(
+                        size: Size(26, 26),
+                        painter: LotusFlowerPainter(
+                          color: Color(0xFFF2C465),
+                          strokeWidth: 1.6,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
 
-                // 2. Character Details
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text(
-                        'NHÂN VẬT CỦA BẠN',
-                        style: TextStyle(
-                          color: Color(0xFF70BFE6),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.4,
+                  // 2. Character Details
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text(
+                          'NHÂN VẬT CỦA BẠN',
+                          style: TextStyle(
+                            color: Color(0xFF70BFE6),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1.4,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 3),
-                      const Text(
-                        'Cấp 12 • Kẻ Kiến Tạo',
-                        style: TextStyle(
-                          fontFamily: 'serif',
-                          color: Color(0xFFFFF6DF),
-                          fontSize: 17.5,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.2,
+                        const SizedBox(height: 3),
+                        Text(
+                          _cultivationProfile != null
+                              ? '${_cultivationProfile!.realmName} • Tầng ${_cultivationProfile!.subRealm}'
+                              : 'Cấp 12 • Kẻ Kiến Tạo',
+                          style: const TextStyle(
+                            fontFamily: 'serif',
+                            color: Color(0xFFFFF6DF),
+                            fontSize: 17.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.2,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Progress Bar
-                      Container(
-                        height: 3.5,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0C1624),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                        child: LayoutBuilder(
-                          builder: (context, constraints) {
-                            return Stack(
-                              children: [
-                                Container(
-                                  width: constraints.maxWidth * expPercent,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF2C465),
-                                    borderRadius: BorderRadius.circular(2),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFFF2C465).withValues(alpha: 0.45),
-                                        blurRadius: 4,
-                                      ),
-                                    ],
+                        const SizedBox(height: 8),
+                        // Progress Bar
+                        Container(
+                          height: 3.5,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0C1624),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              return Stack(
+                                children: [
+                                  Container(
+                                    width: constraints.maxWidth * expPercent,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF2C465),
+                                      borderRadius: BorderRadius.circular(2),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFFF2C465).withValues(alpha: 0.45),
+                                          blurRadius: 4,
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            );
-                          },
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '${_formatExp(_currentExp)} / ${_formatExp(_maxExp)} Linh Lực',
+                          style: const TextStyle(
+                            color: Color(0xFF8BA5BA),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+
+                  // 3. Streak Days (Flame + Days + Stones)
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.local_fire_department_rounded,
+                        color: Color(0xFFF59E0B),
+                        size: 20,
+                      ),
+                      const SizedBox(height: 1),
+                      Text(
+                        '$_streakDays',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 21,
+                          fontWeight: FontWeight.w800,
+                          height: 1.15,
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '${_formatExp(_currentExp)} / ${_formatExp(_maxExp)} EXP để lên cấp',
-                        style: const TextStyle(
+                      const SizedBox(height: 1),
+                      const Text(
+                        'ngày',
+                        style: TextStyle(
                           color: Color(0xFF8BA5BA),
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
+                      const SizedBox(height: 4),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.diamond_outlined, color: Color(0xFF38BDF8), size: 12),
+                          const SizedBox(width: 3),
+                          Text(
+                            '$_spiritStones',
+                            style: const TextStyle(
+                              color: Color(0xFF38BDF8),
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ),
-                const SizedBox(width: 14),
-
-                // 3. Streak Days (Flame + Days)
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.local_fire_department_rounded,
-                      color: Color(0xFFF59E0B),
-                      size: 20,
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      '$_streakDays',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 21,
-                        fontWeight: FontWeight.w800,
-                        height: 1.15,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    const Text(
-                      'ngày',
-                      style: TextStyle(
-                        color: Color(0xFF8BA5BA),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
