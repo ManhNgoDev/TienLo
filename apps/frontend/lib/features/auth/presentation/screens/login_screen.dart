@@ -110,15 +110,19 @@ class _LoginScreenState extends State<LoginScreen> {
           SafeArea(
             child: LayoutBuilder(
               builder: (context, constraints) {
+                final minH = constraints.hasBoundedHeight
+                    ? (constraints.maxHeight - 32).clamp(0.0, double.infinity)
+                    : 0.0;
                 return SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                   child: Center(
                     child: ConstrainedBox(
                       constraints: BoxConstraints(
                         maxWidth: 460,
-                        minHeight: constraints.maxHeight - 32,
+                        minHeight: minH,
                       ),
                       child: IntrinsicHeight(
+
                         child: Column(
                           children: [
                             // Top Header: Logo + Brand Name
