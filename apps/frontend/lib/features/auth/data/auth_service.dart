@@ -64,6 +64,22 @@ class AuthService {
     );
   }
 
+  Future<String?> getFreshIdToken() async {
+    try {
+      GoogleSignInAccount? account = _googleSignIn.currentUser;
+      account ??= await _googleSignIn.signInSilently();
+      if (account != null) {
+        final auth = await account.authentication;
+        if (auth.idToken != null && auth.idToken!.isNotEmpty) {
+          return auth.idToken;
+        }
+      }
+    } catch (e) {
+      debugPrint('Lỗi tự động làm mới Google ID token: $e');
+    }
+    return null;
+  }
+
   Future<void> signOut() async {
     try {
       await _googleSignIn.signOut();

@@ -78,6 +78,20 @@ class AuthRepository {
     return prefs.getString(_keyToken);
   }
 
+  /// Lấy token hợp lệ (tự động làm mới qua GoogleSignIn nếu cần)
+  Future<String?> getValidToken() async {
+    try {
+      final freshToken = await _authService.getFreshIdToken();
+      if (freshToken != null && freshToken.isNotEmpty) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_keyToken, freshToken);
+        return freshToken;
+      }
+    } catch (_) {}
+
+    return getSavedToken();
+  }
+
   /// Kiểm tra trạng thái đăng nhập
   Future<bool> isLoggedIn() async {
     final token = await getSavedToken();

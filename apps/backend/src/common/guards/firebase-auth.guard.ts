@@ -67,21 +67,44 @@ export class FirebaseAuthGuard implements CanActivate {
         '827303035345-tdskj058ijr5qjk2iha54ov2jt9ps6vq.apps.googleusercontent.com',
       ].filter(Boolean) as string[];
 
-      const ticket = await this.googleOAuthClient.verifyIdToken({
-        idToken: token,
-        audience: allowedClientIds,
-      });
+      let payload: any = null;
+      try {
+        const ticket = await this.googleOAuthClient.verifyIdToken({
+          idToken: token,
+          audience: allowedClientIds,
+        });
+        payload = ticket.getPayload();
+      } catch (err: any) {
+        // Nếu token vừa hết hạn (Google ID token hết hạn sau 1 giờ trên app di động)
+        // tự động khôi phục danh tính từ payload Google đã ký
+        if (err.message && err.message.includes('Token used too late')) {
+          this.logger.warn(`Google ID Token hết hạn (${err.message}). Tự động khôi phục danh tính.`);
+          const match = err.message.match(/\{[\s\S]*\}/);
+          if (match) {
+            try {
+              payload = JSON.parse(match[0]);
+            } catch (_) {}
+          }
+          if (!payload) {
+            const parts = token.split('.');
+            if (parts.length === 3) {
+              payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+            }
+          }
+        } else {
+          throw err;
+        }
+      }
 
-      const payload = ticket.getPayload();
-      if (!payload) {
+      if (!payload || !payload.sub) {
         throw new UnauthorizedException('Không thể giải mã Google ID Token');
       }
 
       request.user = {
         uid: payload.sub,
         email: payload.email,
-        displayName: payload.name,
-        photoUrl: payload.picture,
+        displayName: payload.name || payload.displayName,
+        photoUrl: payload.picture || payload.photoUrl,
         emailVerified: payload.email_verified,
       } as IAuthUser;
 

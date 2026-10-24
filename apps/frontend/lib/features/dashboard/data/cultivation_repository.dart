@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/constants/api_constants.dart';
 import '../../../core/network/api_client.dart';
+import '../../auth/data/auth_repository.dart';
 
 class CultivationRealmModel {
   final int index;
@@ -97,6 +98,13 @@ class CultivationRepository {
       : _apiClient = apiClient ?? ApiClient();
 
   Future<String?> _getToken() async {
+    try {
+      final validToken = await AuthRepository().getValidToken();
+      if (validToken != null && validToken.isNotEmpty) {
+        return validToken;
+      }
+    } catch (_) {}
+
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
     if (token == null || token.isEmpty) {
