@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "827303035345",
+    "project_id": "tienlo-2616c",
+    "storage_bucket": "tienlo-2616c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:827303035345:android:30fee33e83bd89953a60f0",
+        "android_client_info": {
+          "package_name": "com.tienlo.frontend"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "827303035345-tdskj058ijr5qjk2iha54ov2jt9ps6vq.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgoVeVPO8pBWIxW-UMen1rSnsxv4bUGaQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "827303035345-tdskj058ijr5qjk2iha54ov2jt9ps6vq.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

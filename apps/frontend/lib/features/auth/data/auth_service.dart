@@ -20,7 +20,10 @@ class AuthResult {
 class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
+    serverClientId:
+        '827303035345-tdskj058ijr5qjk2iha54ov2jt9ps6vq.apps.googleusercontent.com',
   );
+
 
   /// Đăng nhập bằng Google thực tế thông qua GoogleSignIn SDK
   Future<AuthResult?> signInWithGoogle() async {
