@@ -8,6 +8,7 @@ import 'penalty_dialog.dart';
 import 'profile/account_settings_card.dart';
 import 'profile/cultivation_progress_card.dart';
 import 'profile/profile_header_card.dart';
+import '../../../common/presentation/screens/server_waiting_screen.dart';
 
 class ProfileView extends StatefulWidget {
   final UserModel user;
@@ -228,6 +229,24 @@ class _ProfileViewState extends State<ProfileView> {
                         },
                       );
                     }
+                  },
+                ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.cloud_sync_rounded, color: Color(0xFFFBBF24), size: 18),
+                  ),
+                  title: const Text('Xem Màn Hình Đợi Server (Render Free)', style: TextStyle(color: Color(0xFFFDE68A), fontSize: 13, fontWeight: FontWeight.bold)),
+                  subtitle: const Text('Giao diện thông báo vui lòng đợi server khởi chạy', style: TextStyle(color: Color(0xFF8BA5BA), fontSize: 10.5)),
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    ServerWaitingScreen.showPreview(context);
                   },
                 ),
                 const SizedBox(height: 12),

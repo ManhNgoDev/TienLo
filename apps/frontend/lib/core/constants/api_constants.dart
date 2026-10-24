@@ -1,10 +1,16 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConstants {
-  /// Tự động trỏ đúng URL máy chủ Backend khi chạy trên Mobile:
-  /// - Android Emulator: 'http://10.0.2.2:3000/api' (kết nối trực tiếp tới localhost của máy tính)
+  static String? customBaseUrl;
+
+  /// Tự động trỏ đúng URL máy chủ Backend:
+  /// - Nếu đã cấu hình customBaseUrl (Render hoặc URL tùy chỉnh) thì ưu tiên dùng
+  /// - Android Emulator: 'http://10.0.2.2:3000/api'
   /// - iOS Simulator & Thiết bị khác: 'http://localhost:3000/api'
   static String get defaultBaseUrl {
+    if (customBaseUrl != null && customBaseUrl!.trim().isNotEmpty) {
+      return customBaseUrl!.trim();
+    }
     if (defaultTargetPlatform == TargetPlatform.android) {
       return 'http://10.0.2.2:3000/api';
     }
