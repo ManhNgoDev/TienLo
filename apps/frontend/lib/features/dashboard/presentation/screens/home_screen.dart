@@ -236,36 +236,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {}
   }
 
-  Future<void> _showPenaltyNoticeOrSimulate() async {
-    final uncompleted = _quests.where((q) => !q.isCompleted).length;
-    final count = uncompleted > 0 ? uncompleted : 2;
-    try {
-      final penalty = await _cultivationRepository.penalizeExp(
-        uncompletedCount: count,
-        reason: 'Chưa hoàn thành $count nhiệm vụ tu luyện trong ngày!',
-      );
-      if (mounted) {
-        PenaltyDialog.show(
-          context,
-          uncompletedCount: (penalty['uncompletedCount'] as num?)?.toInt() ?? count,
-          penaltyExp: (penalty['penaltyExp'] as num?)?.toInt() ?? (count * 150),
-          reason: penalty['reason']?.toString() ?? 'Chưa hoàn thành nhiệm vụ',
-          demotedLevel: penalty['demotedLevel'] == true,
-          demotedRealm: penalty['demotedRealm'] == true,
-          previousRealmName: penalty['previousRealmName']?.toString() ?? '',
-          previousSubRealm: (penalty['previousSubRealm'] as num?)?.toInt() ?? 1,
-          currentRealmName: penalty['currentRealmName']?.toString() ?? '',
-          currentSubRealm: (penalty['currentSubRealm'] as num?)?.toInt() ?? 1,
-          remainingExp: (penalty['profile']?['currentExp'] as num?)?.toInt(),
-          maxExp: (penalty['profile']?['maxExp'] as num?)?.toInt(),
-          onDismiss: () {
-            _loadCultivationProfile();
-            _loadStatistics();
-          },
-        );
-      }
-    } catch (_) {}
-  }
+
 
   Future<void> _loadStatistics() async {
     if (_isLoadingStats) return;
@@ -290,54 +261,59 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _toggleQuest(QuestItem quest) async {
-    final previousCompleted = quest.isCompleted;
+    // Nếu nhiệm vụ đã hoàn thành thì không cho ticks lần nữa
+    if (quest.isCompleted) return;
+
     setState(() {
-      quest.isCompleted = !quest.isCompleted;
-      quest.isXpClaimed = quest.isCompleted;
-      if (quest.isCompleted) {
-        _currentExp += quest.xp;
-        _spiritStones += quest.spiritStones;
-      } else {
-        _currentExp = (_currentExp - quest.xp).clamp(0, 100000);
-        _spiritStones = (_spiritStones - quest.spiritStones).clamp(0, 100000);
-      }
+      quest.isCompleted = true;
+      quest.isXpClaimed = true;
+      _currentExp += quest.xp;
+      _spiritStones += quest.spiritStones;
     });
     _saveLocalQuests();
 
-    if (!previousCompleted) {
-      try {
-        final res = await _cultivationRepository.completeQuest(quest.id);
-        if (res != null) {
-          await _loadCultivationProfile();
-          _loadStatistics();
-        }
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              backgroundColor: const Color(0xFF1E293B),
-              content: Row(
-                children: [
-                  const Icon(Icons.auto_awesome, color: Color(0xFFF3C766), size: 18),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Hoàn thành tu luyện! +${quest.xp} Linh Lực, +${quest.spiritStones} Nguyên Thạch',
-                      style: const TextStyle(
-                        color: Color(0xFFFDE68A),
-                        fontWeight: FontWeight.bold,
-                      ),
+    try {
+      final res = await _cultivationRepository.completeQuest(quest.id);
+      if (res != null) {
+        await _loadCultivationProfile();
+        _loadStatistics();
+      } else {
+        // Fallback ghi nhận trực tiếp vào database qua addExp và addSpiritStones
+        await _cultivationRepository.addExp(quest.xp);
+        await _cultivationRepository.addSpiritStones(
+          quest.spiritStones,
+          'Thưởng hoàn thành nhiệm vụ: ${quest.title}',
+        );
+        await _loadCultivationProfile();
+        _loadStatistics();
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: const Color(0xFF1E293B),
+            content: Row(
+              children: [
+                const Icon(Icons.auto_awesome, color: Color(0xFFF3C766), size: 18),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Hoàn thành tu luyện! +${quest.xp} Linh Lực, +${quest.spiritStones} Nguyên Thạch',
+                    style: const TextStyle(
+                      color: Color(0xFFFDE68A),
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                ],
-              ),
-              duration: const Duration(seconds: 2),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ],
             ),
-          );
-        }
-      } catch (_) {}
-    }
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+      }
+    } catch (_) {}
   }
 
   void _addCampaign() async {
@@ -623,7 +599,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           quests: _quests,
                           completedCount: _completedCount,
                           onToggleQuest: _toggleQuest,
-                          onShowPenaltyNotice: _showPenaltyNoticeOrSimulate,
                         ),
                       ],
                     ],

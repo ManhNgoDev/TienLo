@@ -8,14 +8,12 @@ class DailyQuestsSection extends StatelessWidget {
   final List<QuestItem> quests;
   final int completedCount;
   final ValueChanged<QuestItem> onToggleQuest;
-  final VoidCallback? onShowPenaltyNotice;
 
   const DailyQuestsSection({
     super.key,
     required this.quests,
     required this.completedCount,
     required this.onToggleQuest,
-    this.onShowPenaltyNotice,
   });
 
   Widget _buildEmptyQuestsCard() {
@@ -178,7 +176,7 @@ class DailyQuestsSection extends StatelessWidget {
                 const SizedBox(width: 10),
                 const Expanded(
                   child: Text(
-                    'Chưa hoàn thành hết nhiệm vụ sẽ bị Thiên Đạo phạt trừ linh lực và tụt cảnh giới/tầng!',
+                    'Chưa hoàn thành hết nhiệm vụ trong ngày sẽ bị Thiên Đạo phạt trừ linh lực và tụt cảnh giới/tầng vào ngày hôm sau!',
                     style: TextStyle(
                       color: Color(0xFFFCA5A5),
                       fontSize: 11,
@@ -187,42 +185,6 @@ class DailyQuestsSection extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (onShowPenaltyNotice != null) ...[
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: onShowPenaltyNotice,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEF4444).withValues(alpha: 0.3),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: const Color(0xFFEF4444).withValues(alpha: 0.6),
-                          width: 0.8,
-                        ),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Xem phạt',
-                            style: TextStyle(
-                              color: Color(0xFFFFD1D1),
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(width: 2),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            color: Color(0xFFFFD1D1),
-                            size: 14,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
               ],
             ),
           ),

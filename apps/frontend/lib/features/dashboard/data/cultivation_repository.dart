@@ -195,6 +195,37 @@ class CultivationRepository {
     }
   }
 
+  Future<Map<String, dynamic>?> addExp(int amount) async {
+    final token = await _getToken();
+    try {
+      final res = await _apiClient.post(
+        ApiConstants.cultivationAddExp,
+        token: token,
+        body: {'amount': amount},
+      );
+      return res as Map<String, dynamic>?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> addSpiritStones(int amount, String description) async {
+    final token = await _getToken();
+    try {
+      final res = await _apiClient.post(
+        ApiConstants.cultivationAddStones,
+        token: token,
+        body: {
+          'amount': amount,
+          'description': description,
+        },
+      );
+      return res as Map<String, dynamic>?;
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>?> getStatistics() async {
     final token = await _getToken();
     try {

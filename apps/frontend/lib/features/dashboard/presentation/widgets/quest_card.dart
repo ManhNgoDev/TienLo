@@ -194,31 +194,36 @@ class QuestCard extends StatelessWidget {
 
                   // Checkbox Circle
                   GestureDetector(
-                    onTap: () => onToggle(quest),
-                    child: Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: quest.isCompleted
-                            ? const Color(0xFFF2C465).withValues(alpha: 0.15)
-                            : Colors.transparent,
-                        border: Border.all(
+                    onTap: quest.isCompleted ? null : () => onToggle(quest),
+                    child: MouseRegion(
+                      cursor: quest.isCompleted
+                          ? SystemMouseCursors.basic
+                          : SystemMouseCursors.click,
+                      child: Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
                           color: quest.isCompleted
-                              ? const Color(0xFFF2C465)
-                              : const Color(0xFF5A758D),
-                          width: 1.6,
+                              ? const Color(0xFFF2C465).withValues(alpha: 0.15)
+                              : Colors.transparent,
+                          border: Border.all(
+                            color: quest.isCompleted
+                                ? const Color(0xFFF2C465)
+                                : const Color(0xFF5A758D),
+                            width: 1.6,
+                          ),
                         ),
+                        child: quest.isCompleted
+                            ? const Center(
+                                child: Icon(
+                                  Icons.check_rounded,
+                                  color: Color(0xFFF2C465),
+                                  size: 18,
+                                ),
+                              )
+                            : null,
                       ),
-                      child: quest.isCompleted
-                          ? const Center(
-                              child: Icon(
-                                Icons.check_rounded,
-                                color: Color(0xFFF2C465),
-                                size: 18,
-                              ),
-                            )
-                          : null,
                     ),
                   ),
                 ],
