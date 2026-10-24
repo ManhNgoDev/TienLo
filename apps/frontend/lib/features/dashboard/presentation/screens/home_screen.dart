@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/data/auth_repository.dart';
@@ -111,28 +112,6 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<QuestItem> _quests = [];
 
   int get _completedCount => _quests.where((q) => q.isCompleted || q.isXpClaimed).length;
-
-  String _toRoman(int number) {
-    const romanMap = {
-      1: 'I',
-      2: 'II',
-      3: 'III',
-      4: 'IV',
-      5: 'V',
-      6: 'VI',
-      7: 'VII',
-      8: 'VIII',
-      9: 'IX',
-      10: 'X',
-    };
-    return romanMap[number] ?? '$number';
-  }
-
-  String get _currentChapterText {
-    final realmIdx = _cultivationProfile?.realmIndex ?? 0;
-    final roman = _toRoman(realmIdx + 1);
-    return 'CHƯƠNG $roman • NGÀY THỨ $_streakDays';
-  }
 
   String get _currentStoryTitle {
     final realmName = _cultivationProfile?.realmName ?? 'Phàm Nhân';
@@ -738,41 +717,25 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  _currentChapterText,
-                                  style: const TextStyle(
-                                    color: Color(0xFFE8B95E),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    letterSpacing: 2.0,
-                                  ),
+                            child: ShaderMask(
+                              shaderCallback: (bounds) => const LinearGradient(
+                                colors: [
+                                  Color(0xFFFFFFFF),
+                                  Color(0xFFFFF2D1),
+                                  Color(0xFFF6CE70),
+                                ],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ).createShader(bounds),
+                              child: Text(
+                                _currentStoryTitle,
+                                style: GoogleFonts.dancingScript(
+                                  color: Colors.white,
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.15,
                                 ),
-                                const SizedBox(height: 4),
-                                ShaderMask(
-                                  shaderCallback: (bounds) => const LinearGradient(
-                                    colors: [
-                                      Color(0xFFFFFFFF),
-                                      Color(0xFFFFF2D1),
-                                      Color(0xFFF6CE70),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ).createShader(bounds),
-                                  child: Text(
-                                    _currentStoryTitle,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 26,
-                                      fontStyle: FontStyle.italic,
-                                      fontWeight: FontWeight.bold,
-                                      height: 1.15,
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                           // Avatar Icon
@@ -964,10 +927,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ? 'Phàm Nhân'
                                   : '${_cultivationProfile!.realmName} • Tầng ${_cultivationProfile!.subRealm}')
                               : 'Phàm Nhân',
-                          style: const TextStyle(
-                            fontFamily: 'serif',
-                            color: Color(0xFFFFF6DF),
-                            fontSize: 17.5,
+                          style: GoogleFonts.playfairDisplay(
+                            color: const Color(0xFFFFF6DF),
+                            fontSize: 18.5,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.2,
                           ),
@@ -987,7 +949,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Container(
                                     width: constraints.maxWidth * expPercent,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF2C465),
+                                      gradient: const LinearGradient(
+                                        colors: [Color(0xFFE5B869), Color(0xFFF6CE70)],
+                                      ),
                                       borderRadius: BorderRadius.circular(2),
                                       boxShadow: [
                                         BoxShadow(
@@ -1004,7 +968,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          '${_formatExp(_currentExp)} / ${_formatExp(_maxExp)} Linh Lực',
+                          '${_formatExp(_currentExp)} / ${_formatExp(_maxExp)} EXP để lên cấp',
                           style: const TextStyle(
                             color: Color(0xFF8BA5BA),
                             fontSize: 11,
@@ -1109,29 +1073,37 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: const Color(0xFF0F261C),
-                          border: Border.all(color: const Color(0xFF10B981), width: 1),
+                  Expanded(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFF0F261C),
+                            border: Border.all(color: const Color(0xFF10B981), width: 1),
+                          ),
+                          child: const Icon(Icons.flash_on_rounded, color: Color(0xFF10B981), size: 14),
                         ),
-                        child: const Icon(Icons.flash_on_rounded, color: Color(0xFF10B981), size: 14),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'PHIÊN TU LUYỆN HIỆN TẠI (SESSION)',
-                        style: TextStyle(
-                          color: Color(0xFF70BFE6),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.4,
+                        const SizedBox(width: 8),
+                        const Flexible(
+                          child: Text(
+                            'PHIÊN TU LUYỆN (SESSION)',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Color(0xFF70BFE6),
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
@@ -1158,10 +1130,9 @@ class _HomeScreenState extends State<HomeScreen> {
               // Row 2: Campaign Goal Title
               Text(
                 _activeCampaignTitle!,
-                style: const TextStyle(
-                  fontFamily: 'serif',
-                  color: Color(0xFFFFF6DF),
-                  fontSize: 17,
+                style: GoogleFonts.playfairDisplay(
+                  color: const Color(0xFFFFF6DF),
+                  fontSize: 18,
                   fontWeight: FontWeight.w700,
                   height: 1.25,
                 ),
@@ -1397,59 +1368,47 @@ class _HomeScreenState extends State<HomeScreen> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    const Text(
-                      'DAILY QUESTS',
-                      style: TextStyle(
-                        color: Color(0xFFE8B95E),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 2.0,
-                      ),
-                    ),
-                    if (_activeCampaignTitle != null) ...[
-                      const SizedBox(width: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFC59A44).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                            color: const Color(0xFFC59A44).withValues(alpha: 0.5),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Text(
-                          'Ngày $_campaignCurrentDay/$_campaignTotalDays',
-                          style: const TextStyle(
-                            color: Color(0xFFF2C465),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
+                const Text(
+                  'DAILY QUESTS',
+                  style: TextStyle(
+                    color: Color(0xFFE8B95E),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 2.0,
+                  ),
                 ),
                 const SizedBox(height: 2),
-                const Text(
-                  '3 Nhiệm vụ tu tiên hôm nay',
-                  style: TextStyle(
-                    color: Color(0xFFFFF2D1),
-                    fontSize: 20,
-                    fontStyle: FontStyle.italic,
-                    fontWeight: FontWeight.bold,
+                ShaderMask(
+                  shaderCallback: (bounds) => const LinearGradient(
+                    colors: [
+                      Color(0xFFFFFFFF),
+                      Color(0xFFFFF2D1),
+                      Color(0xFFF6CE70),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ).createShader(bounds),
+                  child: Text(
+                    'Ba hành động tạo khác biệt',
+                    style: GoogleFonts.dancingScript(
+                      color: Colors.white,
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      height: 1.15,
+                    ),
                   ),
                 ),
               ],
             ),
             if (_quests.isNotEmpty)
               Text(
-                '$_completedCount/${_quests.length} đã hoàn thành',
+                '$_completedCount/${_quests.length} đã hoàn\nthành',
+                textAlign: TextAlign.right,
                 style: const TextStyle(
-                  color: Color(0xFF94A3B8),
+                  color: Color(0xFF8BA5BA),
                   fontSize: 11.5,
+                  height: 1.25,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
           ],
@@ -1510,11 +1469,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 14),
-              const Text(
+              Text(
                 'Chưa có nhiệm vụ tu luyện',
-                style: TextStyle(
-                  fontFamily: 'serif',
-                  color: Color(0xFFFFF6DF),
+                style: GoogleFonts.playfairDisplay(
+                  color: const Color(0xFFFFF6DF),
                   fontSize: 16.5,
                   fontWeight: FontWeight.bold,
                 ),

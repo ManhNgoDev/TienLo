@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../data/cultivation_repository.dart';
 
 class CultivationRealmsModal extends StatelessWidget {
@@ -80,8 +81,7 @@ class CultivationRealmsModal extends StatelessWidget {
                         const SizedBox(height: 3),
                         Text(
                           '10 Cảnh Giới • Phàm Nhân Đến Phi Tiên',
-                          style: TextStyle(
-                            fontFamily: 'serif',
+                          style: GoogleFonts.playfairDisplay(
                             color: const Color(0xFFFFF6DF),
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
@@ -235,8 +235,7 @@ class CultivationRealmsModal extends StatelessWidget {
                                   children: [
                                     Text(
                                       realm.name,
-                                      style: TextStyle(
-                                        fontFamily: 'serif',
+                                      style: GoogleFonts.playfairDisplay(
                                         color: isCurrent
                                             ? const Color(0xFFFFF6DF)
                                             : isPassed
