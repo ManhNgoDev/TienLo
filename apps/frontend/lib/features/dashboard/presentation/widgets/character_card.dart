@@ -137,28 +137,38 @@ class CharacterCard extends StatelessWidget {
                         const SizedBox(height: 8),
                         // Progress Bar
                         Container(
-                          height: 3.5,
+                          width: double.infinity,
+                          height: 4.0,
                           decoration: BoxDecoration(
                             color: const Color(0xFF0C1624),
                             borderRadius: BorderRadius.circular(2),
+                            border: Border.all(
+                              color: const Color(0xFF1E2F40),
+                              width: 0.6,
+                            ),
                           ),
                           child: LayoutBuilder(
                             builder: (context, constraints) {
+                              final barWidth = (constraints.maxWidth * expPercent).clamp(0.0, constraints.maxWidth);
                               return Stack(
+                                alignment: Alignment.centerLeft,
                                 children: [
-                                  Container(
-                                    width: constraints.maxWidth * expPercent,
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [Color(0xFFE5B869), Color(0xFFF6CE70)],
-                                      ),
-                                      borderRadius: BorderRadius.circular(2),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: const Color(0xFFF2C465).withValues(alpha: 0.45),
-                                          blurRadius: 4,
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(2),
+                                    child: Container(
+                                      width: barWidth,
+                                      height: double.infinity,
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [Color(0xFFE5B869), Color(0xFFF6CE70)],
                                         ),
-                                      ],
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFFF2C465).withValues(alpha: 0.5),
+                                            blurRadius: 6,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],

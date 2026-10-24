@@ -104,6 +104,7 @@ class CultivationProgressCard extends StatelessWidget {
                   ],
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -180,32 +181,43 @@ class CultivationProgressCard extends StatelessWidget {
 
                     // Progress Bar
                     Container(
-                      height: 7,
+                      width: double.infinity,
+                      height: 8,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF0A1420),
-                        borderRadius: BorderRadius.circular(3.5),
+                        color: const Color(0xFF07121D),
+                        borderRadius: BorderRadius.circular(4),
                         border: Border.all(
-                          color: const Color(0xFF1E2F40),
-                          width: 0.8,
+                          color: const Color(0xFF1E3246),
+                          width: 1.0,
                         ),
                       ),
                       child: LayoutBuilder(
                         builder: (context, constraints) {
+                          final barWidth = (constraints.maxWidth * percent).clamp(0.0, constraints.maxWidth);
                           return Stack(
+                            alignment: Alignment.centerLeft,
                             children: [
-                              Container(
-                                width: constraints.maxWidth * percent,
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    colors: [Color(0xFFD97706), Color(0xFFF59E0B), Color(0xFFFDE68A)],
-                                  ),
-                                  borderRadius: BorderRadius.circular(3.5),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFFF2C465).withValues(alpha: 0.6),
-                                      blurRadius: 8,
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: Container(
+                                  width: barWidth,
+                                  height: double.infinity,
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      colors: [
+                                        Color(0xFFD97706),
+                                        Color(0xFFF59E0B),
+                                        Color(0xFFFDE68A),
+                                      ],
                                     ),
-                                  ],
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(0xFFF59E0B).withValues(alpha: 0.65),
+                                        blurRadius: 10,
+                                        spreadRadius: 1,
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
