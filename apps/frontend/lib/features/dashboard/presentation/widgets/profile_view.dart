@@ -4,11 +4,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../auth/domain/user_model.dart';
 import '../../data/cultivation_repository.dart';
 import 'cultivation_realms_modal.dart';
-import 'penalty_dialog.dart';
 import 'profile/account_settings_card.dart';
 import 'profile/cultivation_progress_card.dart';
 import 'profile/profile_header_card.dart';
-import '../../../common/presentation/screens/server_waiting_screen.dart';
 
 class ProfileView extends StatefulWidget {
   final UserModel user;
@@ -174,89 +172,62 @@ class _ProfileViewState extends State<ProfileView> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 14),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  activeThumbColor: const Color(0xFFF2C465),
-                  title: const Text('Hiệu ứng âm thanh tu tiên', style: TextStyle(color: Colors.white, fontSize: 13.5)),
-                  value: true,
-                  onChanged: (val) {},
-                ),
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  activeThumbColor: const Color(0xFFF2C465),
-                  title: const Text('Thông báo nhắc nhở rèn luyện', style: TextStyle(color: Colors.white, fontSize: 13.5)),
-                  value: true,
-                  onChanged: (val) {},
-                ),
-                const Divider(color: Color(0xFF1E2F40)),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444).withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.bolt_rounded, color: Color(0xFFEF4444), size: 18),
+                const SizedBox(height: 24),
+                Center(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF2C465).withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: const Color(0xFFF2C465).withValues(alpha: 0.4),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.construction_rounded,
+                          color: Color(0xFFF2C465),
+                          size: 26,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Tính năng đang được hoàn thiện',
+                        style: TextStyle(
+                          color: Color(0xFFFFF6DF),
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'Các tùy chọn trong Cài Đặt Hệ Thống đang được tối ưu và sẽ sớm ra mắt đạo hữu!',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Color(0xFF8BA5BA),
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  title: const Text('Thử nghiệm Thiên Đạo Phạt', style: TextStyle(color: Color(0xFFFCA5A5), fontSize: 13, fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Mô phỏng bỏ lỡ nhiệm vụ để kiểm tra tụt tầng', style: TextStyle(color: Color(0xFF8BA5BA), fontSize: 10.5)),
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    final penalty = await _cultivationRepository.penalizeExp(
-                      uncompletedCount: 2,
-                      customPenalty: 400,
-                      reason: 'Thử nghiệm Thiên Đạo trừng phạt do bỏ lỡ nhiệm vụ!',
-                    );
-                    if (mounted) {
-                      PenaltyDialog.show(
-                        context,
-                        uncompletedCount: (penalty['uncompletedCount'] as num?)?.toInt() ?? 2,
-                        penaltyExp: (penalty['penaltyExp'] as num?)?.toInt() ?? 400,
-                        reason: penalty['reason']?.toString() ?? 'Chưa hoàn thành nhiệm vụ',
-                        demotedLevel: penalty['demotedLevel'] == true,
-                        demotedRealm: penalty['demotedRealm'] == true,
-                        previousRealmName: penalty['previousRealmName']?.toString() ?? '',
-                        previousSubRealm: (penalty['previousSubRealm'] as num?)?.toInt() ?? 1,
-                        currentRealmName: penalty['currentRealmName']?.toString() ?? '',
-                        currentSubRealm: (penalty['currentSubRealm'] as num?)?.toInt() ?? 1,
-                        remainingExp: (penalty['profile']?['currentExp'] as num?)?.toInt(),
-                        maxExp: (penalty['profile']?['maxExp'] as num?)?.toInt(),
-                        onDismiss: () {
-                          _loadProfileData();
-                        },
-                      );
-                    }
-                  },
                 ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.cloud_sync_rounded, color: Color(0xFFFBBF24), size: 18),
-                  ),
-                  title: const Text('Xem Màn Hình Đợi Server (Render Free)', style: TextStyle(color: Color(0xFFFDE68A), fontSize: 13, fontWeight: FontWeight.bold)),
-                  subtitle: const Text('Giao diện thông báo vui lòng đợi server khởi chạy', style: TextStyle(color: Color(0xFF8BA5BA), fontSize: 10.5)),
-                  onTap: () {
-                    Navigator.pop(ctx);
-                    ServerWaitingScreen.showPreview(context);
-                  },
-                ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,
+                  height: 44,
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(ctx),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF8BA5BA),
                       side: const BorderSide(color: Color(0xFF38BDF8)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: const Text('Đóng'),
                   ),

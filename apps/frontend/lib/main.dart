@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'core/constants/api_constants.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/data/auth_repository.dart';
@@ -33,7 +34,16 @@ class _TienLoAppState extends State<TienLoApp> {
   }
 
   Future<void> _checkInitialState() async {
-    // 1. Kiểm tra tài khoản đã lưu
+    // 1. Tải URL cấu hình nếu có trong SharedPreferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedUrl = prefs.getString('custom_backend_url');
+      if (savedUrl != null && savedUrl.trim().isNotEmpty) {
+        ApiConstants.customBaseUrl = savedUrl.trim();
+      }
+    } catch (_) {}
+
+    // 2. Kiểm tra tài khoản đã lưu
     final savedUser = await _authRepository.getSavedUser();
 
     // Bỏ qua kiểm tra server nếu đang chạy widget test
@@ -49,11 +59,13 @@ class _TienLoAppState extends State<TienLoApp> {
       return;
     }
 
-    // 2. Thử kiểm tra máy chủ backend có đang hoạt động hay đang ngủ đông (Render Cold Start)
+    // 3. Kiểm tra xem server đã mở sẵn hay chưa:
+    // Nếu server mở sẵn rồi -> vào thẳng app, KHÔNG hiện màn hình đợi
+    // Chỉ khi server chưa mở / đang cold-start -> mới hiện màn hình đợi
     bool serverAwake = false;
     try {
       final uri = Uri.parse('${ApiConstants.defaultBaseUrl}${ApiConstants.health}');
-      final res = await http.get(uri).timeout(const Duration(milliseconds: 2500));
+      final res = await http.get(uri).timeout(const Duration(milliseconds: 2000));
       serverAwake = (res.statusCode >= 200 && res.statusCode < 300);
     } catch (_) {
       serverAwake = false;
@@ -63,7 +75,6 @@ class _TienLoAppState extends State<TienLoApp> {
       setState(() {
         _currentUser = savedUser;
         _isCheckingInitial = false;
-        // Nếu server chưa thức tỉnh (ví dụ Render Cold Start), bật màn hình chờ khởi động
         _isServerStarting = !serverAwake;
       });
     }

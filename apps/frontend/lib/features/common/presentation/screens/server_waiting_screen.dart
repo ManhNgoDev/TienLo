@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/api_constants.dart';
 
 class ServerWaitingScreen extends StatefulWidget {
@@ -38,11 +39,10 @@ class _ServerWaitingScreenState extends State<ServerWaitingScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _animController;
   Timer? _pingTimer;
-  Timer? _secondTimer;
 
-  int _elapsedSeconds = 0;
   bool _isChecking = false;
   bool _isSuccess = false;
+  int _attemptCount = 0;
   String _statusMessage = 'Đang phóng phi kiếm thức tỉnh máy chủ...';
 
   @override
@@ -53,79 +53,139 @@ class _ServerWaitingScreenState extends State<ServerWaitingScreen>
       duration: const Duration(seconds: 8),
     )..repeat();
 
-    _startTimers();
+    _startHealthPolling();
   }
 
-  void _startTimers() {
-    // Đếm giây hiển thị cho đạo hữu
-    _secondTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted || _isSuccess) return;
-      setState(() {
-        _elapsedSeconds++;
-        if (_elapsedSeconds < 15) {
-          _statusMessage = 'Đang phóng phi kiếm thức tỉnh máy chủ...';
-        } else if (_elapsedSeconds < 35) {
-          _statusMessage = 'Máy chủ Render đang nạp tài nguyên và khởi động...';
-        } else if (_elapsedSeconds < 65) {
-          _statusMessage = 'Đang thiết lập linh mạch kết nối Tiên Giới...';
-        } else {
-          _statusMessage = 'Sắp hoàn tất khởi động, xin kiên nhẫn một chút...';
-        }
-      });
-    });
-
-    // Thử ping ngay lần đầu
+  void _startHealthPolling() {
+    // 1. Thử ping ngay lập tức lần đầu
     _checkServer();
 
-    // Lặp lại ping mỗi 3.5 giây
-    _pingTimer = Timer.periodic(const Duration(milliseconds: 3500), (timer) {
+    // 2. Định kỳ lặp lại kiểm tra tín hiệu thực tế mỗi 2.5 giây
+    // Không dùng đếm ngược vì Render cold-start khởi động không cố định thời gian
+    _pingTimer = Timer.periodic(const Duration(milliseconds: 2500), (timer) {
       if (!mounted || _isSuccess) return;
       _checkServer();
     });
   }
 
+  /// Logic kiểm tra thực tế xem máy chủ đã mở hoàn tất hay chưa qua /api/health
   Future<void> _checkServer() async {
     if (_isChecking || _isSuccess) return;
-    setState(() => _isChecking = true);
+    if (mounted) {
+      setState(() {
+        _isChecking = true;
+        _attemptCount++;
+        if (_attemptCount <= 3) {
+          _statusMessage = 'Đang kết nối tới máy chủ Render...';
+        } else if (_attemptCount <= 10) {
+          _statusMessage = 'Máy chủ Render đang nạp tài nguyên và khởi động...';
+        } else {
+          _statusMessage = 'Đang thiết lập linh mạch, sắp hoàn tất khởi động...';
+        }
+      });
+    }
 
     try {
       final uri = Uri.parse('${ApiConstants.defaultBaseUrl}${ApiConstants.health}');
-      final res = await http.get(uri).timeout(const Duration(seconds: 4));
+      final res = await http.get(uri).timeout(const Duration(seconds: 3));
 
+      // Máy chủ đã mở hoàn tất khi trả về HTTP 200 OK!
       if (res.statusCode >= 200 && res.statusCode < 300) {
         if (!mounted) return;
         setState(() {
           _isSuccess = true;
-          _statusMessage = 'Máy chủ Tiên Giới đã khởi chạy thành công! Đang tiến nhập...';
+          _statusMessage = 'Máy chủ Tiên Giới đã khởi chạy hoàn tất! Đang tiến nhập...';
         });
 
-        // Chờ 1 giây để đạo hữu kịp ngắm thông báo thành công
-        await Future.delayed(const Duration(milliseconds: 1100));
+        _pingTimer?.cancel();
+
+        // Chờ 600ms để hiệu ứng xanh lục báo thành công hiển thị trọn vẹn
+        await Future.delayed(const Duration(milliseconds: 600));
         if (mounted) {
           widget.onServerReady();
         }
         return;
       }
     } catch (_) {
-      // Server chưa khởi động xong (cold start), tiếp tục chờ
+      // Máy chủ chưa mở xong (đang cold-start / thức tỉnh), tiếp tục chờ lần ping tiếp theo
     } finally {
-      if (mounted) {
+      if (mounted && !_isSuccess) {
         setState(() => _isChecking = false);
       }
     }
   }
 
-  String _formatTimer(int seconds) {
-    final m = seconds ~/ 60;
-    final s = seconds % 60;
-    return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+  void _showConfigureUrlDialog() {
+    final textCtrl = TextEditingController(text: ApiConstants.defaultBaseUrl);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF091726),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(color: Color(0xFFC59A44), width: 1.2),
+        ),
+        title: const Text(
+          'Cấu Hình URL Render',
+          style: TextStyle(color: Color(0xFFFFF6DF), fontWeight: FontWeight.bold, fontSize: 16),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Nhập đường dẫn Backend trên Render của bạn (kèm /api):',
+              style: TextStyle(color: Color(0xFFBAC7D5), fontSize: 12),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: textCtrl,
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'https://tienlo-backend.onrender.com/api',
+                hintStyle: const TextStyle(color: Color(0xFF5A758D)),
+                filled: true,
+                fillColor: const Color(0xFF060F1A),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFFF2C465)),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy', style: TextStyle(color: Color(0xFF8BA5BA))),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final newUrl = textCtrl.text.trim();
+              Navigator.pop(ctx);
+              if (newUrl.isNotEmpty) {
+                ApiConstants.customBaseUrl = newUrl;
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setString('custom_backend_url', newUrl);
+                _checkServer();
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD97706),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Lưu & Thử Lại'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   void dispose() {
     _animController.dispose();
     _pingTimer?.cancel();
-    _secondTimer?.cancel();
     super.dispose();
   }
 
@@ -153,97 +213,40 @@ class _ServerWaitingScreenState extends State<ServerWaitingScreen>
             ),
           ),
 
-          // 2. Cinematic Dark Mist & Vignette Overlay
+          // 2. Dark fantasy mist overlays
+          Positioned.fill(
+            child: Container(
+              color: const Color(0xFF040810).withValues(alpha: 0.82),
+            ),
+          ),
+
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
-                gradient: LinearGradient(
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 1.1,
                   colors: [
-                    Colors.black.withValues(alpha: 0.65),
-                    const Color(0xFF070B12).withValues(alpha: 0.70),
-                    const Color(0xFF070B12).withValues(alpha: 0.94),
+                    Colors.transparent,
+                    const Color(0xFF020408).withValues(alpha: 0.95),
                   ],
-                  stops: const [0.0, 0.45, 1.0],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
                 ),
               ),
             ),
           ),
 
-          // 3. Nút Đóng (khi đang ở chế độ Xem Trước / Thử Nghiệm)
-          if (widget.isTestingPreview)
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 12,
-              right: 18,
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).pop(),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF141F30).withValues(alpha: 0.8),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFE5B869).withValues(alpha: 0.5)),
-                  ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.close_rounded, color: Color(0xFFFDE68A), size: 16),
-                      SizedBox(width: 4),
-                      Text('Đóng xem trước', style: TextStyle(color: Color(0xFFFDE68A), fontSize: 11.5)),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-          // 4. Foreground Content
+          // 3. Main Center Content
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 440),
+                  constraints: const BoxConstraints(maxWidth: 480),
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Badge Header
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF141F30).withValues(alpha: 0.85),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: const Color(0xFFE5B869).withValues(alpha: 0.6),
-                            width: 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFE5B869).withValues(alpha: 0.25),
-                              blurRadius: 10,
-                            ),
-                          ],
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.bolt_rounded, color: Color(0xFFF2C465), size: 16),
-                            SizedBox(width: 6),
-                            Text(
-                              'TIÊN GIỚI KHỞI ĐỘNG',
-                              style: TextStyle(
-                                color: Color(0xFFFDE68A),
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 2.0,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-
-                      // Animated Rotating Mandala Aura
+                      // Celestial Mandala Animation Ring
                       Stack(
                         alignment: Alignment.center,
                         children: [
@@ -404,7 +407,7 @@ class _ServerWaitingScreenState extends State<ServerWaitingScreen>
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
-                                          _isSuccess ? 'ĐÃ KẾT NỐI' : 'ĐANG THỨC TỈNH...',
+                                          _isSuccess ? 'MÁY CHỦ SẴN SÀNG' : 'ĐANG KẾT NỐI MÁY CHỦ...',
                                           style: TextStyle(
                                             color: _isSuccess ? const Color(0xFF6EE7B7) : const Color(0xFFFBBF24),
                                             fontSize: 11,
@@ -414,13 +417,33 @@ class _ServerWaitingScreenState extends State<ServerWaitingScreen>
                                         ),
                                       ],
                                     ),
-                                    Text(
-                                      _formatTimer(_elapsedSeconds),
-                                      style: GoogleFonts.robotoMono(
-                                        color: const Color(0xFFFDE68A),
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    Row(
+                                      children: [
+                                        if (_isChecking && !_isSuccess)
+                                          const SizedBox(
+                                            width: 12,
+                                            height: 12,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 1.6,
+                                              valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFBBF24)),
+                                            ),
+                                          )
+                                        else
+                                          Icon(
+                                            _isSuccess ? Icons.check_circle_outline : Icons.wifi_tethering_rounded,
+                                            size: 14,
+                                            color: _isSuccess ? const Color(0xFF10B981) : const Color(0xFFFBBF24),
+                                          ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          _isSuccess ? '100% OK' : (_isChecking ? 'Kiểm tra...' : 'Tự động ping'),
+                                          style: TextStyle(
+                                            color: _isSuccess ? const Color(0xFF6EE7B7) : const Color(0xFFFDE68A),
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -452,7 +475,7 @@ class _ServerWaitingScreenState extends State<ServerWaitingScreen>
                                 ),
                                 const SizedBox(height: 8),
                                 const Text(
-                                  '💡 Render Free Tier sẽ tự động tạm ngủ khi không có truy cập. Khi có đạo hữu vào, máy chủ mất khoảng 30s - 1.5 phút để khởi động lại.',
+                                  '💡 Render Free Tier sẽ tự động tạm ngủ khi không có truy cập. Hệ thống đang liên tục kiểm tra tín hiệu thực tế; ngay khi máy chủ khởi động hoàn tất sẽ tự động tiến nhập ngay lập tức!',
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     color: Color(0xFF64748B),
@@ -551,6 +574,17 @@ class _ServerWaitingScreenState extends State<ServerWaitingScreen>
                               ),
                             ],
                           ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Nút Cấu Hình URL Render
+                      TextButton.icon(
+                        onPressed: _showConfigureUrlDialog,
+                        icon: const Icon(Icons.settings_ethernet_rounded, size: 16, color: Color(0xFF64748B)),
+                        label: Text(
+                          'Cấu hình URL Render (${ApiConstants.defaultBaseUrl})',
+                          style: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
                         ),
                       ),
                     ],
