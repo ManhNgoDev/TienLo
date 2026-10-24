@@ -54,12 +54,34 @@ export class CampaignsService {
     }
   }
 
+  private extractDurationDays(goalPrompt: string, defaultDays: number = 14): number {
+    const lower = goalPrompt.toLowerCase();
+    if (lower.includes('nửa tháng') || lower.includes('nua thang')) return 15;
+    if (lower.includes('một tháng') || lower.includes('mot thang')) return 30;
+    if (lower.includes('hai tháng') || lower.includes('hai thang')) return 60;
+    if (lower.includes('ba tháng') || lower.includes('ba thang')) return 90;
+    if (lower.includes('một tuần') || lower.includes('mot tuan')) return 7;
+    if (lower.includes('hai tuần') || lower.includes('hai tuan')) return 14;
+    if (lower.includes('ba tuần') || lower.includes('ba tuan')) return 21;
+    if (lower.includes('bốn tuần') || lower.includes('bon tuan')) return 28;
+
+    const weekMatch = lower.match(/(\d+)\s*(tuần|tuan)/);
+    if (weekMatch) return parseInt(weekMatch[1], 10) * 7;
+    const monthMatch = lower.match(/(\d+)\s*(tháng|thang)/);
+    if (monthMatch) return parseInt(monthMatch[1], 10) * 30;
+    const dayMatch = lower.match(/(\d+)\s*(ngày|ngay|ng)/);
+    if (dayMatch) return parseInt(dayMatch[1], 10);
+    return defaultDays;
+  }
+
   async generateAiCampaign(
     userId: string,
     goalPrompt: string,
-    durationDays: number = 30,
+    durationDays: number = 14,
   ): Promise<GeneratedCampaign> {
     const campaignId = `camp-${Date.now()}`;
+    const calculatedDuration = this.extractDurationDays(goalPrompt, durationDays);
+    let finalDuration = calculatedDuration;
     let campaignTitle = `Chiến Dịch: ${goalPrompt}`;
     let rawQuests: Array<{
       title: string;
@@ -75,28 +97,34 @@ export class CampaignsService {
     if (this.genAiClient) {
       try {
         const prompt = `Bạn là "Thiên Đạo Trí Tuệ" của ứng dụng phát triển bản thân phong cách Tu Tiên RPG "Tiên Lộ".
-Tu sĩ gửi mục tiêu rèn luyện đời thực: "${goalPrompt}" trong thời gian dự kiến ${durationDays} ngày.
-Hãy phân tích mục tiêu thành một kế hoạch tu tiên sắc bén, thực tế và khả thi.
-Tạo 3 đến 5 nhiệm vụ hàng ngày hoặc thử thách để tu sĩ thực hiện.
+Tu sĩ gửi mục tiêu rèn luyện đời thực: "${goalPrompt}".
+Thời gian chiến dịch được xác định là ${calculatedDuration} ngày (ví dụ: '2 tuần' = 14 ngày, '3 tháng' = 90 ngày).
+Chiến dịch sẽ duy trì liên tục trong suốt ${calculatedDuration} ngày. MỖI NGÀY tu sĩ sẽ có đúng 3 NHIỆM VỤ HÀNG NGÀY cần hoàn thành:
+1. Nhiệm vụ 1: Độ khó EASY (DỄ) - Dinh dưỡng, nước uống hoặc thói quen nền tảng
+2. Nhiệm vụ 2: Độ khó MEDIUM (VỪA) - Bài tập chính hoặc hành động trọng tâm hôm nay
+3. Nhiệm vụ 3: Độ khó HARD (KHÓ) - Thử thách bứt phá hoặc kỷ luật nâng cao
 
 Quy định phần thưởng:
-- EASY (Luyện Thể - Dễ): 50-100 Linh Lực (EXP), 5-10 Linh Thạch
-- MEDIUM (Trúc Cơ - Vừa): 150-300 Linh Lực (EXP), 20-40 Linh Thạch
-- HARD (Ngưng Đan - Khó): 400-800 Linh Lực (EXP), 50-100 Linh Thạch
-- BREAKTHROUGH (Thiên Kiếp - Đại Thử Thách): 1500-3000 Linh Lực (EXP), 200-500 Linh Thạch
+- EASY (Dễ): 80-120 Linh Lực (EXP), 10-15 Nguyên Thạch
+- MEDIUM (Vừa): 150-250 Linh Lực (EXP), 20-30 Nguyên Thạch
+- HARD (Khó): 300-500 Linh Lực (EXP), 40-60 Nguyên Thạch
 
-iconType chỉ chọn trong danh sách: "fitness", "water", "walk", "meditation", "study", "medal".
+LƯU Ý QUAN TRỌNG:
+- Độ khó ("difficulty") CHỈ được là một trong 3 giá trị: "EASY", "MEDIUM", "HARD". Tuyệt đối KHÔNG ghi cảnh giới tu tiên như Trúc Cơ, Luyện Thể vào độ khó hay phụ đề.
+- Mỗi ngày đúng 3 nhiệm vụ.
+- iconType chỉ chọn trong danh sách: "fitness", "water", "walk", "meditation", "study", "medal".
 
 Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đúng cấu trúc sau:
 {
   "campaignTitle": "Tên chiến dịch phong cách tiên hiệp hùng tráng",
+  "durationDays": ${calculatedDuration},
   "quests": [
     {
       "title": "Tên hành động ngắn gọn",
-      "subtitle": "Hướng dẫn cụ thể (vd: 3 hiệp · Cường độ vừa)",
-      "difficulty": "EASY" | "MEDIUM" | "HARD" | "BREAKTHROUGH",
-      "expReward": 200,
-      "stoneReward": 25,
+      "subtitle": "Hướng dẫn cụ thể cho ngày rèn luyện",
+      "difficulty": "EASY" | "MEDIUM" | "HARD",
+      "expReward": 100,
+      "stoneReward": 15,
       "iconType": "fitness",
       "isDaily": true
     }
@@ -114,8 +142,11 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
         const text = response.text?.trim() || '';
         const parsed = JSON.parse(text);
         if (parsed.campaignTitle) campaignTitle = parsed.campaignTitle;
+        if (parsed.durationDays && typeof parsed.durationDays === 'number') {
+          finalDuration = parsed.durationDays;
+        }
         if (Array.isArray(parsed.quests) && parsed.quests.length > 0) {
-          rawQuests = parsed.quests;
+          rawQuests = parsed.quests.slice(0, 3);
         }
       } catch (err: any) {
         this.logger.warn(`Lỗi khi gọi Gemini AI: ${err.message}. Chuyển sang quy tắc nội bộ.`);
@@ -125,11 +156,11 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
     // 2. Fallback sang bộ quy tắc thông minh nếu AI không khả dụng hoặc lỗi JSON
     if (rawQuests.length === 0) {
       rawQuests = this.generateFallbackQuests(goalPrompt);
-      campaignTitle = `Tu Tiên Luyện Thể: ${goalPrompt}`;
+      campaignTitle = `Tiên Lộ Tu Thân: ${goalPrompt}`;
     }
 
-    // 3. Chuẩn hóa danh sách Quests
-    const quests: GeneratedQuest[] = rawQuests.map((q, idx) => {
+    // 3. Chuẩn hóa danh sách Quests (luôn đảm bảo 3 nhiệm vụ mỗi ngày)
+    const quests: GeneratedQuest[] = rawQuests.slice(0, 3).map((q, idx) => {
       let diff = QuestDifficulty.MEDIUM;
       if (q.difficulty === 'EASY') diff = QuestDifficulty.EASY;
       else if (q.difficulty === 'HARD') diff = QuestDifficulty.HARD;
@@ -143,12 +174,12 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
         id: `q-${Date.now()}-${idx}`,
         campaignId,
         title: q.title,
-        subtitle: q.subtitle || `${rewardTier.label} · Hàng ngày`,
+        subtitle: q.subtitle || 'Rèn luyện hàng ngày',
         difficulty: diff,
         expReward,
         stoneReward,
         iconType: q.iconType || 'fitness',
-        isDaily: q.isDaily !== false,
+        isDaily: true,
         isCompleted: false,
         isXpClaimed: false,
       };
@@ -159,7 +190,7 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
       userId,
       title: campaignTitle,
       goalPrompt,
-      durationDays,
+      durationDays: finalDuration,
       status: 'ACTIVE',
       quests,
       createdAt: new Date().toISOString(),
@@ -312,22 +343,48 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
     iconType: string;
     isDaily: boolean;
   }> {
-    const isFitness = /cơ|bụng|múi|gym|chạy|thể dục|cân|nặng|workout/i.test(prompt);
+    const lower = prompt.toLowerCase();
+    const isWeightGain = /tăng\s*(thêm)?\s*(\d+)?\s*(cân|kg|ký)|bulk|tăng\s*cân/i.test(lower);
+    const isFitness = /cơ|bụng|múi|gym|chạy|thể dục|cân|nặng|workout|mỡ|giảm/i.test(lower);
+    const isStudy = /học|đọc|sách|code|lập trình|thi|tiếng anh|nghiên cứu/i.test(lower);
 
-    if (isFitness) {
+    if (isWeightGain) {
       return [
         {
-          title: 'Tập Core & Plank 15 phút',
-          subtitle: '3 hiệp · Cường độ vừa',
+          title: 'Nạp 4-5 bữa ăn giàu dinh dưỡng',
+          subtitle: 'Bổ sung thặng dư calo, protein và tinh bột tốt suốt cả ngày',
+          difficulty: 'EASY',
+          expReward: 100,
+          stoneReward: 15,
+          iconType: 'fitness',
+          isDaily: true,
+        },
+        {
+          title: 'Tập tạ kích thích cơ bắp 30 phút',
+          subtitle: 'Tập các bài Compound (Squat, Deadlift) gia tăng đồng hóa',
           difficulty: 'MEDIUM',
-          expReward: 200,
+          expReward: 220,
           stoneReward: 25,
           iconType: 'fitness',
           isDaily: true,
         },
         {
-          title: 'Uống đủ 2L nước thanh lọc thể',
-          subtitle: 'Bổ sung nước suốt cả ngày',
+          title: 'Uống sinh tố dinh dưỡng & ngủ đủ 8 tiếng',
+          subtitle: 'Tối ưu quá trình hấp thu và tái tạo cơ bắp ban đêm',
+          difficulty: 'HARD',
+          expReward: 350,
+          stoneReward: 40,
+          iconType: 'medal',
+          isDaily: true,
+        },
+      ];
+    }
+
+    if (isFitness) {
+      return [
+        {
+          title: 'Uống đủ 2L nước lọc & hạn chế tối đa đường',
+          subtitle: 'Thanh lọc cơ thể, hỗ trợ chuyển hóa mỡ thừa',
           difficulty: 'EASY',
           expReward: 80,
           stoneReward: 10,
@@ -335,53 +392,85 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
           isDaily: true,
         },
         {
-          title: 'Đi bộ hoặc chạy 5.000 bước',
-          subtitle: 'Vận động đốt mỡ nhẹ',
+          title: 'Tập gập bụng & Plank 15 phút',
+          subtitle: '3 hiệp Plank & Crunch kích hoạt cơ múi bụng',
           difficulty: 'MEDIUM',
-          expReward: 160,
-          stoneReward: 20,
-          iconType: 'walk',
+          expReward: 200,
+          stoneReward: 25,
+          iconType: 'fitness',
           isDaily: true,
         },
         {
-          title: 'Đại Thử Thách: Hoàn thành 1 tuần không ăn vặt',
-          subtitle: 'Thiên Kiếp Thử Thách · Đốt mỡ tối đa',
-          difficulty: 'BREAKTHROUGH',
-          expReward: 1800,
-          stoneReward: 250,
+          title: 'Cardio hoặc chạy bộ 20 phút đốt mỡ',
+          subtitle: 'Duy trì nhịp tim đốt calo thâm hụt sau buổi tập',
+          difficulty: 'HARD',
+          expReward: 350,
+          stoneReward: 40,
+          iconType: 'walk',
+          isDaily: true,
+        },
+      ];
+    }
+
+    if (isStudy) {
+      return [
+        {
+          title: 'Đọc sách hoặc tài liệu 20 phút',
+          subtitle: 'Khởi động tư duy mỗi sáng bằng tri thức mới',
+          difficulty: 'EASY',
+          expReward: 80,
+          stoneReward: 10,
+          iconType: 'study',
+          isDaily: true,
+        },
+        {
+          title: 'Tập trung học sâu 45 phút Pomodoro',
+          subtitle: 'Tuyệt đối không lướt mạng xã hội, tập trung cao độ',
+          difficulty: 'MEDIUM',
+          expReward: 200,
+          stoneReward: 25,
+          iconType: 'study',
+          isDaily: true,
+        },
+        {
+          title: 'Thực hành làm bài tập hoặc viết code 30 phút',
+          subtitle: 'Ứng dụng trực tiếp kiến thức vừa học vào thực tế',
+          difficulty: 'HARD',
+          expReward: 350,
+          stoneReward: 40,
           iconType: 'medal',
-          isDaily: false,
+          isDaily: true,
         },
       ];
     }
 
     return [
       {
-        title: `Rèn luyện: ${prompt.slice(0, 30)}`,
-        subtitle: 'Khởi đầu ngày mới tập trung 25 phút',
-        difficulty: 'MEDIUM',
-        expReward: 180,
-        stoneReward: 20,
+        title: 'Hành động nhỏ khởi đầu ngày mới',
+        subtitle: 'Dành 20 phút hành động kiên trì cho mục tiêu',
+        difficulty: 'EASY',
+        expReward: 80,
+        stoneReward: 10,
         iconType: 'study',
         isDaily: true,
       },
       {
-        title: 'Tịnh tâm thiền định 10 phút',
-        subtitle: 'Thanh lọc tạp niệm trước khi tu luyện',
-        difficulty: 'EASY',
-        expReward: 75,
-        stoneReward: 10,
-        iconType: 'meditation',
+        title: 'Thực hiện cam kết rèn luyện hôm nay',
+        subtitle: 'Tập trung hoàn thành chỉ tiêu đề ra',
+        difficulty: 'MEDIUM',
+        expReward: 200,
+        stoneReward: 25,
+        iconType: 'fitness',
         isDaily: true,
       },
       {
-        title: 'Độ Kiếp: Tổng kết kết quả sau 7 ngày',
-        subtitle: 'Đánh giá chỉ số tiến bộ',
+        title: 'Thử thách bứt phá giới hạn',
+        subtitle: 'Nâng cao cường độ rèn luyện trong ngày',
         difficulty: 'HARD',
-        expReward: 600,
-        stoneReward: 80,
+        expReward: 350,
+        stoneReward: 40,
         iconType: 'medal',
-        isDaily: false,
+        isDaily: true,
       },
     ];
   }

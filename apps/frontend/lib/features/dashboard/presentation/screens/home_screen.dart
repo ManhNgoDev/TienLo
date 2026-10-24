@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../auth/domain/user_model.dart';
@@ -30,6 +32,48 @@ class QuestItem {
     this.isCompleted = false,
     this.isXpClaimed = false,
   });
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'subtitle': subtitle,
+    'xp': xp,
+    'spiritStones': spiritStones,
+    'difficulty': difficulty,
+    'iconCode': icon.codePoint,
+    'iconColor': iconColor.toARGB32(),
+    'isCompleted': isCompleted,
+    'isXpClaimed': isXpClaimed,
+  };
+
+  static IconData iconFromCode(int? code) {
+    if (code == null) return Icons.fitness_center_rounded;
+    if (code == Icons.restaurant_rounded.codePoint) return Icons.restaurant_rounded;
+    if (code == Icons.fitness_center_rounded.codePoint) return Icons.fitness_center_rounded;
+    if (code == Icons.bedtime_rounded.codePoint) return Icons.bedtime_rounded;
+    if (code == Icons.water_drop_outlined.codePoint) return Icons.water_drop_outlined;
+    if (code == Icons.directions_walk_rounded.codePoint) return Icons.directions_walk_rounded;
+    if (code == Icons.auto_awesome.codePoint) return Icons.auto_awesome;
+    if (code == Icons.military_tech_rounded.codePoint) return Icons.military_tech_rounded;
+    if (code == Icons.track_changes_rounded.codePoint) return Icons.track_changes_rounded;
+    // ignore: non_const_argument_for_const_parameter
+    return IconData(code, fontFamily: 'MaterialIcons');
+  }
+
+  factory QuestItem.fromJson(Map<String, dynamic> json) => QuestItem(
+    id: json['id']?.toString() ?? '',
+    title: json['title']?.toString() ?? '',
+    subtitle: json['subtitle']?.toString() ?? '',
+    xp: (json['xp'] as num?)?.toInt() ?? 100,
+    spiritStones: (json['spiritStones'] as num?)?.toInt() ?? 15,
+    difficulty: json['difficulty']?.toString() ?? 'MEDIUM',
+    icon: iconFromCode(json['iconCode'] as int?),
+    iconColor: json['iconColor'] != null
+        ? Color(json['iconColor'] as int)
+        : const Color(0xFFF2C465),
+    isCompleted: json['isCompleted'] == true,
+    isXpClaimed: json['isXpClaimed'] == true,
+  );
 }
 
 class HomeScreen extends StatefulWidget {
@@ -59,6 +103,11 @@ class _HomeScreenState extends State<HomeScreen> {
   CultivationProfileModel? _cultivationProfile;
   bool _isGeneratingAi = false;
 
+  String? _activeCampaignTitle;
+  int _campaignTotalDays = 14;
+  int _campaignCurrentDay = 1;
+  String? _campaignStartDate;
+
   final List<QuestItem> _quests = [];
 
   int get _completedCount => _quests.where((q) => q.isCompleted || q.isXpClaimed).length;
@@ -69,33 +118,58 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadCultivationProfile();
   }
 
+  int _extractDurationDays(String prompt) {
+    final lower = prompt.toLowerCase();
+    if (lower.contains('nửa tháng') || lower.contains('nua thang')) return 15;
+    if (lower.contains('một tháng') || lower.contains('mot thang')) return 30;
+    if (lower.contains('hai tháng') || lower.contains('hai thang')) return 60;
+    if (lower.contains('ba tháng') || lower.contains('ba thang')) return 90;
+    if (lower.contains('một tuần') || lower.contains('mot tuan')) return 7;
+    if (lower.contains('hai tuần') || lower.contains('hai tuan')) return 14;
+    if (lower.contains('ba tuần') || lower.contains('ba tuan')) return 21;
+    if (lower.contains('bốn tuần') || lower.contains('bon tuan')) return 28;
+
+    final weekMatch = RegExp(r'(\d+)\s*(tuần|tuan)').firstMatch(lower);
+    if (weekMatch != null) {
+      return int.parse(weekMatch.group(1)!) * 7;
+    }
+    final monthMatch = RegExp(r'(\d+)\s*(tháng|thang)').firstMatch(lower);
+    if (monthMatch != null) {
+      return int.parse(monthMatch.group(1)!) * 30;
+    }
+    final dayMatch = RegExp(r'(\d+)\s*(ngày|ngay|ng)').firstMatch(lower);
+    if (dayMatch != null) {
+      return int.parse(dayMatch.group(1)!);
+    }
+    return 14;
+  }
+
   Map<String, dynamic> _getDifficultyInfo(String diff) {
-    switch (diff.toUpperCase()) {
-      case 'EASY':
-        return {
-          'label': 'DỄ · Luyện Thể',
-          'color': const Color(0xFF10B981),
-          'bgColor': const Color(0xFF10B981).withValues(alpha: 0.15),
-        };
-      case 'HARD':
-        return {
-          'label': 'KHÓ · Ngưng Đan',
-          'color': const Color(0xFFF97316),
-          'bgColor': const Color(0xFFF97316).withValues(alpha: 0.15),
-        };
-      case 'BREAKTHROUGH':
-        return {
-          'label': 'THIÊN KIẾP · Đột Phá',
-          'color': const Color(0xFFA855F7),
-          'bgColor': const Color(0xFFA855F7).withValues(alpha: 0.18),
-        };
-      case 'MEDIUM':
-      default:
-        return {
-          'label': 'VỪA · Trúc Cơ',
-          'color': const Color(0xFFF59E0B),
-          'bgColor': const Color(0xFFF59E0B).withValues(alpha: 0.15),
-        };
+    final upper = diff.toUpperCase().trim();
+    if (upper == 'EASY' || upper.contains('DỄ') || upper.contains('LUYỆN THỂ')) {
+      return {
+        'label': 'DỄ',
+        'color': const Color(0xFF10B981),
+        'bgColor': const Color(0xFF10B981).withValues(alpha: 0.15),
+      };
+    } else if (upper == 'HARD' || upper.contains('KHÓ') || upper.contains('NGƯNG ĐAN')) {
+      return {
+        'label': 'KHÓ',
+        'color': const Color(0xFFF97316),
+        'bgColor': const Color(0xFFF97316).withValues(alpha: 0.15),
+      };
+    } else if (upper == 'BREAKTHROUGH' || upper.contains('ĐỘT PHÁ') || upper.contains('THIÊN KIẾP')) {
+      return {
+        'label': 'ĐỘT PHÁ',
+        'color': const Color(0xFFA855F7),
+        'bgColor': const Color(0xFFA855F7).withValues(alpha: 0.18),
+      };
+    } else {
+      return {
+        'label': 'VỪA',
+        'color': const Color(0xFFF59E0B),
+        'bgColor': const Color(0xFFF59E0B).withValues(alpha: 0.15),
+      };
     }
   }
 
@@ -125,6 +199,7 @@ class _HomeScreenState extends State<HomeScreen> {
     subtitle = subtitle
         .replaceAll('Chiến dịch tu tiên mới · Hàng ngày', '')
         .replaceAll('Chiến dịch tu tiên mới', '')
+        .replaceAll(RegExp(r'^(Luyện Thể|Trúc Cơ|Ngưng Đan|Thiên Kiếp|Đột Phá|Dễ|Vừa|Khó)\s*·\s*', caseSensitive: false), '')
         .trim();
     if (subtitle.isEmpty) {
       subtitle = 'Mục tiêu rèn luyện hàng ngày';
@@ -146,42 +221,53 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<QuestItem> _analyzeGoalAndCreateQuests(String prompt) {
     final lower = prompt.toLowerCase();
-    final bool isFitness = lower.contains('cơ') ||
-        lower.contains('bụng') ||
-        lower.contains('múi') ||
-        lower.contains('gym') ||
-        lower.contains('chạy') ||
-        lower.contains('thể dục') ||
-        lower.contains('cân') ||
-        lower.contains('workout') ||
-        lower.contains('bước');
-
-    final bool isStudy = lower.contains('học') ||
-        lower.contains('đọc') ||
-        lower.contains('sách') ||
-        lower.contains('code') ||
-        lower.contains('lập trình') ||
-        lower.contains('thi') ||
-        lower.contains('tiếng anh');
+    final bool isWeightGain = RegExp(r'tăng\s*(thêm)?\s*(\d+)?\s*(cân|kg|ký)|bulk|tăng\s*cân').hasMatch(lower);
+    final bool isFitness = RegExp(r'cơ|bụng|múi|gym|chạy|thể dục|cân|nặng|workout|mỡ|giảm').hasMatch(lower);
+    final bool isStudy = RegExp(r'học|đọc|sách|code|lập trình|thi|tiếng anh|nghiên cứu').hasMatch(lower);
 
     final now = DateTime.now().millisecondsSinceEpoch;
 
-    if (isFitness) {
+    if (isWeightGain) {
       return [
         QuestItem(
           id: 'q-$now-1',
-          title: 'Tập gập bụng & Plank 15 phút',
-          subtitle: '3 hiệp · Nghỉ 45s giữa các hiệp',
-          xp: 180,
-          spiritStones: 20,
+          title: 'Nạp 4-5 bữa ăn giàu dinh dưỡng',
+          subtitle: 'Bổ sung thặng dư calo, protein và tinh bột tốt suốt cả ngày',
+          xp: 100,
+          spiritStones: 15,
+          difficulty: 'EASY',
+          icon: Icons.restaurant_rounded,
+          iconColor: const Color(0xFF10B981),
+        ),
+        QuestItem(
+          id: 'q-$now-2',
+          title: 'Tập tạ kích thích cơ bắp 30 phút',
+          subtitle: 'Tập các bài Compound (Squat, Deadlift) gia tăng đồng hóa',
+          xp: 220,
+          spiritStones: 25,
           difficulty: 'MEDIUM',
           icon: Icons.fitness_center_rounded,
           iconColor: const Color(0xFFF2C465),
         ),
         QuestItem(
-          id: 'q-$now-2',
-          title: 'Uống đủ 2L nước lọc',
-          subtitle: 'Thanh lọc cơ thể, hỗ trợ chuyển hóa mỡ',
+          id: 'q-$now-3',
+          title: 'Uống sinh tố dinh dưỡng & ngủ đủ 8 tiếng',
+          subtitle: 'Tối ưu quá trình hấp thu và tái tạo cơ bắp ban đêm',
+          xp: 350,
+          spiritStones: 40,
+          difficulty: 'HARD',
+          icon: Icons.bedtime_rounded,
+          iconColor: const Color(0xFFF97316),
+        ),
+      ];
+    }
+
+    if (isFitness) {
+      return [
+        QuestItem(
+          id: 'q-$now-1',
+          title: 'Uống đủ 2L nước lọc & hạn chế tối đa đường',
+          subtitle: 'Thanh lọc cơ thể, hỗ trợ chuyển hóa mỡ thừa',
           xp: 80,
           spiritStones: 10,
           difficulty: 'EASY',
@@ -189,129 +275,180 @@ class _HomeScreenState extends State<HomeScreen> {
           iconColor: const Color(0xFF38BDF8),
         ),
         QuestItem(
-          id: 'q-$now-3',
-          title: 'Đi bộ hoặc chạy 5.000 bước',
-          subtitle: 'Vận động đốt mỡ nhẹ nhàng',
-          xp: 160,
-          spiritStones: 18,
+          id: 'q-$now-2',
+          title: 'Tập gập bụng & Plank 15 phút',
+          subtitle: '3 hiệp Plank & Crunch kích hoạt cơ múi bụng',
+          xp: 200,
+          spiritStones: 25,
           difficulty: 'MEDIUM',
-          icon: Icons.directions_walk_rounded,
-          iconColor: const Color(0xFF34D399),
+          icon: Icons.fitness_center_rounded,
+          iconColor: const Color(0xFFF2C465),
         ),
         QuestItem(
-          id: 'q-$now-4',
-          title: 'Kiểm soát calo & ăn đủ protein',
-          subtitle: 'Hạn chế đường và đồ chiên rán',
-          xp: 220,
-          spiritStones: 25,
+          id: 'q-$now-3',
+          title: 'Cardio hoặc chạy bộ 20 phút đốt mỡ',
+          subtitle: 'Duy trì nhịp tim đốt calo thâm hụt sau buổi tập',
+          xp: 350,
+          spiritStones: 40,
           difficulty: 'HARD',
-          icon: Icons.restaurant_rounded,
+          icon: Icons.directions_walk_rounded,
           iconColor: const Color(0xFFF97316),
         ),
-        QuestItem(
-          id: 'q-$now-5',
-          title: 'Đại Thử Thách: Duy trì 7 ngày kiên trì',
-          subtitle: 'Thiên Kiếp Thử Thách · Đột phá giới hạn',
-          xp: 1500,
-          spiritStones: 200,
-          difficulty: 'BREAKTHROUGH',
-          icon: Icons.military_tech_rounded,
-          iconColor: const Color(0xFFA855F7),
-        ),
       ];
-    } else if (isStudy) {
+    }
+
+    if (isStudy) {
       return [
         QuestItem(
           id: 'q-$now-1',
-          title: 'Tập trung học tập 25 phút Pomodoro',
-          subtitle: 'Không mạng xã hội · Tập trung tối đa',
-          xp: 150,
-          spiritStones: 15,
-          difficulty: 'MEDIUM',
+          title: 'Đọc sách hoặc tài liệu 20 phút',
+          subtitle: 'Khởi động tư duy mỗi sáng bằng tri thức mới',
+          xp: 80,
+          spiritStones: 10,
+          difficulty: 'EASY',
           icon: Icons.menu_book_rounded,
           iconColor: const Color(0xFF38BDF8),
         ),
         QuestItem(
           id: 'q-$now-2',
-          title: 'Ghi chép 3 ý tưởng trọng tâm',
-          subtitle: 'Hệ thống hóa kiến thức vào sổ tay',
-          xp: 80,
-          spiritStones: 10,
-          difficulty: 'EASY',
-          icon: Icons.edit_note_rounded,
-          iconColor: const Color(0xFF34D399),
+          title: 'Tập trung học sâu 45 phút Pomodoro',
+          subtitle: 'Tuyệt đối không lướt mạng xã hội, tập trung cao độ',
+          xp: 200,
+          spiritStones: 25,
+          difficulty: 'MEDIUM',
+          icon: Icons.auto_awesome,
+          iconColor: const Color(0xFFF59E0B),
         ),
         QuestItem(
           id: 'q-$now-3',
-          title: 'Thực hành áp dụng kiến thức 30 phút',
-          subtitle: 'Luyện bài tập hoặc thực hành dự án',
-          xp: 260,
-          spiritStones: 30,
+          title: 'Thực hành làm bài tập hoặc viết code 30 phút',
+          subtitle: 'Ứng dụng trực tiếp kiến thức vừa học vào thực tế',
+          xp: 350,
+          spiritStones: 40,
           difficulty: 'HARD',
           icon: Icons.code_rounded,
           iconColor: const Color(0xFFF97316),
         ),
-        QuestItem(
-          id: 'q-$now-4',
-          title: 'Đại Thử Thách: Hoàn thành mục tiêu tuần',
-          subtitle: 'Thiên Kiếp Thử Thách · Đánh giá kiến thức',
-          xp: 1200,
-          spiritStones: 150,
-          difficulty: 'BREAKTHROUGH',
-          icon: Icons.military_tech_rounded,
-          iconColor: const Color(0xFFA855F7),
-        ),
-      ];
-    } else {
-      return [
-        QuestItem(
-          id: 'q-$now-1',
-          title: 'Hành động nhỏ khởi đầu ngày mới',
-          subtitle: 'Dành 20 phút hành động kiên trì',
-          xp: 120,
-          spiritStones: 15,
-          difficulty: 'EASY',
-          icon: Icons.auto_awesome,
-          iconColor: const Color(0xFFF2C465),
-        ),
-        QuestItem(
-          id: 'q-$now-2',
-          title: 'Thực hiện cam kết rèn luyện',
-          subtitle: 'Tập trung hoàn thành chỉ tiêu đề ra',
-          xp: 220,
-          spiritStones: 25,
-          difficulty: 'MEDIUM',
-          icon: Icons.track_changes_rounded,
-          iconColor: const Color(0xFF38BDF8),
-        ),
-        QuestItem(
-          id: 'q-$now-3',
-          title: 'Đại Thử Thách: Tổng kết và đột phá',
-          subtitle: 'Ghi nhận tiến độ và nâng tầm mục tiêu',
-          xp: 500,
-          spiritStones: 60,
-          difficulty: 'HARD',
-          icon: Icons.insights_rounded,
-          iconColor: const Color(0xFFF97316),
-        ),
       ];
     }
+
+    return [
+      QuestItem(
+        id: 'q-$now-1',
+        title: 'Hành động nhỏ khởi đầu ngày mới',
+        subtitle: 'Dành 20 phút hành động kiên trì cho mục tiêu',
+        xp: 80,
+        spiritStones: 10,
+        difficulty: 'EASY',
+        icon: Icons.auto_awesome,
+        iconColor: const Color(0xFF10B981),
+      ),
+      QuestItem(
+        id: 'q-$now-2',
+        title: 'Thực hiện cam kết rèn luyện hôm nay',
+        subtitle: 'Tập trung hoàn thành chỉ tiêu đề ra',
+        xp: 200,
+        spiritStones: 25,
+        difficulty: 'MEDIUM',
+        icon: Icons.track_changes_rounded,
+        iconColor: const Color(0xFFF2C465),
+      ),
+      QuestItem(
+        id: 'q-$now-3',
+        title: 'Thử thách bứt phá giới hạn',
+        subtitle: 'Nâng cao cường độ rèn luyện trong ngày',
+        xp: 350,
+        spiritStones: 40,
+        difficulty: 'HARD',
+        icon: Icons.military_tech_rounded,
+        iconColor: const Color(0xFFF97316),
+      ),
+    ];
+  }
+
+  Future<void> _saveLocalQuests() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final listJson = _quests.map((q) => q.toJson()).toList();
+      await prefs.setString('daily_quests_cache', jsonEncode(listJson));
+    } catch (_) {}
   }
 
   Future<void> _loadCultivationProfile() async {
     try {
-      final profile = await _cultivationRepository.getProfile();
-      final campaigns = await _cultivationRepository.getUserCampaigns();
+      final prefs = await SharedPreferences.getInstance();
+      _activeCampaignTitle = prefs.getString('active_camp_title');
+      _campaignTotalDays = prefs.getInt('active_camp_duration') ?? 14;
+      _campaignStartDate = prefs.getString('active_camp_start_date');
 
+      final todayStr = DateTime.now().toIso8601String().split('T')[0];
+      final lastDate = prefs.getString('active_camp_last_date');
+
+      if (_campaignStartDate != null) {
+        try {
+          final start = DateTime.parse(_campaignStartDate!);
+          final now = DateTime.now();
+          final diff = DateTime(now.year, now.month, now.day)
+              .difference(DateTime(start.year, start.month, start.day))
+              .inDays;
+          _campaignCurrentDay = (diff + 1).clamp(1, _campaignTotalDays);
+        } catch (_) {}
+      }
+
+      // 1. Tải danh sách nhiệm vụ đã lưu trong SharedPreferences (nếu có)
+      final cachedJsonStr = prefs.getString('daily_quests_cache');
       final List<QuestItem> loadedQuests = [];
-      for (final camp in campaigns) {
-        final rawQuests = camp['quests'];
-        if (rawQuests is List) {
-          for (final q in rawQuests) {
-            loadedQuests.add(_mapToQuestItem(q));
+      if (cachedJsonStr != null && cachedJsonStr.isNotEmpty) {
+        try {
+          final List<dynamic> decoded = jsonDecode(cachedJsonStr);
+          for (final item in decoded) {
+            loadedQuests.add(QuestItem.fromJson(item));
+          }
+        } catch (_) {}
+      }
+
+      // 2. Nếu chưa có local cache, thử lấy từ backend campaigns
+      if (loadedQuests.isEmpty) {
+        final campaigns = await _cultivationRepository.getUserCampaigns();
+        if (campaigns.isNotEmpty) {
+          final activeCamp = campaigns.first;
+          if (_activeCampaignTitle == null) {
+            _activeCampaignTitle = activeCamp['title'];
+            _campaignTotalDays = activeCamp['durationDays'] ?? 14;
+          }
+          final rawQuests = activeCamp['quests'];
+          if (rawQuests is List) {
+            for (final q in rawQuests.take(3)) {
+              loadedQuests.add(_mapToQuestItem(q));
+            }
           }
         }
       }
+
+      // 3. Nếu vẫn rỗng nhưng đang có chiến dịch, phân tích tạo 3 nhiệm vụ
+      if (loadedQuests.isEmpty && _activeCampaignTitle != null) {
+        loadedQuests.addAll(_analyzeGoalAndCreateQuests(_activeCampaignTitle!));
+      }
+
+      // 4. Kiểm tra chuyển sang ngày mới:
+      // Khi sang ngày hôm sau (todayStr != lastDate):
+      // - Tự động làm mới/tạo mới 3 nhiệm vụ cho ngày hôm nay và reset trạng thái chưa hoàn thành
+      final bool isNewDay = lastDate != null && lastDate != todayStr;
+      if (isNewDay) {
+        if (_activeCampaignTitle != null) {
+          loadedQuests.clear();
+          loadedQuests.addAll(_analyzeGoalAndCreateQuests(_activeCampaignTitle!));
+        }
+        for (final q in loadedQuests) {
+          q.isCompleted = false;
+          q.isXpClaimed = false;
+        }
+        await prefs.setString('active_camp_last_date', todayStr);
+      } else if (lastDate == null) {
+        await prefs.setString('active_camp_last_date', todayStr);
+      }
+
+      final profile = await _cultivationRepository.getProfile();
 
       if (mounted) {
         setState(() {
@@ -319,9 +456,14 @@ class _HomeScreenState extends State<HomeScreen> {
           _currentExp = profile.currentExp;
           _maxExp = profile.maxExp;
           _spiritStones = profile.spiritStones;
-          _quests.clear();
-          _quests.addAll(loadedQuests);
+          if (loadedQuests.isNotEmpty) {
+            _quests.clear();
+            _quests.addAll(loadedQuests.take(3));
+          }
         });
+        if (isNewDay && _quests.isNotEmpty) {
+          _saveLocalQuests();
+        }
       }
     } catch (_) {}
   }
@@ -339,6 +481,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _spiritStones = (_spiritStones - quest.spiritStones).clamp(0, 100000);
       }
     });
+    _saveLocalQuests();
 
     if (!previousCompleted) {
       try {
@@ -356,7 +499,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Hoàn thành tu luyện! +${quest.xp} Linh Lực, +${quest.spiritStones} Linh Thạch',
+                      'Hoàn thành tu luyện! +${quest.xp} Linh Lực, +${quest.spiritStones} Nguyên Thạch',
                       style: const TextStyle(
                         color: Color(0xFFFDE68A),
                         fontWeight: FontWeight.bold,
@@ -379,40 +522,56 @@ class _HomeScreenState extends State<HomeScreen> {
     final text = _campaignController.text.trim();
     if (text.isEmpty || _isGeneratingAi) return;
 
+    final duration = _extractDurationDays(text);
+    final todayStr = DateTime.now().toIso8601String().split('T')[0];
+
     setState(() {
       _isGeneratingAi = true;
+      _activeCampaignTitle = text;
+      _campaignTotalDays = duration;
+      _campaignCurrentDay = 1;
+      _campaignStartDate = todayStr;
     });
 
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('active_camp_title', text);
+    await prefs.setInt('active_camp_duration', duration);
+    await prefs.setString('active_camp_start_date', todayStr);
+    await prefs.setString('active_camp_last_date', todayStr);
+
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        backgroundColor: Color(0xFF142436),
+      SnackBar(
+        backgroundColor: const Color(0xFF142436),
         content: Row(
           children: [
-            SizedBox(
+            const SizedBox(
               width: 16,
               height: 16,
               child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFF2C465)),
             ),
-            SizedBox(width: 12),
-            Text('Thiên Đạo AI đang phân tích và kiến tạo nhiệm vụ...'),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text('Thiên Đạo AI đang phân tích chiến dịch $duration ngày và tạo 3 nhiệm vụ mỗi ngày...'),
+            ),
           ],
         ),
-        duration: Duration(seconds: 3),
+        duration: const Duration(seconds: 4),
       ),
     );
 
     List<QuestItem> newQuests = [];
     try {
-      final campaignData = await _cultivationRepository.generateAiCampaign(text);
+      final campaignData = await _cultivationRepository.generateAiCampaign(text, durationDays: duration);
       if (campaignData != null && campaignData['quests'] != null) {
         final List<dynamic> rawQuests = campaignData['quests'];
-        for (var q in rawQuests) {
+        for (var q in rawQuests.take(3)) {
           newQuests.add(_mapToQuestItem(q));
         }
       }
     } catch (_) {}
 
-    // Nếu API mạng chưa khả dụng, dùng bộ suy diễn thông minh nội bộ
+    // Nếu API mạng chưa khả dụng, dùng bộ suy diễn thông minh nội bộ (đúng 3 nhiệm vụ mỗi ngày)
     if (newQuests.isEmpty) {
       newQuests = _analyzeGoalAndCreateQuests(text);
     }
@@ -421,15 +580,15 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _isGeneratingAi = false;
         _campaignController.clear();
-        for (var q in newQuests.reversed) {
-          _quests.insert(0, q);
-        }
+        _quests.clear();
+        _quests.addAll(newQuests.take(3));
       });
+      _saveLocalQuests();
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: const Color(0xFF0F261C),
-          content: Text('Thiên Đạo đã phân tích và tạo ${newQuests.length} nhiệm vụ tu tiên!'),
+          content: Text('Thiên Đạo đã khởi tạo chiến dịch $duration ngày với 3 nhiệm vụ hôm nay!'),
           duration: const Duration(seconds: 3),
         ),
       );
@@ -1041,21 +1200,47 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            const Column(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'DAILY QUESTS',
-                  style: TextStyle(
-                    color: Color(0xFFE8B95E),
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 2.0,
-                  ),
+                Row(
+                  children: [
+                    const Text(
+                      'DAILY QUESTS',
+                      style: TextStyle(
+                        color: Color(0xFFE8B95E),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 2.0,
+                      ),
+                    ),
+                    if (_activeCampaignTitle != null) ...[
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFC59A44).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: const Color(0xFFC59A44).withValues(alpha: 0.5),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          'Ngày $_campaignCurrentDay/$_campaignTotalDays',
+                          style: const TextStyle(
+                            color: Color(0xFFF2C465),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                SizedBox(height: 2),
-                Text(
-                  'Nhiệm vụ tu tiên hôm nay',
+                const SizedBox(height: 2),
+                const Text(
+                  '3 Nhiệm vụ tu tiên hôm nay',
                   style: TextStyle(
                     color: Color(0xFFFFF2D1),
                     fontSize: 20,
@@ -1290,14 +1475,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 2),
 
-                  // Spirit Stones Reward
+                  // Spirit Stones Reward (Nguyên Thạch)
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       const Icon(Icons.diamond_outlined, color: Color(0xFF38BDF8), size: 12),
                       const SizedBox(width: 3),
                       Text(
-                        '+${quest.spiritStones} Đá',
+                        '+${quest.spiritStones} Nguyên Thạch',
                         style: TextStyle(
                           color: const Color(0xFF38BDF8),
                           fontSize: 11.5,

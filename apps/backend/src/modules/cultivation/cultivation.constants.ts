@@ -20,10 +20,10 @@ export const CULTIVATION_REALMS: CultivationRealmConfig[] = [
 ];
 
 export enum QuestDifficulty {
-  EASY = 'EASY',         // Cấp 1: Luyện Thể (Dễ)
-  MEDIUM = 'MEDIUM',     // Cấp 2: Trúc Cơ (Trung Bình)
-  HARD = 'HARD',         // Cấp 3: Ngưng Đan (Khó)
-  BREAKTHROUGH = 'BREAKTHROUGH', // Cấp 4: Thiên Kiếp / Đại Thử Thách
+  EASY = 'EASY',         // Cấp 1: Dễ
+  MEDIUM = 'MEDIUM',     // Cấp 2: Vừa
+  HARD = 'HARD',         // Cấp 3: Khó
+  BREAKTHROUGH = 'BREAKTHROUGH', // Cấp 4: Đột Phá
 }
 
 export interface DifficultyRewardTier {
@@ -36,31 +36,31 @@ export interface DifficultyRewardTier {
 
 export const DIFFICULTY_REWARDS: Record<QuestDifficulty, DifficultyRewardTier> = {
   [QuestDifficulty.EASY]: {
-    minExp: 50,
-    maxExp: 100,
-    minStones: 5,
-    maxStones: 10,
-    label: 'Luyện Thể',
+    minExp: 80,
+    maxExp: 120,
+    minStones: 10,
+    maxStones: 15,
+    label: 'Dễ',
   },
   [QuestDifficulty.MEDIUM]: {
     minExp: 150,
-    maxExp: 300,
+    maxExp: 250,
     minStones: 20,
-    maxStones: 40,
-    label: 'Trúc Cơ',
+    maxStones: 30,
+    label: 'Vừa',
   },
   [QuestDifficulty.HARD]: {
-    minExp: 400,
-    maxExp: 800,
-    minStones: 5,
-    maxStones: 100,
-    label: 'Ngưng Đan',
+    minExp: 300,
+    maxExp: 500,
+    minStones: 40,
+    maxStones: 60,
+    label: 'Khó',
   },
   [QuestDifficulty.BREAKTHROUGH]: {
-    minExp: 1500,
-    maxExp: 3000,
-    minStones: 200,
-    maxStones: 500,
-    label: 'Thiên Kiếp',
+    minExp: 1000,
+    maxExp: 2000,
+    minStones: 100,
+    maxStones: 200,
+    label: 'Đột Phá',
   },
 };

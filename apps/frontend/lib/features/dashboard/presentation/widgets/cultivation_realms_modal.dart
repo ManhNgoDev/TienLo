@@ -133,17 +133,17 @@ class CultivationRealmsModal extends StatelessWidget {
                     ),
                     const Spacer(),
 
-                    // Linh Thạch (Spirit Stones)
+                    // Nguyên Thạch
                     Row(
                       children: [
                         const Icon(Icons.diamond_outlined, color: Color(0xFF38BDF8), size: 16),
                         const SizedBox(width: 4),
                         Text(
-                          '${profile.spiritStones}',
+                          '${profile.spiritStones} Nguyên Thạch',
                           style: const TextStyle(
                             color: Color(0xFF38BDF8),
                             fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                            fontSize: 12.5,
                           ),
                         ),
                         const SizedBox(width: 12),
