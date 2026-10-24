@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "827303035345-ptkbqup3ek8lo48rimf5qjb6empui75c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.tienlo.frontend",
+            "certificate_hash": "6eab596f51e1e69b78230c03b6c741149d834c0d"
+          }
+        },
+        {
           "client_id": "827303035345-tdskj058ijr5qjk2iha54ov2jt9ps6vq.apps.googleusercontent.com",
           "client_type": 3
         }
