@@ -12,6 +12,8 @@ class PenaltyDialog extends StatelessWidget {
   final int previousSubRealm;
   final String currentRealmName;
   final int currentSubRealm;
+  final int? remainingExp;
+  final int? maxExp;
   final VoidCallback onDismiss;
 
   const PenaltyDialog({
@@ -25,6 +27,8 @@ class PenaltyDialog extends StatelessWidget {
     required this.previousSubRealm,
     required this.currentRealmName,
     required this.currentSubRealm,
+    this.remainingExp,
+    this.maxExp,
     required this.onDismiss,
   });
 
@@ -39,6 +43,8 @@ class PenaltyDialog extends StatelessWidget {
     required int previousSubRealm,
     required String currentRealmName,
     required int currentSubRealm,
+    int? remainingExp,
+    int? maxExp,
     required VoidCallback onDismiss,
   }) {
     return showDialog(
@@ -54,6 +60,8 @@ class PenaltyDialog extends StatelessWidget {
         previousSubRealm: previousSubRealm,
         currentRealmName: currentRealmName,
         currentSubRealm: currentSubRealm,
+        remainingExp: remainingExp,
+        maxExp: maxExp,
         onDismiss: () {
           Navigator.of(ctx).pop();
           onDismiss();
@@ -75,27 +83,28 @@ class PenaltyDialog extends StatelessWidget {
         (currentRealmName == 'Luyện Khí' && currentSubRealm == 1);
 
     return BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+      filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
       child: Dialog(
         backgroundColor: Colors.transparent,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 22, vertical: 24),
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Container(
+          constraints: const BoxConstraints(maxWidth: 420),
           decoration: BoxDecoration(
-            color: const Color(0xFF16080C).withValues(alpha: 0.95),
+            color: const Color(0xFF140508).withValues(alpha: 0.96),
             borderRadius: BorderRadius.circular(26),
             border: Border.all(
-              color: const Color(0xFFEF4444).withValues(alpha: 0.8),
-              width: 1.5,
+              color: const Color(0xFFEF4444).withValues(alpha: 0.85),
+              width: 1.6,
             ),
             boxShadow: [
               BoxShadow(
                 color: const Color(0xFFEF4444).withValues(alpha: 0.35),
-                blurRadius: 28,
+                blurRadius: 32,
                 spreadRadius: 2,
               ),
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.8),
-                blurRadius: 20,
+                color: Colors.black.withValues(alpha: 0.85),
+                blurRadius: 24,
               ),
             ],
           ),
@@ -105,8 +114,8 @@ class PenaltyDialog extends StatelessWidget {
             children: [
               // 1. Icon Lôi Kiếp Thiên Phạt
               Container(
-                width: 64,
-                height: 64,
+                width: 68,
+                height: 68,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: const RadialGradient(
@@ -114,8 +123,9 @@ class PenaltyDialog extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFEF4444).withValues(alpha: 0.6),
-                      blurRadius: 18,
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.65),
+                      blurRadius: 22,
+                      spreadRadius: 2,
                     ),
                   ],
                 ),
@@ -123,140 +133,230 @@ class PenaltyDialog extends StatelessWidget {
                   child: Icon(
                     Icons.bolt_rounded,
                     color: Colors.white,
-                    size: 38,
+                    size: 42,
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
               // 2. Title Header
-              const Text(
-                '⚡ THIÊN ĐẠO TRỪNG PHẠT ⚡',
-                style: TextStyle(
-                  color: Color(0xFFF87171),
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 2.0,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEF4444).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.5),
+                  ),
+                ),
+                child: const Text(
+                  '⚡ THIÊN ĐẠO TRỪNG PHẠT ⚡',
+                  style: TextStyle(
+                    color: Color(0xFFFCA5A5),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 2.0,
+                  ),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: 8),
               Text(
-                'Tâm Ma Xâm Lấn',
+                'Chưa Hoàn Thành Hết Nhiệm Vụ',
+                textAlign: TextAlign.center,
                 style: GoogleFonts.playfairDisplay(
                   color: const Color(0xFFFFF1F2),
-                  fontSize: 22,
+                  fontSize: 21,
                   fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 2),
+              const Text(
+                'Thiên Quy Bất Dịch • Tu Vi Tổn Hao',
+                style: TextStyle(
+                  color: Color(0xFFFDA4AF),
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 12),
 
-              // 3. Thông điệp
+              // 3. Thông điệp cảnh báo
               Text(
-                'Hôm qua đạo hữu chưa hoàn thành $uncompletedCount nhiệm vụ tu luyện! Thiên quy bất dịch, tu vi bị hao tổn nghiêm trọng.',
+                'Hôm qua đạo hữu chưa hoàn thành $uncompletedCount nhiệm vụ tu luyện! Đạo tâm bất định, Thiên Đạo giáng hạ lôi kiếp trừng phạt.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Color(0xFFFDA4AF),
-                  fontSize: 13,
+                  color: Color(0xFFE2E8F0),
+                  fontSize: 12.5,
                   height: 1.45,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 14),
 
-              // 4. Chi tiết hình phạt
+              // 4. Chi tiết tổn thất Linh Lực
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF260A10).withValues(alpha: 0.8),
+                  color: const Color(0xFF24070B).withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: const Color(0xFFDC2626).withValues(alpha: 0.4),
+                    color: const Color(0xFFDC2626).withValues(alpha: 0.45),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.remove_circle_outline_rounded, color: Color(0xFFF87171), size: 18),
+                        SizedBox(width: 8),
+                        Text(
+                          'Bị trừ Linh Lực:',
+                          style: TextStyle(color: Color(0xFFE2E8F0), fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      '-${_formatNumber(penaltyExp)} Linh Lực',
+                      style: const TextStyle(
+                        color: Color(0xFFFF5252),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // 5. CẢNH BÁO TỤT TẦNG / TỤT CẢNH GIỚI (TRỌNG TÂM)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: (demotedLevel || demotedRealm)
+                      ? const Color(0xFF33060A)
+                      : const Color(0xFF19202E),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: (demotedLevel || demotedRealm)
+                        ? const Color(0xFFEF4444)
+                        : const Color(0xFF38BDF8).withValues(alpha: 0.5),
+                    width: 1.3,
                   ),
                 ),
                 child: Column(
                   children: [
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          'Tổn thất linh lực:',
-                          style: TextStyle(color: Color(0xFFE2E8F0), fontSize: 13),
+                        Icon(
+                          (demotedLevel || demotedRealm)
+                              ? Icons.trending_down_rounded
+                              : Icons.shield_outlined,
+                          color: (demotedLevel || demotedRealm)
+                              ? const Color(0xFFEF4444)
+                              : const Color(0xFF38BDF8),
+                          size: 20,
                         ),
+                        const SizedBox(width: 6),
                         Text(
-                          '-${_formatNumber(penaltyExp)} Linh Lực',
-                          style: const TextStyle(
-                            color: Color(0xFFF87171),
-                            fontSize: 14,
+                          demotedRealm
+                              ? 'CẢNH GIỚI BỊ THOÁI HÓA (RỚT CẢNH GIỚI)!'
+                              : (demotedLevel
+                                  ? 'BỊ TỤT TẦNG TU LUYỆN!'
+                                  : 'TRẠNG THÁI CẢNH GIỚI HIỆN TẠI'),
+                          style: TextStyle(
+                            color: (demotedLevel || demotedRealm)
+                                ? const Color(0xFFEF4444)
+                                : const Color(0xFF38BDF8),
+                            fontSize: 11.5,
                             fontWeight: FontWeight.bold,
+                            letterSpacing: 0.6,
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    const Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Chuỗi ngày kiên trì:',
-                          style: TextStyle(color: Color(0xFFE2E8F0), fontSize: 13),
+
+                    if (demotedRealm || demotedLevel) ...[
+                      // Hiển thị biến động: Trước ➔ Tụt xuống
+                      Text(
+                        'Trước: $previousRealmName - Tầng $previousSubRealm',
+                        style: const TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontSize: 12,
+                          decoration: TextDecoration.lineThrough,
+                          decorationColor: Color(0xFFEF4444),
                         ),
-                        Text(
-                          'Bị gián đoạn (0 ngày)',
-                          style: TextStyle(
-                            color: Color(0xFFFBBF24),
-                            fontSize: 13,
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF450A0A),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xFFF59E0B), width: 1),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              '⬇️ Tụt xuống: ',
+                              style: TextStyle(color: Color(0xFFFDE68A), fontSize: 13, fontWeight: FontWeight.w600),
+                            ),
+                            Text(
+                              '$currentRealmName - Tầng $currentSubRealm',
+                              style: const TextStyle(
+                                color: Color(0xFFFBBF24),
+                                fontSize: 15,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ] else ...[
+                      // Không bị tụt tầng
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F172A),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'Giữ vững: $currentRealmName - Tầng $currentSubRealm',
+                          style: const TextStyle(
+                            color: Color(0xFFBAE6FD),
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // 5. Cảnh báo tụt tầng / tụt cảnh giới
-              if (demotedLevel || demotedRealm) ...[
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF3B070B),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFEF4444), width: 1.2),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.trending_down_rounded, color: Color(0xFFEF4444), size: 20),
-                          const SizedBox(width: 6),
-                          Text(
-                            demotedRealm ? 'CẢNH GIỚI BỊ THOÁI HÓA!' : 'BỊ TỤT TẦNG TU LUYỆN!',
-                            style: const TextStyle(
-                              color: Color(0xFFEF4444),
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
-                        ],
                       ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'Linh lực đã bị trừ nhưng may mắn chưa rơi tầng tu luyện.',
+                        style: TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+                      ),
+                    ],
+
+                    if (remainingExp != null && maxExp != null) ...[
                       const SizedBox(height: 6),
                       Text(
-                        '$previousRealmName Tầng $previousSubRealm  ➔  $currentRealmName Tầng $currentSubRealm',
+                        'Linh lực còn lại: ${_formatNumber(remainingExp!)} / ${_formatNumber(maxExp!)}',
                         style: const TextStyle(
-                          color: Color(0xFFFDE8E8),
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFCBD5E1),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
-                  ),
+                  ],
                 ),
-                const SizedBox(height: 14),
-              ],
+              ),
+              const SizedBox(height: 10),
 
               // 6. Ghi chú bảo hiểm Luyện Khí Tầng 1
               if (isLuyenKhiProtected) ...[
@@ -264,9 +364,9 @@ class PenaltyDialog extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF132235),
+                    color: const Color(0xFF0C1929),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.4)),
+                    border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.5)),
                   ),
                   child: const Row(
                     children: [
@@ -274,7 +374,7 @@ class PenaltyDialog extends StatelessWidget {
                       SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          'Thiên Đạo bảo hộ: Đạo hữu đã bước vào Luyện Khí nên không bị tụt xuống Phàm Nhân!',
+                          'Thiên Đạo bảo hộ: Dừng tại Luyện Khí Tầng 1 (0 Linh Lực), tu sĩ không bị tụt xuống Phàm Nhân!',
                           style: TextStyle(
                             color: Color(0xFFBAE6FD),
                             fontSize: 11,
@@ -285,32 +385,68 @@ class PenaltyDialog extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
               ],
 
-              // 7. Action Button
+              // 7. Chuỗi ngày kiên trì
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E1012),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.25)),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Chuỗi ngày kiên trì:',
+                      style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                    ),
+                    Text(
+                      'Bị gián đoạn (0 ngày)',
+                      style: TextStyle(
+                        color: Color(0xFFFBBF24),
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // 8. Action Button
               SizedBox(
                 width: double.infinity,
-                height: 46,
+                height: 48,
                 child: ElevatedButton(
                   onPressed: onDismiss,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFDC2626),
                     foregroundColor: Colors.white,
-                    elevation: 6,
-                    shadowColor: const Color(0xFFEF4444).withValues(alpha: 0.6),
+                    elevation: 8,
+                    shadowColor: const Color(0xFFEF4444).withValues(alpha: 0.7),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
-                      side: const BorderSide(color: Color(0xFFFCA5A5), width: 1),
+                      side: const BorderSide(color: Color(0xFFFCA5A5), width: 1.2),
                     ),
                   ),
-                  child: const Text(
-                    'Tạ Tội Thiên Đạo & Khắc Phục',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.check_circle_outline_rounded, size: 18),
+                      SizedBox(width: 8),
+                      Text(
+                        'Tạ Tội Thiên Đạo & Khắc Phục',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),

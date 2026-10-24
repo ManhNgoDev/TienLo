@@ -222,6 +222,8 @@ class _HomeScreenState extends State<HomeScreen> {
               previousSubRealm: (data['previousSubRealm'] as num?)?.toInt() ?? 1,
               currentRealmName: data['currentRealmName']?.toString() ?? '',
               currentSubRealm: (data['currentSubRealm'] as num?)?.toInt() ?? 1,
+              remainingExp: (data['profile']?['currentExp'] as num?)?.toInt(),
+              maxExp: (data['profile']?['maxExp'] as num?)?.toInt(),
               onDismiss: () {
                 _loadCultivationProfile();
                 _loadStatistics();
@@ -231,6 +233,37 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
       _loadStatistics();
+    } catch (_) {}
+  }
+
+  Future<void> _showPenaltyNoticeOrSimulate() async {
+    final uncompleted = _quests.where((q) => !q.isCompleted).length;
+    final count = uncompleted > 0 ? uncompleted : 2;
+    try {
+      final penalty = await _cultivationRepository.penalizeExp(
+        uncompletedCount: count,
+        reason: 'Chưa hoàn thành $count nhiệm vụ tu luyện trong ngày!',
+      );
+      if (mounted) {
+        PenaltyDialog.show(
+          context,
+          uncompletedCount: (penalty['uncompletedCount'] as num?)?.toInt() ?? count,
+          penaltyExp: (penalty['penaltyExp'] as num?)?.toInt() ?? (count * 150),
+          reason: penalty['reason']?.toString() ?? 'Chưa hoàn thành nhiệm vụ',
+          demotedLevel: penalty['demotedLevel'] == true,
+          demotedRealm: penalty['demotedRealm'] == true,
+          previousRealmName: penalty['previousRealmName']?.toString() ?? '',
+          previousSubRealm: (penalty['previousSubRealm'] as num?)?.toInt() ?? 1,
+          currentRealmName: penalty['currentRealmName']?.toString() ?? '',
+          currentSubRealm: (penalty['currentSubRealm'] as num?)?.toInt() ?? 1,
+          remainingExp: (penalty['profile']?['currentExp'] as num?)?.toInt(),
+          maxExp: (penalty['profile']?['maxExp'] as num?)?.toInt(),
+          onDismiss: () {
+            _loadCultivationProfile();
+            _loadStatistics();
+          },
+        );
+      }
     } catch (_) {}
   }
 
@@ -590,6 +623,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           quests: _quests,
                           completedCount: _completedCount,
                           onToggleQuest: _toggleQuest,
+                          onShowPenaltyNotice: _showPenaltyNoticeOrSimulate,
                         ),
                       ],
                     ],

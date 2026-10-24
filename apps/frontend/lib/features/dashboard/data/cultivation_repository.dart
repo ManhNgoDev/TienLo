@@ -263,7 +263,34 @@ class CultivationRepository {
     return [];
   }
 
-  Future<Map<String, dynamic>?> penalizeExp({
+  static int calculateSubRealmExp(int realmIndex, int tier) {
+    if (realmIndex == 0) return 1000;
+    if (realmIndex >= 9) return 99999999999;
+
+    const baseExps = {
+      1: 1000,
+      2: 7500,
+      3: 55000,
+      4: 400000,
+      5: 3000000,
+      6: 22000000,
+      7: 160000000,
+      8: 1200000000,
+    };
+
+    final base = baseExps[realmIndex] ?? 1000;
+    final targetTier = tier.clamp(1, 10);
+    if (targetTier <= 1) return base;
+
+    double exp = base.toDouble();
+    for (int t = 2; t <= targetTier; t++) {
+      final factor = (1.0 + 0.10 + (t - 2) * 0.03).clamp(1.0, 1.35);
+      exp = ((exp * factor) / 50).round() * 50.0;
+    }
+    return exp.toInt();
+  }
+
+  Future<Map<String, dynamic>> penalizeExp({
     required int uncompletedCount,
     int? customPenalty,
     String? reason,
@@ -285,8 +312,82 @@ class CultivationRepository {
         return res;
       }
     } catch (e) {
-      debugPrint('Error penalizeExp: $e');
+      debugPrint('Error penalizeExp backend: $e');
     }
-    return null;
+
+    // Local fallback nếu backend offline hoặc lỗi:
+    final currentProfile = await getProfile();
+    int realmIndex = currentProfile.realmIndex;
+    int subRealm = currentProfile.subRealm;
+    int currentExp = currentProfile.currentExp;
+    int totalExp = currentProfile.totalExp;
+    final prevRealmName = currentProfile.realmName;
+    final prevSubRealm = subRealm;
+
+    final penaltyExp = customPenalty != null && customPenalty > 0
+        ? customPenalty
+        : (uncompletedCount * 150).clamp(100, 999999999);
+
+    final actualReason = reason ??
+        'Chưa hoàn thành $uncompletedCount nhiệm vụ hôm qua, tâm ma quấy nhiễu!';
+
+    currentExp -= penaltyExp;
+    totalExp = (totalExp - penaltyExp).clamp(0, 999999999999);
+    bool demotedLevel = false;
+    bool demotedRealm = false;
+
+    while (currentExp < 0) {
+      if (realmIndex == 1 && subRealm == 1) {
+        currentExp = 0;
+        break;
+      }
+      if (realmIndex == 0) {
+        currentExp = 0;
+        break;
+      }
+
+      if (subRealm > 1) {
+        subRealm -= 1;
+        final maxExp = calculateSubRealmExp(realmIndex, subRealm);
+        currentExp = maxExp + currentExp;
+        demotedLevel = true;
+      } else {
+        realmIndex -= 1;
+        subRealm = 10;
+        final maxExp = calculateSubRealmExp(realmIndex, 10);
+        currentExp = maxExp + currentExp;
+        demotedLevel = true;
+        demotedRealm = true;
+      }
+    }
+
+    final realmConfig = CultivationProfileModel._defaultRealms.firstWhere(
+      (r) => r.index == realmIndex,
+      orElse: () => CultivationProfileModel._defaultRealms[1],
+    );
+
+    return {
+      'profile': {
+        'userId': currentProfile.userId,
+        'realmIndex': realmIndex,
+        'realmName': realmConfig.name,
+        'subRealm': subRealm,
+        'currentExp': currentExp,
+        'maxExp': calculateSubRealmExp(realmIndex, subRealm),
+        'totalExp': totalExp,
+        'spiritStones': currentProfile.spiritStones,
+        'streakDays': 0,
+        'title': realmConfig.title,
+      },
+      'penaltyExp': penaltyExp,
+      'uncompletedCount': uncompletedCount,
+      'reason': actualReason,
+      'demotedLevel': demotedLevel,
+      'demotedRealm': demotedRealm,
+      'previousRealmName': prevRealmName,
+      'previousSubRealm': prevSubRealm,
+      'currentRealmName': realmConfig.name,
+      'currentSubRealm': subRealm,
+    };
   }
 }

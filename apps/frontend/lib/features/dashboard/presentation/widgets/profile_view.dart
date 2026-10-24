@@ -209,7 +209,7 @@ class _ProfileViewState extends State<ProfileView> {
                       customPenalty: 400,
                       reason: 'Thử nghiệm Thiên Đạo trừng phạt do bỏ lỡ nhiệm vụ!',
                     );
-                    if (penalty != null && mounted) {
+                    if (mounted) {
                       PenaltyDialog.show(
                         context,
                         uncompletedCount: (penalty['uncompletedCount'] as num?)?.toInt() ?? 2,
@@ -221,6 +221,8 @@ class _ProfileViewState extends State<ProfileView> {
                         previousSubRealm: (penalty['previousSubRealm'] as num?)?.toInt() ?? 1,
                         currentRealmName: penalty['currentRealmName']?.toString() ?? '',
                         currentSubRealm: (penalty['currentSubRealm'] as num?)?.toInt() ?? 1,
+                        remainingExp: (penalty['profile']?['currentExp'] as num?)?.toInt(),
+                        maxExp: (penalty['profile']?['maxExp'] as num?)?.toInt(),
                         onDismiss: () {
                           _loadProfileData();
                         },

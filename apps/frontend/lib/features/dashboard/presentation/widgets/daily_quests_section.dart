@@ -8,12 +8,14 @@ class DailyQuestsSection extends StatelessWidget {
   final List<QuestItem> quests;
   final int completedCount;
   final ValueChanged<QuestItem> onToggleQuest;
+  final VoidCallback? onShowPenaltyNotice;
 
   const DailyQuestsSection({
     super.key,
     required this.quests,
     required this.completedCount,
     required this.onToggleQuest,
+    this.onShowPenaltyNotice,
   });
 
   Widget _buildEmptyQuestsCard() {
@@ -145,6 +147,86 @@ class DailyQuestsSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 14),
+
+        if (quests.isNotEmpty) ...[
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEF4444).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFFEF4444).withValues(alpha: 0.35),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEF4444).withValues(alpha: 0.25),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.bolt_rounded,
+                    color: Color(0xFFF87171),
+                    size: 16,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Chưa hoàn thành hết nhiệm vụ sẽ bị Thiên Đạo phạt trừ linh lực và tụt cảnh giới/tầng!',
+                    style: TextStyle(
+                      color: Color(0xFFFCA5A5),
+                      fontSize: 11,
+                      height: 1.35,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                if (onShowPenaltyNotice != null) ...[
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: onShowPenaltyNotice,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEF4444).withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFFEF4444).withValues(alpha: 0.6),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Xem phạt',
+                            style: TextStyle(
+                              color: Color(0xFFFFD1D1),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(width: 2),
+                          Icon(
+                            Icons.chevron_right_rounded,
+                            color: Color(0xFFFFD1D1),
+                            size: 14,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
 
         // List of Quests or Empty State
         if (quests.isEmpty)
