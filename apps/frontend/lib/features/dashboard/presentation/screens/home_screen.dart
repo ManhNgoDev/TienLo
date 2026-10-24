@@ -11,6 +11,8 @@ class QuestItem {
   final String title;
   final String subtitle;
   final int xp;
+  final int spiritStones;
+  final String difficulty; // 'EASY', 'MEDIUM', 'HARD', 'BREAKTHROUGH'
   final IconData icon;
   final Color iconColor;
   bool isCompleted;
@@ -21,6 +23,8 @@ class QuestItem {
     required this.title,
     required this.subtitle,
     required this.xp,
+    this.spiritStones = 15,
+    this.difficulty = 'MEDIUM',
     required this.icon,
     required this.iconColor,
     this.isCompleted = false,
@@ -65,6 +69,36 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadCultivationProfile();
   }
 
+  Map<String, dynamic> _getDifficultyInfo(String diff) {
+    switch (diff.toUpperCase()) {
+      case 'EASY':
+        return {
+          'label': 'DỄ · Luyện Thể',
+          'color': const Color(0xFF10B981),
+          'bgColor': const Color(0xFF10B981).withValues(alpha: 0.15),
+        };
+      case 'HARD':
+        return {
+          'label': 'KHÓ · Ngưng Đan',
+          'color': const Color(0xFFF97316),
+          'bgColor': const Color(0xFFF97316).withValues(alpha: 0.15),
+        };
+      case 'BREAKTHROUGH':
+        return {
+          'label': 'THIÊN KIẾP · Đột Phá',
+          'color': const Color(0xFFA855F7),
+          'bgColor': const Color(0xFFA855F7).withValues(alpha: 0.18),
+        };
+      case 'MEDIUM':
+      default:
+        return {
+          'label': 'VỪA · Trúc Cơ',
+          'color': const Color(0xFFF59E0B),
+          'bgColor': const Color(0xFFF59E0B).withValues(alpha: 0.15),
+        };
+    }
+  }
+
   QuestItem _mapToQuestItem(dynamic q) {
     IconData icon = Icons.fitness_center_rounded;
     Color iconColor = const Color(0xFFF2C465);
@@ -74,25 +108,194 @@ class _HomeScreenState extends State<HomeScreen> {
       iconColor = const Color(0xFF38BDF8);
     } else if (iconType == 'walk') {
       icon = Icons.directions_walk_rounded;
-      iconColor = const Color(0xFFF2C465);
+      iconColor = const Color(0xFF34D399);
     } else if (iconType == 'meditation' || iconType == 'study') {
       icon = Icons.auto_awesome;
-      iconColor = const Color(0xFFF59E0B);
+      iconColor = const Color(0xFFA78BFA);
     } else if (iconType == 'medal') {
       icon = Icons.military_tech_rounded;
       iconColor = const Color(0xFFFBBF24);
     }
 
+    final diff = q['difficulty']?.toString().toUpperCase() ?? 'MEDIUM';
+    final xp = (q['expReward'] as num?)?.toInt() ?? (q['xp'] as num?)?.toInt() ?? 150;
+    final stones = (q['stoneReward'] as num?)?.toInt() ?? (q['spiritStones'] as num?)?.toInt() ?? 20;
+
+    String subtitle = q['subtitle']?.toString() ?? 'Rèn luyện hàng ngày';
+    subtitle = subtitle
+        .replaceAll('Chiến dịch tu tiên mới · Hàng ngày', '')
+        .replaceAll('Chiến dịch tu tiên mới', '')
+        .trim();
+    if (subtitle.isEmpty) {
+      subtitle = 'Mục tiêu rèn luyện hàng ngày';
+    }
+
     return QuestItem(
       id: q['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
       title: q['title']?.toString() ?? 'Nhiệm vụ tu tiên',
-      subtitle: q['subtitle']?.toString() ?? 'Hàng ngày',
-      xp: (q['expReward'] as num?)?.toInt() ?? (q['xp'] as num?)?.toInt() ?? 100,
+      subtitle: subtitle,
+      xp: xp,
+      spiritStones: stones,
+      difficulty: diff,
       icon: icon,
       iconColor: iconColor,
       isCompleted: q['isCompleted'] == true,
       isXpClaimed: q['isXpClaimed'] == true,
     );
+  }
+
+  List<QuestItem> _analyzeGoalAndCreateQuests(String prompt) {
+    final lower = prompt.toLowerCase();
+    final bool isFitness = lower.contains('cơ') ||
+        lower.contains('bụng') ||
+        lower.contains('múi') ||
+        lower.contains('gym') ||
+        lower.contains('chạy') ||
+        lower.contains('thể dục') ||
+        lower.contains('cân') ||
+        lower.contains('workout') ||
+        lower.contains('bước');
+
+    final bool isStudy = lower.contains('học') ||
+        lower.contains('đọc') ||
+        lower.contains('sách') ||
+        lower.contains('code') ||
+        lower.contains('lập trình') ||
+        lower.contains('thi') ||
+        lower.contains('tiếng anh');
+
+    final now = DateTime.now().millisecondsSinceEpoch;
+
+    if (isFitness) {
+      return [
+        QuestItem(
+          id: 'q-$now-1',
+          title: 'Tập gập bụng & Plank 15 phút',
+          subtitle: '3 hiệp · Nghỉ 45s giữa các hiệp',
+          xp: 180,
+          spiritStones: 20,
+          difficulty: 'MEDIUM',
+          icon: Icons.fitness_center_rounded,
+          iconColor: const Color(0xFFF2C465),
+        ),
+        QuestItem(
+          id: 'q-$now-2',
+          title: 'Uống đủ 2L nước lọc',
+          subtitle: 'Thanh lọc cơ thể, hỗ trợ chuyển hóa mỡ',
+          xp: 80,
+          spiritStones: 10,
+          difficulty: 'EASY',
+          icon: Icons.water_drop_outlined,
+          iconColor: const Color(0xFF38BDF8),
+        ),
+        QuestItem(
+          id: 'q-$now-3',
+          title: 'Đi bộ hoặc chạy 5.000 bước',
+          subtitle: 'Vận động đốt mỡ nhẹ nhàng',
+          xp: 160,
+          spiritStones: 18,
+          difficulty: 'MEDIUM',
+          icon: Icons.directions_walk_rounded,
+          iconColor: const Color(0xFF34D399),
+        ),
+        QuestItem(
+          id: 'q-$now-4',
+          title: 'Kiểm soát calo & ăn đủ protein',
+          subtitle: 'Hạn chế đường và đồ chiên rán',
+          xp: 220,
+          spiritStones: 25,
+          difficulty: 'HARD',
+          icon: Icons.restaurant_rounded,
+          iconColor: const Color(0xFFF97316),
+        ),
+        QuestItem(
+          id: 'q-$now-5',
+          title: 'Đại Thử Thách: Duy trì 7 ngày kiên trì',
+          subtitle: 'Thiên Kiếp Thử Thách · Đột phá giới hạn',
+          xp: 1500,
+          spiritStones: 200,
+          difficulty: 'BREAKTHROUGH',
+          icon: Icons.military_tech_rounded,
+          iconColor: const Color(0xFFA855F7),
+        ),
+      ];
+    } else if (isStudy) {
+      return [
+        QuestItem(
+          id: 'q-$now-1',
+          title: 'Tập trung học tập 25 phút Pomodoro',
+          subtitle: 'Không mạng xã hội · Tập trung tối đa',
+          xp: 150,
+          spiritStones: 15,
+          difficulty: 'MEDIUM',
+          icon: Icons.menu_book_rounded,
+          iconColor: const Color(0xFF38BDF8),
+        ),
+        QuestItem(
+          id: 'q-$now-2',
+          title: 'Ghi chép 3 ý tưởng trọng tâm',
+          subtitle: 'Hệ thống hóa kiến thức vào sổ tay',
+          xp: 80,
+          spiritStones: 10,
+          difficulty: 'EASY',
+          icon: Icons.edit_note_rounded,
+          iconColor: const Color(0xFF34D399),
+        ),
+        QuestItem(
+          id: 'q-$now-3',
+          title: 'Thực hành áp dụng kiến thức 30 phút',
+          subtitle: 'Luyện bài tập hoặc thực hành dự án',
+          xp: 260,
+          spiritStones: 30,
+          difficulty: 'HARD',
+          icon: Icons.code_rounded,
+          iconColor: const Color(0xFFF97316),
+        ),
+        QuestItem(
+          id: 'q-$now-4',
+          title: 'Đại Thử Thách: Hoàn thành mục tiêu tuần',
+          subtitle: 'Thiên Kiếp Thử Thách · Đánh giá kiến thức',
+          xp: 1200,
+          spiritStones: 150,
+          difficulty: 'BREAKTHROUGH',
+          icon: Icons.military_tech_rounded,
+          iconColor: const Color(0xFFA855F7),
+        ),
+      ];
+    } else {
+      return [
+        QuestItem(
+          id: 'q-$now-1',
+          title: 'Hành động nhỏ khởi đầu ngày mới',
+          subtitle: 'Dành 20 phút hành động kiên trì',
+          xp: 120,
+          spiritStones: 15,
+          difficulty: 'EASY',
+          icon: Icons.auto_awesome,
+          iconColor: const Color(0xFFF2C465),
+        ),
+        QuestItem(
+          id: 'q-$now-2',
+          title: 'Thực hiện cam kết rèn luyện',
+          subtitle: 'Tập trung hoàn thành chỉ tiêu đề ra',
+          xp: 220,
+          spiritStones: 25,
+          difficulty: 'MEDIUM',
+          icon: Icons.track_changes_rounded,
+          iconColor: const Color(0xFF38BDF8),
+        ),
+        QuestItem(
+          id: 'q-$now-3',
+          title: 'Đại Thử Thách: Tổng kết và đột phá',
+          subtitle: 'Ghi nhận tiến độ và nâng tầm mục tiêu',
+          xp: 500,
+          spiritStones: 60,
+          difficulty: 'HARD',
+          icon: Icons.insights_rounded,
+          iconColor: const Color(0xFFF97316),
+        ),
+      ];
+    }
   }
 
   Future<void> _loadCultivationProfile() async {
@@ -130,10 +333,10 @@ class _HomeScreenState extends State<HomeScreen> {
       quest.isXpClaimed = quest.isCompleted;
       if (quest.isCompleted) {
         _currentExp += quest.xp;
-        _spiritStones += 10;
+        _spiritStones += quest.spiritStones;
       } else {
         _currentExp = (_currentExp - quest.xp).clamp(0, 100000);
-        _spiritStones = (_spiritStones - 10).clamp(0, 100000);
+        _spiritStones = (_spiritStones - quest.spiritStones).clamp(0, 100000);
       }
     });
 
@@ -153,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Hoàn thành tu luyện! +${quest.xp} Linh Lực, +10 Linh Thạch',
+                      'Hoàn thành tu luyện! +${quest.xp} Linh Lực, +${quest.spiritStones} Linh Thạch',
                       style: const TextStyle(
                         color: Color(0xFFFDE68A),
                         fontWeight: FontWeight.bold,
@@ -191,47 +394,42 @@ class _HomeScreenState extends State<HomeScreen> {
               child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFF2C465)),
             ),
             SizedBox(width: 12),
-            Text('Thiên Đạo đang diễn toán chiến dịch tu tiên...'),
+            Text('Thiên Đạo AI đang phân tích và kiến tạo nhiệm vụ...'),
           ],
         ),
         duration: Duration(seconds: 3),
       ),
     );
 
-    final campaignData = await _cultivationRepository.generateAiCampaign(text);
+    List<QuestItem> newQuests = [];
+    try {
+      final campaignData = await _cultivationRepository.generateAiCampaign(text);
+      if (campaignData != null && campaignData['quests'] != null) {
+        final List<dynamic> rawQuests = campaignData['quests'];
+        for (var q in rawQuests) {
+          newQuests.add(_mapToQuestItem(q));
+        }
+      }
+    } catch (_) {}
+
+    // Nếu API mạng chưa khả dụng, dùng bộ suy diễn thông minh nội bộ
+    if (newQuests.isEmpty) {
+      newQuests = _analyzeGoalAndCreateQuests(text);
+    }
 
     if (mounted) {
       setState(() {
         _isGeneratingAi = false;
         _campaignController.clear();
-
-        if (campaignData != null && campaignData['quests'] != null) {
-          final List<dynamic> rawQuests = campaignData['quests'];
-          for (var q in rawQuests) {
-            _quests.insert(0, _mapToQuestItem(q));
-          }
-        } else {
-          // Local fallback
-          _quests.insert(
-            0,
-            QuestItem(
-              id: DateTime.now().millisecondsSinceEpoch.toString(),
-              title: text,
-              subtitle: 'Chiến dịch tu tiên mới · Hàng ngày',
-              xp: 150,
-              icon: Icons.flag_rounded,
-              iconColor: const Color(0xFFF59E0B),
-              isCompleted: false,
-              isXpClaimed: false,
-            ),
-          );
+        for (var q in newQuests.reversed) {
+          _quests.insert(0, q);
         }
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: const Color(0xFF0F261C),
-          content: Text('Thiên Đạo đã kiến tạo thành công: "$text"!'),
+          content: Text('Thiên Đạo đã phân tích và tạo ${newQuests.length} nhiệm vụ tu tiên!'),
           duration: const Duration(seconds: 3),
         ),
       );
@@ -961,6 +1159,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildQuestCard(QuestItem quest) {
     final bool hasStrikethrough = quest.isXpClaimed || quest.isCompleted;
+    final diffInfo = _getDifficultyInfo(quest.difficulty);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
@@ -968,12 +1167,14 @@ class _HomeScreenState extends State<HomeScreen> {
         filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
             color: const Color(0xFF07121E).withValues(alpha: 0.88),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: const Color(0xFFC59A44),
+              color: quest.isCompleted
+                  ? const Color(0xFFC59A44).withValues(alpha: 0.4)
+                  : const Color(0xFFC59A44),
               width: 1.3,
             ),
             boxShadow: [
@@ -985,11 +1186,12 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Left: Icon Box
+              // 1. Left: Icon Box
               Container(
-                width: 48,
-                height: 48,
+                width: 46,
+                height: 46,
                 decoration: BoxDecoration(
                   color: const Color(0xFF0A1422),
                   borderRadius: BorderRadius.circular(16),
@@ -1002,61 +1204,120 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: _buildQuestIcon(quest),
                 ),
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 12),
 
-              // Middle: Title & Subtitle
+              // 2. Middle: Difficulty Badge + Title + Subtitle
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Difficulty Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: diffInfo['bgColor'],
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: (diffInfo['color'] as Color).withValues(alpha: 0.6),
+                          width: 0.8,
+                        ),
+                      ),
+                      child: Text(
+                        diffInfo['label'],
+                        style: TextStyle(
+                          color: diffInfo['color'],
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+
+                    // Title
                     Text(
                       quest.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 15.5,
+                      style: TextStyle(
+                        color: hasStrikethrough ? const Color(0xFF8BA5BA) : Colors.white,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w700,
-                        letterSpacing: 0.2,
+                        letterSpacing: 0.1,
+                        decoration: hasStrikethrough ? TextDecoration.lineThrough : null,
+                        decorationColor: const Color(0xFF8BA5BA),
                       ),
                     ),
                     const SizedBox(height: 3),
+
+                    // Subtitle
                     Text(
                       quest.subtitle,
                       style: const TextStyle(
-                        color: Color(0xFF8BA5BA),
-                        fontSize: 12.5,
+                        color: Color(0xFF7E98AE),
+                        fontSize: 11.5,
                         fontWeight: FontWeight.w400,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
 
-              // Right: XP & Checkbox Circle
+              // 3. Right: Rewards (EXP + Spirit Stones) & Checkbox
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    '+${quest.xp} XP',
-                    style: TextStyle(
-                      color: const Color(0xFFF2C465),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      decoration: hasStrikethrough
-                          ? TextDecoration.lineThrough
-                          : TextDecoration.none,
-                      decorationColor: const Color(0xFFF2C465),
-                      decorationThickness: 2.0,
-                    ),
+                  // EXP Reward
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.auto_awesome, color: Color(0xFFF2C465), size: 12),
+                      const SizedBox(width: 3),
+                      Text(
+                        '+${quest.xp} EXP',
+                        style: TextStyle(
+                          color: const Color(0xFFF2C465),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          decoration: hasStrikethrough
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                          decorationColor: const Color(0xFFF2C465),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+
+                  // Spirit Stones Reward
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.diamond_outlined, color: Color(0xFF38BDF8), size: 12),
+                      const SizedBox(width: 3),
+                      Text(
+                        '+${quest.spiritStones} Đá',
+                        style: TextStyle(
+                          color: const Color(0xFF38BDF8),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          decoration: hasStrikethrough
+                              ? TextDecoration.lineThrough
+                              : TextDecoration.none,
+                          decorationColor: const Color(0xFF38BDF8),
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 6),
+
+                  // Checkbox Circle
                   GestureDetector(
                     onTap: () => _toggleQuest(quest),
                     child: Container(
-                      width: 26,
-                      height: 26,
+                      width: 28,
+                      height: 28,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: quest.isCompleted
@@ -1066,7 +1327,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: quest.isCompleted
                               ? const Color(0xFFF2C465)
                               : const Color(0xFF5A758D),
-                          width: 1.5,
+                          width: 1.6,
                         ),
                       ),
                       child: quest.isCompleted
@@ -1074,7 +1335,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Icon(
                                 Icons.check_rounded,
                                 color: Color(0xFFF2C465),
-                                size: 16,
+                                size: 18,
                               ),
                             )
                           : null,

@@ -23,7 +23,7 @@ class ApiClient {
     final uri = Uri.parse('$baseUrl$endpoint');
     final response = await http
         .get(uri, headers: _buildHeaders(token))
-        .timeout(const Duration(seconds: 10));
+        .timeout(const Duration(seconds: 35));
 
     return _handleResponse(response);
   }
@@ -40,7 +40,7 @@ class ApiClient {
           headers: _buildHeaders(token),
           body: body != null ? jsonEncode(body) : null,
         )
-        .timeout(const Duration(seconds: 10));
+        .timeout(const Duration(seconds: 35));
 
     return _handleResponse(response);
   }
