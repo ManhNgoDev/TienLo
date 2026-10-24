@@ -554,55 +554,148 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // Card: Tạo chiến dịch mới
   Widget _buildCampaignCard() {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F1E2E).withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFF334155).withValues(alpha: 0.8),
-          width: 1.0,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(7),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1A2A3D),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: const Color(0xFFE5B869).withValues(alpha: 0.5),
-                  ),
-                ),
-                child: const Icon(
-                  Icons.auto_awesome,
-                  color: Color(0xFFF3C766),
-                  size: 18,
-                ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: const Color(0xFF07121E).withValues(alpha: 0.88),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: const Color(0xFFC59A44),
+              width: 1.4,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.45),
+                blurRadius: 18,
+                offset: const Offset(0, 4),
               ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Tạo chiến dịch mới',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.bold,
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top Row: Icon + Texts
+              Row(
+                children: [
+                  // Double Border Sparkle Icon Box
+                  Container(
+                    width: 50,
+                    height: 50,
+                    padding: const EdgeInsets.all(3.0),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0A1422),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFFC59A44),
+                        width: 1.3,
                       ),
                     ),
-                    SizedBox(height: 2),
-                    Text(
-                      'AI biến mục tiêu lớn thành nhiệm vụ vừa sức.',
-                      style: TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 11.5,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF08111D),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFFC59A44).withValues(alpha: 0.75),
+                          width: 1.0,
+                        ),
+                      ),
+                      child: const Center(
+                        child: Icon(
+                          Icons.auto_awesome,
+                          color: Color(0xFFF2C465),
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Tạo chiến dịch mới',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                        SizedBox(height: 3),
+                        Text(
+                          'AI biến mục tiêu lớn thành nhiệm vụ vừa sức.',
+                          style: TextStyle(
+                            color: Color(0xFF8BA5BA),
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Bottom Input Bar with Arrow Button
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF07101B),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: const Color(0xFFC59A44),
+                    width: 1.2,
+                  ),
+                ),
+                padding: const EdgeInsets.only(left: 16, right: 5, top: 4, bottom: 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _campaignController,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13.5,
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: 'Ví dụ: Chạy được 5km sau 8 tuần...',
+                          hintStyle: TextStyle(
+                            color: Color(0xFF7E98AE),
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          border: InputBorder.none,
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        onSubmitted: (_) => _addCampaign(),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: _addCampaign,
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0A1522),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: const Color(0xFFC59A44),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.arrow_forward_rounded,
+                            color: Color(0xFFF2C465),
+                            size: 20,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -610,56 +703,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 14),
-
-          // Input Field with Action Button
-          Container(
-            padding: const EdgeInsets.only(left: 14, right: 6, top: 4, bottom: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFF080F18).withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: const Color(0xFF233549),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _campaignController,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
-                    decoration: const InputDecoration(
-                      hintText: 'Ví dụ: Chạy được 5km sau 8 tuần...',
-                      hintStyle: TextStyle(
-                        color: Color(0xFF64748B),
-                        fontSize: 12.5,
-                      ),
-                      border: InputBorder.none,
-                      isDense: true,
-                      contentPadding: EdgeInsets.symmetric(vertical: 10),
-                    ),
-                    onSubmitted: (_) => _addCampaign(),
-                  ),
-                ),
-                IconButton(
-                  onPressed: _addCampaign,
-                  style: IconButton.styleFrom(
-                    backgroundColor: const Color(0xFF142436),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: const BorderSide(color: Color(0xFFE5B869), width: 1.2),
-                    ),
-                  ),
-                  icon: const Icon(
-                    Icons.arrow_forward_rounded,
-                    color: Color(0xFFE5B869),
-                    size: 18,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
