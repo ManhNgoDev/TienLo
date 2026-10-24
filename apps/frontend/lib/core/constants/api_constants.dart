@@ -3,14 +3,27 @@ import 'package:flutter/foundation.dart';
 class ApiConstants {
   static String? customBaseUrl;
 
-  /// Tự động trỏ đúng URL máy chủ Backend:
-  /// - Nếu đã cấu hình customBaseUrl (Render hoặc URL tùy chỉnh) thì ưu tiên dùng
-  /// - Android Emulator: 'http://10.0.2.2:3000/api'
-  /// - iOS Simulator & Thiết bị khác: 'http://localhost:3000/api'
+  /// Đường dẫn máy chủ Backend đã deploy trên Render (dành cho bản build APK)
+  static String productionRenderUrl = 'https://tienlo-backend.onrender.com/api';
+
+  /// Nhận biến môi trường khi build: flutter build apk --dart-define=BACKEND_URL=https://...
+  static const String envBackendUrl = String.fromEnvironment('BACKEND_URL', defaultValue: '');
+
+  /// Tự động chuyển đổi môi trường:
+  /// - Khi chạy trên máy (Dev / Debug): trỏ localhost:3000 hoặc 10.0.2.2:3000
+  /// - Khi build APK (Release): tự động trỏ đến đường dẫn Render deploy
   static String get defaultBaseUrl {
     if (customBaseUrl != null && customBaseUrl!.trim().isNotEmpty) {
       return customBaseUrl!.trim();
     }
+    if (envBackendUrl.isNotEmpty) {
+      return envBackendUrl.trim();
+    }
+    // Nếu là bản build phát hành (APK Release) -> dùng link Render deploy
+    if (kReleaseMode) {
+      return productionRenderUrl;
+    }
+    // Môi trường dev cục bộ trên máy
     if (defaultTargetPlatform == TargetPlatform.android) {
       return 'http://10.0.2.2:3000/api';
     }
