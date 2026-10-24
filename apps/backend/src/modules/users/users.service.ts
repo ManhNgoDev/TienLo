@@ -53,7 +53,8 @@ export class UsersService {
     } else if (cultivation.subRealm < 10) {
       nextTitle = `${cultivation.realmName} Tầng ${cultivation.subRealm + 1}`;
     } else {
-      nextTitle = `Đột phá Cảnh Giới Kế Tiếp`;
+      const nextRealm = cultivation.allRealms.find((r: any) => r.index === cultivation.realmIndex + 1);
+      nextTitle = nextRealm ? `${nextRealm.name} Tầng 1 • Đột Phá Cảnh Giới` : 'Cực Cảnh Phi Tiên';
     }
 
     const progressPercent = cultivation.maxExp > 0

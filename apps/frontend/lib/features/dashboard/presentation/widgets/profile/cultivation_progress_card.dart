@@ -19,6 +19,18 @@ class CultivationProgressCard extends StatelessWidget {
   });
 
   String _formatNumber(int value) {
+    if (value >= 1000000000000000) {
+      final v = value / 1000000000000000;
+      return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} Tr.Tỷ';
+    }
+    if (value >= 1000000000000) {
+      final v = value / 1000000000000;
+      return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} Ngàn Tỷ';
+    }
+    if (value >= 1000000000) {
+      final v = value / 1000000000;
+      return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} Tỷ';
+    }
     return value.toString().replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]}.',
@@ -113,7 +125,7 @@ class CultivationProgressCard extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  '${_formatNumber(expNeeded)} EXP nữa',
+                                  '${_formatNumber(expNeeded)} Linh Lực nữa',
                                   style: const TextStyle(
                                     color: Color(0xFFFB923C),
                                     fontSize: 11,
@@ -178,7 +190,7 @@ class CultivationProgressCard extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '${_formatNumber(currentExp)} EXP',
+                        '${_formatNumber(currentExp)} Linh Lực',
                         style: const TextStyle(
                           color: Color(0xFF8BA5BA),
                           fontSize: 11,
@@ -186,7 +198,7 @@ class CultivationProgressCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${_formatNumber(maxExp)} EXP',
+                        '${_formatNumber(maxExp)} Linh Lực',
                         style: const TextStyle(
                           color: Color(0xFF8BA5BA),
                           fontSize: 11,

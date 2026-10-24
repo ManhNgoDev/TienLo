@@ -155,7 +155,7 @@ class QuestCard extends StatelessWidget {
                       const Icon(Icons.auto_awesome, color: Color(0xFFF2C465), size: 12),
                       const SizedBox(width: 3),
                       Text(
-                        '+${quest.xp} EXP',
+                        '+${quest.xp} Linh Lực',
                         style: TextStyle(
                           color: const Color(0xFFF2C465),
                           fontSize: 12,

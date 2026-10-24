@@ -27,6 +27,18 @@ class ProfileHeaderCard extends StatelessWidget {
   });
 
   String _formatNumber(int value) {
+    if (value >= 1000000000000000) {
+      final v = value / 1000000000000000;
+      return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} Tr.Tỷ';
+    }
+    if (value >= 1000000000000) {
+      final v = value / 1000000000000;
+      return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} Ngàn Tỷ';
+    }
+    if (value >= 1000000000) {
+      final v = value / 1000000000;
+      return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} Tỷ';
+    }
     return value.toString().replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]}.',
@@ -219,7 +231,7 @@ class ProfileHeaderCard extends StatelessWidget {
                     Container(width: 1, height: 26, color: const Color(0xFF1E2F40)),
                     _buildStatCol('$completedQuests', 'Nhiệm vụ'),
                     Container(width: 1, height: 26, color: const Color(0xFF1E2F40)),
-                    _buildStatCol(_formatNumber(totalExp), 'Tổng XP'),
+                    _buildStatCol(_formatNumber(totalExp), 'Tổng Linh Lực'),
                   ],
                 ),
               ),

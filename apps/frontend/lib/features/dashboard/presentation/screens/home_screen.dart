@@ -252,7 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Hoàn thành tu luyện! +${quest.xp} EXP, +${quest.spiritStones} Nguyên Thạch',
+                      'Hoàn thành tu luyện! +${quest.xp} Linh Lực, +${quest.spiritStones} Nguyên Thạch',
                       style: const TextStyle(
                         color: Color(0xFFFDE68A),
                         fontWeight: FontWeight.bold,

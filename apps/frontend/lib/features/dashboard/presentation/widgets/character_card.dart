@@ -23,6 +23,18 @@ class CharacterCard extends StatelessWidget {
   });
 
   String _formatExp(int value) {
+    if (value >= 1000000000000000) {
+      final v = value / 1000000000000000;
+      return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} Tr.Tỷ';
+    }
+    if (value >= 1000000000000) {
+      final v = value / 1000000000000;
+      return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} Ngàn Tỷ';
+    }
+    if (value >= 1000000000) {
+      final v = value / 1000000000;
+      return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} Tỷ';
+    }
     return value.toString().replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]}.',
@@ -158,11 +170,11 @@ class CharacterCard extends StatelessWidget {
                         Text(
                           profile != null
                               ? (profile!.realmIndex == 0
-                                  ? '${_formatExp(currentExp)} / ${_formatExp(maxExp)} EXP đột phá Tiên Lộ'
+                                  ? '${_formatExp(currentExp)} / ${_formatExp(maxExp)} Linh Lực đột phá Tiên Lộ'
                                   : (profile!.subRealm >= 10
-                                      ? '${_formatExp(currentExp)} / ${_formatExp(maxExp)} EXP đột phá Cảnh Giới'
-                                      : '${_formatExp(currentExp)} / ${_formatExp(maxExp)} EXP đột phá Tầng ${profile!.subRealm + 1}'))
-                              : '${_formatExp(currentExp)} / ${_formatExp(maxExp)} EXP để đột phá',
+                                      ? '${_formatExp(currentExp)} / ${_formatExp(maxExp)} Linh Lực đột phá Cảnh Giới'
+                                      : '${_formatExp(currentExp)} / ${_formatExp(maxExp)} Linh Lực đột phá Tầng ${profile!.subRealm + 1}'))
+                              : '${_formatExp(currentExp)} / ${_formatExp(maxExp)} Linh Lực để đột phá',
                           style: const TextStyle(
                             color: Color(0xFF8BA5BA),
                             fontSize: 11,

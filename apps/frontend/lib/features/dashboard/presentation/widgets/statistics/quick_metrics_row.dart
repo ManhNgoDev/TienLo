@@ -14,6 +14,18 @@ class QuickMetricsRow extends StatelessWidget {
   });
 
   String _formatNumber(int value) {
+    if (value >= 1000000000000000) {
+      final v = value / 1000000000000000;
+      return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} Tr.Tỷ';
+    }
+    if (value >= 1000000000000) {
+      final v = value / 1000000000000;
+      return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} Ngàn Tỷ';
+    }
+    if (value >= 1000000000) {
+      final v = value / 1000000000;
+      return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} Tỷ';
+    }
     return value.toString().replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]}.',
@@ -97,7 +109,7 @@ class QuickMetricsRow extends StatelessWidget {
             icon: Icons.bolt_rounded,
             iconColor: const Color(0xFF38BDF8),
             value: '+${_formatNumber(currentExp)}',
-            label: 'Linh lực EXP',
+            label: 'Linh lực',
           ),
         ),
         const SizedBox(width: 10),

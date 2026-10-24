@@ -86,13 +86,13 @@ class CultivationProfileModel {
   static final List<CultivationRealmModel> _defaultRealms = [
     CultivationRealmModel(index: 0, name: 'Phàm Nhân', subRealms: 1, expPerSubRealm: 1000, minExp: 1000, maxExp: 1000, title: 'Phàm Thai Chưa Tỉnh'),
     CultivationRealmModel(index: 1, name: 'Luyện Khí', subRealms: 10, expPerSubRealm: 1000, minExp: 1000, maxExp: 33550, title: 'Luyện Khí Kỳ Tu Sĩ'),
-    CultivationRealmModel(index: 2, name: 'Kết Đan', subRealms: 10, expPerSubRealm: 2500, minExp: 2500, maxExp: 83800, title: 'Kim Đan Đại Sư'),
-    CultivationRealmModel(index: 3, name: 'Nguyên Anh', subRealms: 10, expPerSubRealm: 5000, minExp: 5000, maxExp: 168250, title: 'Nguyên Anh Lão Tổ'),
-    CultivationRealmModel(index: 4, name: 'Hóa Thần', subRealms: 10, expPerSubRealm: 10000, minExp: 10000, maxExp: 334800, title: 'Hóa Thần Chân Quân'),
-    CultivationRealmModel(index: 5, name: 'Luyện Hư', subRealms: 10, expPerSubRealm: 20000, minExp: 20000, maxExp: 669850, title: 'Luyện Hư Chí Tôn'),
-    CultivationRealmModel(index: 6, name: 'Đại Thừa', subRealms: 10, expPerSubRealm: 40000, minExp: 40000, maxExp: 1341000, title: 'Đại Thừa Cường Giả'),
-    CultivationRealmModel(index: 7, name: 'Hợp Thể', subRealms: 10, expPerSubRealm: 80000, minExp: 80000, maxExp: 2681950, title: 'Hợp Thể Tiên Tôn'),
-    CultivationRealmModel(index: 8, name: 'Độ Kiếp', subRealms: 10, expPerSubRealm: 150000, minExp: 150000, maxExp: 5028650, title: 'Chuẩn Tiên Thiên Kiếp'),
+    CultivationRealmModel(index: 2, name: 'Kết Đan', subRealms: 10, expPerSubRealm: 35000, minExp: 35000, maxExp: 1173050, title: 'Kim Đan Đại Sư'),
+    CultivationRealmModel(index: 3, name: 'Nguyên Anh', subRealms: 10, expPerSubRealm: 1250000, minExp: 1250000, maxExp: 41902700, title: 'Nguyên Anh Lão Tổ'),
+    CultivationRealmModel(index: 4, name: 'Hóa Thần', subRealms: 10, expPerSubRealm: 45000000, minExp: 45000000, maxExp: 1508495800, title: 'Hóa Thần Chân Quân'),
+    CultivationRealmModel(index: 5, name: 'Luyện Hư', subRealms: 10, expPerSubRealm: 1600000000, minExp: 1600000000, maxExp: 53635405800, title: 'Luyện Hư Chí Tôn'),
+    CultivationRealmModel(index: 6, name: 'Đại Thừa', subRealms: 10, expPerSubRealm: 55000000000, minExp: 55000000000, maxExp: 1843717075200, title: 'Đại Thừa Cường Giả'),
+    CultivationRealmModel(index: 7, name: 'Hợp Thể', subRealms: 10, expPerSubRealm: 2000000000000, minExp: 2000000000000, maxExp: 67044257280000, title: 'Hợp Thể Tiên Tôn'),
+    CultivationRealmModel(index: 8, name: 'Độ Kiếp', subRealms: 10, expPerSubRealm: 70000000000000, minExp: 70000000000000, maxExp: 2346549004800000, title: 'Chuẩn Tiên Thiên Kiếp'),
     CultivationRealmModel(index: 9, name: 'Phi Tiên', subRealms: 1, expPerSubRealm: 0, minExp: 0, maxExp: 0, title: 'Chân Tiên Phi Thăng'),
   ];
 }

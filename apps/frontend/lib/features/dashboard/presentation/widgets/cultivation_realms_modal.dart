@@ -18,6 +18,18 @@ class CultivationRealmsModal extends StatelessWidget {
   }
 
   String _formatNumber(int value) {
+    if (value >= 1000000000000000) {
+      final v = value / 1000000000000000;
+      return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} Tr.Tỷ';
+    }
+    if (value >= 1000000000000) {
+      final v = value / 1000000000000;
+      return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} Ngàn Tỷ';
+    }
+    if (value >= 1000000000) {
+      final v = value / 1000000000;
+      return '${v.toStringAsFixed(v.truncateToDouble() == v ? 0 : 2)} Tỷ';
+    }
     return value.toString().replaceAllMapped(
       RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
       (Match m) => '${m[1]}.',
@@ -26,17 +38,17 @@ class CultivationRealmsModal extends StatelessWidget {
 
   int _calculateSubRealmExp(int realmIndex, int tier) {
     if (realmIndex == 0) return 1000;
-    if (realmIndex >= 9) return 9999999;
+    if (realmIndex >= 9) return 9999999999999999;
 
     const baseExps = {
-      1: 1000,   // Luyện Khí
-      2: 2500,   // Kết Đan
-      3: 5000,   // Nguyên Anh
-      4: 10000,  // Hóa Thần
-      5: 20000,  // Luyện Hư
-      6: 40000,  // Đại Thừa
-      7: 80000,  // Hợp Thể
-      8: 150000, // Độ Kiếp
+      1: 1000,           // Luyện Khí (Tầng 1: 1.000 -> Tầng 10: 33.550)
+      2: 35000,          // Kết Đan (Tầng 1: 35.000 -> Tầng 10: 1.173.050)
+      3: 1250000,        // Nguyên Anh (Tầng 1: 1.250.000 -> Tầng 10: 41.902.700)
+      4: 45000000,       // Hóa Thần (Tầng 1: 45.000.000 -> Tầng 10: 1.508.495.800)
+      5: 1600000000,     // Luyện Hư (Tầng 1: 1.600.000.000 -> Tầng 10: 53.635.405.800)
+      6: 55000000000,    // Đại Thừa (Tầng 1: 55.000.000.000 -> Tầng 10: 1.843.717.075.200)
+      7: 2000000000000,  // Hợp Thể (Tầng 1: 2.000.000.000.000 -> Tầng 10: 67.044.257.280.000)
+      8: 70000000000000, // Độ Kiếp (Tầng 1: 70.000.000.000.000 -> Tầng 10: 2.346.549.004.800.000)
     };
 
     final base = baseExps[realmIndex] ?? 1000;
@@ -146,7 +158,7 @@ class CultivationRealmsModal extends StatelessWidget {
                         style: TextStyle(color: Color(0xFFBAC7D5), fontSize: 11),
                       ),
                       Text(
-                        'Tổng: ${_formatNumber(totalExp)} EXP',
+                        'Tổng: ${_formatNumber(totalExp)} Linh Lực',
                         style: const TextStyle(
                           color: Color(0xFFF2C465),
                           fontWeight: FontWeight.bold,
@@ -218,7 +230,7 @@ class CultivationRealmsModal extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 Text(
-                                  '${_formatNumber(item['exp'])} EXP',
+                                  '${_formatNumber(item['exp'])} Linh Lực',
                                   style: TextStyle(
                                     color: isCurrentTier
                                         ? const Color(0xFFF2C465)
@@ -549,10 +561,10 @@ class CultivationRealmsModal extends StatelessWidget {
                                 Text(
                                   realm.expPerSubRealm > 0
                                       ? (realm.index == 0
-                                          ? '${_formatNumber(realm.expPerSubRealm)} EXP đột phá'
+                                          ? '${_formatNumber(realm.expPerSubRealm)} Linh Lực đột phá'
                                           : (realm.minExp > 0 && realm.maxExp > realm.minExp
-                                              ? '${_formatNumber(realm.minExp)} - ${_formatNumber(realm.maxExp)} EXP'
-                                              : '${_formatNumber(realm.expPerSubRealm)} EXP/tầng'))
+                                              ? '${_formatNumber(realm.minExp)} - ${_formatNumber(realm.maxExp)} Linh Lực'
+                                              : '${_formatNumber(realm.expPerSubRealm)} Linh Lực/tầng'))
                                       : 'Cực cảnh',
                                   style: TextStyle(
                                     color: isCurrent ? const Color(0xFFF2C465) : const Color(0xFF7E98AE),

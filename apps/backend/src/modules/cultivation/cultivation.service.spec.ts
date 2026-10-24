@@ -60,7 +60,7 @@ describe('CultivationService', () => {
     expect(result.profile.realmIndex).toBe(2);
     expect(result.profile.realmName).toBe('Kết Đan');
     expect(result.profile.subRealm).toBe(1);
-    expect(result.profile.maxExp).toBe(2500); // 2.500 EXP Tầng 1 ở Kết Đan
+    expect(result.profile.maxExp).toBe(35000); // 35.000 Linh Lực Tầng 1 ở Kết Đan (tiếp nối từ 33.550 của Luyện Khí Tầng 10)
     expect(result.profile.currentExp).toBe(500);
   });
 
