@@ -62,21 +62,21 @@ class CultivationProfileModel {
 
     return CultivationProfileModel(
       userId: json['userId'] ?? '',
-      realmIndex: json['realmIndex'] ?? 1,
-      realmName: json['realmName'] ?? 'Luyện Khí',
+      realmIndex: json['realmIndex'] ?? 0,
+      realmName: json['realmName'] ?? 'Phàm Nhân',
       subRealm: json['subRealm'] ?? 1,
       currentExp: json['currentExp'] ?? 0,
       maxExp: json['maxExp'] ?? 1000,
       totalExp: json['totalExp'] ?? 0,
       spiritStones: json['spiritStones'] ?? 50,
       streakDays: json['streakDays'] ?? 1,
-      title: json['title'] ?? 'Luyện Khí Kỳ Tu Sĩ',
+      title: json['title'] ?? 'Phàm Thai Chưa Tỉnh',
       allRealms: realmsList.isNotEmpty ? realmsList : _defaultRealms,
     );
   }
 
   static final List<CultivationRealmModel> _defaultRealms = [
-    CultivationRealmModel(index: 0, name: 'Phàm Nhân', subRealms: 1, expPerSubRealm: 0, title: 'Phàm Thai Chưa Tỉnh'),
+    CultivationRealmModel(index: 0, name: 'Phàm Nhân', subRealms: 1, expPerSubRealm: 1000, title: 'Phàm Thai Chưa Tỉnh'),
     CultivationRealmModel(index: 1, name: 'Luyện Khí', subRealms: 10, expPerSubRealm: 1000, title: 'Luyện Khí Kỳ Tu Sĩ'),
     CultivationRealmModel(index: 2, name: 'Kết Đan', subRealms: 10, expPerSubRealm: 2500, title: 'Kim Đan Đại Sư'),
     CultivationRealmModel(index: 3, name: 'Nguyên Anh', subRealms: 10, expPerSubRealm: 5000, title: 'Nguyên Anh Lão Tổ'),
@@ -112,20 +112,34 @@ class CultivationRepository {
       }
     } catch (_) {}
 
-    // Fallback mặc định
+    // Fallback mặc định: Phàm Nhân, 0 Linh Lực, 50 Linh Thạch
     return CultivationProfileModel(
       userId: 'local-user',
-      realmIndex: 1,
-      realmName: 'Luyện Khí',
+      realmIndex: 0,
+      realmName: 'Phàm Nhân',
       subRealm: 1,
-      currentExp: 680,
+      currentExp: 0,
       maxExp: 1000,
-      totalExp: 680,
+      totalExp: 0,
       spiritStones: 50,
-      streakDays: 12,
-      title: 'Luyện Khí Kỳ Tu Sĩ',
+      streakDays: 1,
+      title: 'Phàm Thai Chưa Tỉnh',
       allRealms: CultivationProfileModel._defaultRealms,
     );
+  }
+
+  Future<List<Map<String, dynamic>>> getUserCampaigns() async {
+    final token = await _getToken();
+    try {
+      final res = await _apiClient.get(
+        ApiConstants.campaignsList,
+        token: token,
+      );
+      if (res is List) {
+        return res.cast<Map<String, dynamic>>();
+      }
+    } catch (_) {}
+    return [];
   }
 
   Future<Map<String, dynamic>?> generateAiCampaign(
@@ -148,13 +162,16 @@ class CultivationRepository {
     }
   }
 
-  Future<void> completeQuest(String questId) async {
+  Future<Map<String, dynamic>?> completeQuest(String questId) async {
     final token = await _getToken();
     try {
-      await _apiClient.post(
+      final res = await _apiClient.post(
         ApiConstants.campaignQuestComplete(questId),
         token: token,
       );
-    } catch (_) {}
+      return res as Map<String, dynamic>?;
+    } catch (_) {
+      return null;
+    }
   }
 }

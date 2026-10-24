@@ -30,7 +30,7 @@ export class CultivationService {
 
   private getRealmConfig(realmIndex: number): CultivationRealmConfig {
     const config = CULTIVATION_REALMS.find((r: CultivationRealmConfig) => r.index === realmIndex);
-    return config || CULTIVATION_REALMS[1]; // Mặc định Luyện Khí
+    return config || CULTIVATION_REALMS[0]; // Mặc định Phàm Nhân
   }
 
   async getProfile(userId: string): Promise<UserCultivationState> {
@@ -67,12 +67,12 @@ export class CultivationService {
       }
     }
 
-    // In-memory fallback (Khởi đầu: Luyện Khí Bậc 1, 0 / 1.000 EXP, 50 Linh Thạch)
+    // In-memory fallback (Khởi đầu: Phàm Nhân, 0 / 1.000 EXP, 50 Linh Thạch)
     if (!this.inMemoryState.has(userId)) {
-      const defaultRealm = CULTIVATION_REALMS[1]; // Luyện Khí
+      const defaultRealm = CULTIVATION_REALMS[0]; // Phàm Nhân
       this.inMemoryState.set(userId, {
         userId,
-        realmIndex: 1,
+        realmIndex: 0,
         realmName: defaultRealm.name,
         subRealm: 1,
         currentExp: 0,
@@ -104,8 +104,8 @@ export class CultivationService {
 
     // Tính toán thăng bậc hoặc thăng cảnh giới
     while (currentExp >= maxExp && realmIndex < 9) {
-      if (subRealm < 10) {
-        // Thăng bậc trong cảnh giới (1 -> 10)
+      if (subRealm < realmConfig.subRealms) {
+        // Thăng bậc trong cảnh giới
         subRealm += 1;
         currentExp -= maxExp;
         levelUp = true;
@@ -115,7 +115,7 @@ export class CultivationService {
         subRealm = 1;
         currentExp -= maxExp;
         realmConfig = this.getRealmConfig(realmIndex);
-        maxExp = realmConfig.expPerSubRealm;
+        maxExp = realmConfig.expPerSubRealm || 1000;
         levelUp = true;
         realmUp = true;
       }

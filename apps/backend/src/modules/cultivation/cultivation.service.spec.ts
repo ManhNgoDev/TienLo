@@ -13,9 +13,10 @@ describe('CultivationService', () => {
     service = new CultivationService(mockSupabaseService);
   });
 
-  it('should initialize user at Luyện Khí Bậc 1 with 0 EXP and 50 Linh Thạch', async () => {
+  it('should initialize user at Phàm Nhân with 0 EXP and 50 Linh Thạch', async () => {
     const profile = await service.getProfile('test-user-1');
-    expect(profile.realmName).toBe('Luyện Khí');
+    expect(profile.realmIndex).toBe(0);
+    expect(profile.realmName).toBe('Phàm Nhân');
     expect(profile.subRealm).toBe(1);
     expect(profile.currentExp).toBe(0);
     expect(profile.maxExp).toBe(1000);
@@ -23,18 +24,21 @@ describe('CultivationService', () => {
     expect(profile.allRealms.length).toBe(10);
   });
 
-  it('should level up sub-realm when EXP exceeds maxExp', async () => {
-    // Add 1200 EXP to Luyện Khí Bậc 1 (maxExp = 1000)
+  it('should breakthrough from Phàm Nhân to Luyện Khí Bậc 1 when reaching 1000 EXP', async () => {
+    // Add 1200 EXP to Phàm Nhân (maxExp = 1000)
     const result = await service.addExp('test-user-1', 1200);
     expect(result.levelUp).toBe(true);
-    expect(result.realmUp).toBe(false);
-    expect(result.profile.subRealm).toBe(2);
+    expect(result.realmUp).toBe(true);
+    expect(result.profile.realmIndex).toBe(1);
+    expect(result.profile.realmName).toBe('Luyện Khí');
+    expect(result.profile.subRealm).toBe(1);
     expect(result.profile.currentExp).toBe(200);
+    expect(result.profile.maxExp).toBe(1000);
   });
 
-  it('should breakthrough to next realm (Kết Đan) when reaching Bậc 10 + 100% EXP', async () => {
-    // Level up through Luyện Khí (10 bậc * 1000 EXP = 10,000 EXP)
-    const result = await service.addExp('test-user-breakthrough', 10500);
+  it('should breakthrough to next realm (Kết Đan) when reaching Bậc 10 + 100% EXP in Luyện Khí', async () => {
+    // First reach Luyện Khí Bậc 1 (1000 EXP), then 10 bậc * 1000 EXP = 10,000 EXP => total 11,000 + 500 = 11,500 EXP
+    const result = await service.addExp('test-user-breakthrough', 11500);
     expect(result.levelUp).toBe(true);
     expect(result.realmUp).toBe(true);
     expect(result.profile.realmIndex).toBe(2);

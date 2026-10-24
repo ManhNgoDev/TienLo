@@ -7,7 +7,7 @@ export interface CultivationRealmConfig {
 }
 
 export const CULTIVATION_REALMS: CultivationRealmConfig[] = [
-  { index: 0, name: 'Phàm Nhân', subRealms: 1, expPerSubRealm: 0, title: 'Phàm Thai Chưa Tỉnh' },
+  { index: 0, name: 'Phàm Nhân', subRealms: 1, expPerSubRealm: 1000, title: 'Phàm Thai Chưa Tỉnh' },
   { index: 1, name: 'Luyện Khí', subRealms: 10, expPerSubRealm: 1000, title: 'Luyện Khí Kỳ Tu Sĩ' },
   { index: 2, name: 'Kết Đan', subRealms: 10, expPerSubRealm: 2500, title: 'Kim Đan Đại Sư' },
   { index: 3, name: 'Nguyên Anh', subRealms: 10, expPerSubRealm: 5000, title: 'Nguyên Anh Lão Tổ' },

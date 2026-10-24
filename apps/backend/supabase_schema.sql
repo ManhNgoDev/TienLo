@@ -85,11 +85,11 @@ CREATE INDEX IF NOT EXISTS idx_users_firebase_uid ON public.users(firebase_uid);
 CREATE TABLE IF NOT EXISTS public.user_cultivations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id TEXT UNIQUE NOT NULL,         -- Firebase UID / Google OAuth UID
-    realm_index INT DEFAULT 1,             -- 0: Phàm Nhân, 1: Luyện Khí, ..., 9: Phi Tiên
-    realm_name TEXT DEFAULT 'Luyện Khí',  -- Tên cảnh giới
+    realm_index INT DEFAULT 0,            -- 0: Phàm Nhân, 1: Luyện Khí, ..., 9: Phi Tiên
+    realm_name TEXT DEFAULT 'Phàm Nhân',  -- Tên cảnh giới: Khởi đầu từ Phàm Nhân
     sub_realm INT DEFAULT 1,              -- Bậc 1 đến 10
     current_exp INT DEFAULT 0,            -- Linh lực tích lũy trong bậc hiện tại
-    max_exp INT DEFAULT 1000,             -- Linh lực cần để lên bậc tiếp theo
+    max_exp INT DEFAULT 1000,             -- Linh lực cần để lên bậc tiếp theo (1000 EXP để đột phá Luyện Khí)
     total_exp BIGINT DEFAULT 0,           -- Tổng linh lực trọn đời tu sĩ
     spirit_stones INT DEFAULT 50,         -- Linh thạch tích lũy (tiền tệ)
     streak_days INT DEFAULT 1,            -- Chuỗi ngày tu luyện
@@ -97,6 +97,11 @@ CREATE TABLE IF NOT EXISTS public.user_cultivations (
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Cập nhật dữ liệu cũ nếu người dùng đang ở Luyện Khí mà chưa có kinh nghiệm:
+UPDATE public.user_cultivations 
+SET realm_index = 0, realm_name = 'Phàm Nhân', max_exp = 1000 
+WHERE realm_index = 1 AND current_exp = 0;
 
 CREATE INDEX IF NOT EXISTS idx_user_cultivations_user_id ON public.user_cultivations(user_id);
 

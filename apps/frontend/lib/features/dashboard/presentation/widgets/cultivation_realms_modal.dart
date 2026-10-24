@@ -121,7 +121,9 @@ class CultivationRealmsModal extends StatelessWidget {
                         border: Border.all(color: const Color(0xFFF2C465), width: 1),
                       ),
                       child: Text(
-                        '${profile.realmName} • Tầng ${profile.subRealm}',
+                        profile.realmIndex == 0
+                            ? 'Phàm Nhân • Phàm Thai'
+                            : '${profile.realmName} • Tầng ${profile.subRealm}',
                         style: const TextStyle(
                           color: Color(0xFFF2C465),
                           fontWeight: FontWeight.bold,
@@ -282,8 +284,10 @@ class CultivationRealmsModal extends StatelessWidget {
                             children: [
                               Text(
                                 realm.expPerSubRealm > 0
-                                    ? '${_formatNumber(realm.expPerSubRealm)} EXP/bậc'
-                                    : (realm.index == 0 ? '0 EXP' : 'Cực cảnh'),
+                                    ? (realm.index == 0
+                                        ? '${_formatNumber(realm.expPerSubRealm)} EXP đột phá'
+                                        : '${_formatNumber(realm.expPerSubRealm)} EXP/bậc')
+                                    : 'Cực cảnh',
                                 style: TextStyle(
                                   color: isCurrent ? const Color(0xFFF2C465) : const Color(0xFF7E98AE),
                                   fontSize: 11.5,
@@ -292,7 +296,9 @@ class CultivationRealmsModal extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                realm.subRealms > 1 ? '${realm.subRealms} bậc' : 'Khởi đầu',
+                                realm.subRealms > 1
+                                    ? '${realm.subRealms} bậc'
+                                    : (realm.index == 0 ? 'Phàm Thai' : 'Cực Cảnh'),
                                 style: const TextStyle(
                                   color: Color(0xFF5A758D),
                                   fontSize: 10,

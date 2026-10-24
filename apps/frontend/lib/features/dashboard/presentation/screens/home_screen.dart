@@ -48,45 +48,14 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _campaignController = TextEditingController();
 
   int _currentNavIndex = 0;
-  int _currentExp = 680;
+  int _currentExp = 0;
   int _maxExp = 1000;
-  final int _streakDays = 12;
+  final int _streakDays = 1;
   int _spiritStones = 50;
   CultivationProfileModel? _cultivationProfile;
   bool _isGeneratingAi = false;
 
-  final List<QuestItem> _quests = [
-    QuestItem(
-      id: '1',
-      title: 'Tập Core 15 phút',
-      subtitle: '3 hiệp · Cường độ vừa',
-      xp: 120,
-      icon: Icons.fitness_center_rounded,
-      iconColor: const Color(0xFFF2C465),
-      isCompleted: false,
-      isXpClaimed: false,
-    ),
-    QuestItem(
-      id: '2',
-      title: 'Uống đủ 2L nước',
-      subtitle: 'Còn 800ml hôm nay',
-      xp: 60,
-      icon: Icons.water_drop_outlined,
-      iconColor: const Color(0xFF38BDF8),
-      isCompleted: false,
-      isXpClaimed: true,
-    ),
-    QuestItem(
-      id: '3',
-      title: 'Đi bộ 6.000 bước',
-      subtitle: '3.840 / 6.000 bước',
-      xp: 80,
-      icon: Icons.directions_walk_rounded,
-      iconColor: const Color(0xFFF2C465),
-      isCompleted: false,
-      isXpClaimed: false,
-    ),
-  ];
+  final List<QuestItem> _quests = [];
 
   int get _completedCount => _quests.where((q) => q.isCompleted || q.isXpClaimed).length;
 
@@ -96,57 +65,110 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadCultivationProfile();
   }
 
+  QuestItem _mapToQuestItem(dynamic q) {
+    IconData icon = Icons.fitness_center_rounded;
+    Color iconColor = const Color(0xFFF2C465);
+    final iconType = q['iconType']?.toString().toLowerCase();
+    if (iconType == 'water') {
+      icon = Icons.water_drop_outlined;
+      iconColor = const Color(0xFF38BDF8);
+    } else if (iconType == 'walk') {
+      icon = Icons.directions_walk_rounded;
+      iconColor = const Color(0xFFF2C465);
+    } else if (iconType == 'meditation' || iconType == 'study') {
+      icon = Icons.auto_awesome;
+      iconColor = const Color(0xFFF59E0B);
+    } else if (iconType == 'medal') {
+      icon = Icons.military_tech_rounded;
+      iconColor = const Color(0xFFFBBF24);
+    }
+
+    return QuestItem(
+      id: q['id']?.toString() ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      title: q['title']?.toString() ?? 'Nhiệm vụ tu tiên',
+      subtitle: q['subtitle']?.toString() ?? 'Hàng ngày',
+      xp: (q['expReward'] as num?)?.toInt() ?? (q['xp'] as num?)?.toInt() ?? 100,
+      icon: icon,
+      iconColor: iconColor,
+      isCompleted: q['isCompleted'] == true,
+      isXpClaimed: q['isXpClaimed'] == true,
+    );
+  }
+
   Future<void> _loadCultivationProfile() async {
     try {
       final profile = await _cultivationRepository.getProfile();
+      final campaigns = await _cultivationRepository.getUserCampaigns();
+
+      final List<QuestItem> loadedQuests = [];
+      for (final camp in campaigns) {
+        final rawQuests = camp['quests'];
+        if (rawQuests is List) {
+          for (final q in rawQuests) {
+            loadedQuests.add(_mapToQuestItem(q));
+          }
+        }
+      }
+
       if (mounted) {
         setState(() {
           _cultivationProfile = profile;
           _currentExp = profile.currentExp;
           _maxExp = profile.maxExp;
           _spiritStones = profile.spiritStones;
+          _quests.clear();
+          _quests.addAll(loadedQuests);
         });
       }
     } catch (_) {}
   }
 
   void _toggleQuest(QuestItem quest) async {
+    final previousCompleted = quest.isCompleted;
     setState(() {
       quest.isCompleted = !quest.isCompleted;
+      quest.isXpClaimed = quest.isCompleted;
       if (quest.isCompleted) {
-        quest.isXpClaimed = true;
         _currentExp += quest.xp;
         _spiritStones += 10;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: const Color(0xFF1E293B),
-            content: Row(
-              children: [
-                const Icon(Icons.auto_awesome, color: Color(0xFFF3C766), size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  'Hoàn thành tu luyện! +${quest.xp} Linh Lực, +10 Linh Thạch',
-                  style: const TextStyle(
-                    color: Color(0xFFFDE68A),
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            duration: const Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
       } else {
-        quest.isXpClaimed = false;
         _currentExp = (_currentExp - quest.xp).clamp(0, 100000);
         _spiritStones = (_spiritStones - 10).clamp(0, 100000);
       }
     });
 
-    if (quest.isCompleted) {
-      await _cultivationRepository.completeQuest(quest.id);
+    if (!previousCompleted) {
+      try {
+        final res = await _cultivationRepository.completeQuest(quest.id);
+        if (res != null) {
+          await _loadCultivationProfile();
+        }
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: const Color(0xFF1E293B),
+              content: Row(
+                children: [
+                  const Icon(Icons.auto_awesome, color: Color(0xFFF3C766), size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Hoàn thành tu luyện! +${quest.xp} Linh Lực, +10 Linh Thạch',
+                      style: const TextStyle(
+                        color: Color(0xFFFDE68A),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              duration: const Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        }
+      } catch (_) {}
     }
   }
 
@@ -186,36 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (campaignData != null && campaignData['quests'] != null) {
           final List<dynamic> rawQuests = campaignData['quests'];
           for (var q in rawQuests) {
-            IconData icon = Icons.fitness_center_rounded;
-            Color iconColor = const Color(0xFFF2C465);
-            final iconType = q['iconType']?.toString().toLowerCase();
-            if (iconType == 'water') {
-              icon = Icons.water_drop_outlined;
-              iconColor = const Color(0xFF38BDF8);
-            } else if (iconType == 'walk') {
-              icon = Icons.directions_walk_rounded;
-              iconColor = const Color(0xFFF2C465);
-            } else if (iconType == 'meditation' || iconType == 'study') {
-              icon = Icons.auto_awesome;
-              iconColor = const Color(0xFFF59E0B);
-            } else if (iconType == 'medal') {
-              icon = Icons.military_tech_rounded;
-              iconColor = const Color(0xFFFBBF24);
-            }
-
-            _quests.insert(
-              0,
-              QuestItem(
-                id: q['id'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
-                title: q['title'] ?? 'Nhiệm vụ tu tiên',
-                subtitle: q['subtitle'] ?? 'Hàng ngày',
-                xp: q['expReward'] ?? 150,
-                icon: icon,
-                iconColor: iconColor,
-                isCompleted: false,
-                isXpClaimed: false,
-              ),
-            );
+            _quests.insert(0, _mapToQuestItem(q));
           }
         } else {
           // Local fallback
@@ -573,8 +566,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 3),
                         Text(
                           _cultivationProfile != null
-                              ? '${_cultivationProfile!.realmName} • Tầng ${_cultivationProfile!.subRealm}'
-                              : 'Cấp 12 • Kẻ Kiến Tạo',
+                              ? (_cultivationProfile!.realmIndex == 0
+                                  ? 'Phàm Nhân'
+                                  : '${_cultivationProfile!.realmName} • Tầng ${_cultivationProfile!.subRealm}')
+                              : 'Phàm Nhân',
                           style: const TextStyle(
                             fontFamily: 'serif',
                             color: Color(0xFFFFF6DF),
@@ -862,7 +857,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 SizedBox(height: 2),
                 Text(
-                  'Ba hành động tạo khác biệt',
+                  'Nhiệm vụ tu tiên hôm nay',
                   style: TextStyle(
                     color: Color(0xFFFFF2D1),
                     fontSize: 20,
@@ -872,20 +867,95 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            Text(
-              '$_completedCount/${_quests.length} đã hoàn thành',
-              style: const TextStyle(
-                color: Color(0xFF94A3B8),
-                fontSize: 11.5,
+            if (_quests.isNotEmpty)
+              Text(
+                '$_completedCount/${_quests.length} đã hoàn thành',
+                style: const TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 11.5,
+                ),
               ),
-            ),
           ],
         ),
         const SizedBox(height: 14),
 
-        // List of Quests
-        ..._quests.map((quest) => _buildQuestCard(quest)),
+        // List of Quests or Cultivation Empty State
+        if (_quests.isEmpty)
+          _buildEmptyQuestsCard()
+        else
+          ..._quests.map((quest) => _buildQuestCard(quest)),
       ],
+    );
+  }
+
+  Widget _buildEmptyQuestsCard() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(22),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 26),
+          decoration: BoxDecoration(
+            color: const Color(0xFF07121E).withValues(alpha: 0.88),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: const Color(0xFFC59A44).withValues(alpha: 0.6),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF0B1726),
+                  border: Border.all(
+                    color: const Color(0xFFF2C465).withValues(alpha: 0.5),
+                    width: 1.2,
+                  ),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.auto_awesome,
+                    color: Color(0xFFF2C465),
+                    size: 26,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'Chưa có nhiệm vụ tu luyện',
+                style: TextStyle(
+                  fontFamily: 'serif',
+                  color: Color(0xFFFFF6DF),
+                  fontSize: 16.5,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Hãy nhập mục tiêu vào "Tạo chiến dịch mới" phía trên để Thiên Đạo AI diễn toán và ban bố nhiệm vụ tu chân cho đạo hữu!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFF8BA5BA),
+                  fontSize: 13,
+                  height: 1.45,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
