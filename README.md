@@ -1,67 +1,86 @@
 # TienLo Monorepo (`tienlo-be-fe`)
 
-Monorepo chứa toàn bộ mã nguồn của dự án **TienLo**, bao gồm Backend xây dựng trên **NestJS** và Frontend phát triển bằng **Flutter**.
+Monorepo chứa toàn bộ mã nguồn của dự án **TienLo** - Ứng dụng phát triển bản thân, theo dõi thói quen & nhật ký hằng ngày:
+- **Backend**: NestJS (TypeScript, Module Architecture, Firebase Admin Auth Guard, Supabase Service)
+- **Frontend**: Flutter (Feature-First Clean Architecture, Google Sign-In, Material 3)
 
 ---
 
-## 📁 Cấu trúc thư mục (Project Structure)
+## 📁 Cấu trúc thư mục chuẩn (Enterprise Architecture)
 
 ```text
 tienlo-be-fe/
 ├── apps/
-│   ├── backend/             # NestJS API Backend (Node.js + TypeScript)
+│   ├── backend/                         # NestJS API Backend (TypeScript)
 │   │   ├── src/
-│   │   │   ├── app.controller.ts
+│   │   │   ├── common/                  # Dùng chung toàn hệ thống
+│   │   │   │   ├── decorators/          # @CurrentUser()
+│   │   │   │   ├── guards/              # FirebaseAuthGuard (Bearer token)
+│   │   │   │   └── interfaces/          # IAuthUser
+│   │   │   ├── config/                  # Quản lý cấu hình
+│   │   │   │   └── firebase.config.ts   # Firebase Admin SDK initialization
+│   │   │   ├── modules/                 # Các module nghiệp vụ tách biệt
+│   │   │   │   ├── auth/                # POST /api/auth/sync, GET /api/auth/me
+│   │   │   │   ├── users/               # GET /api/users/profile
+│   │   │   │   └── database/            # SupabaseService (PostgreSQL client)
 │   │   │   ├── app.module.ts
-│   │   │   ├── app.service.ts
-│   │   │   └── main.ts
-│   │   ├── test/
-│   │   ├── package.json
-│   │   └── tsconfig.json
+│   │   │   └── main.ts                  # Prefix /api, CORS, ValidationPipe
+│   │   ├── .env.example
+│   │   └── package.json
 │   │
-│   └── frontend/            # Flutter Frontend (Dart - Cross-Platform)
+│   └── frontend/                        # Flutter App (Feature-First Structure)
 │       ├── lib/
-│       │   └── main.dart    # Giao diện chính & kết nối API Backend
-│       ├── test/
-│       │   └── widget_test.dart
-│       ├── pubspec.yaml
-│       └── ...
+│       │   ├── core/                    # Core dùng chung
+│       │   │   ├── constants/           # ApiConstants
+│       │   │   ├── network/             # ApiClient (gắn token tự động)
+│       │   │   └── theme/               # AppColors, AppTheme
+│       │   ├── features/                # Chia theo tính năng (Feature-driven)
+│       │   │   ├── auth/                # Tính năng xác thực
+│       │   │   │   ├── data/            # AuthService (Google), AuthRepository
+│       │   │   │   ├── domain/          # UserModel
+│       │   │   │   └── presentation/    # LoginScreen, GoogleSignInButton
+│       │   │   └── dashboard/           # Màn hình chính sau đăng nhập
+│       │   │       └── presentation/    # HomeScreen
+│       │   └── main.dart                # Điểm khởi chạy & định tuyến Auth
+│       ├── test/                        # Unit & Widget tests
+│       └── pubspec.yaml
 │
-├── package.json             # Root package script điều phối dự án
-├── .gitignore               # Bộ lọc Git chuẩn cho cả NestJS và Flutter
-└── README.md                # Tài liệu hướng dẫn sử dụng
+├── package.json                         # Root NPM Scripts điều phối
+├── .gitignore                           # Đã cấu hình lọc rác Git
+└── README.md
 ```
 
 ---
 
-## 🛠️ Yêu cầu môi trường (Prerequisites)
+## 🛠️ Luồng Đăng nhập & Xác thực (Auth Flow)
 
-- **Node.js**: Phiên bản 18+ (khuyên dùng Node 20 hoặc 24 LTS)
-- **NPM**: Phiên bản 9+
-- **Flutter SDK**: Phiên bản 3.x+ (kênh stable)
-- Trình duyệt Chrome hoặc thiết bị Android/iOS giả lập / Windows desktop runner.
+```text
+[Flutter Client]
+       │  Bấm "Đăng nhập Google"
+       ▼
+[Google / Firebase Auth]
+       │  Trả về ID Token (JWT)
+       ▼
+[NestJS Backend API] ──(Header: Bearer <ID_Token>)──> [FirebaseAuthGuard]
+       │                                                         │ Xác thực hợp lệ
+       ▼                                                         ▼
+[Supabase Database] <──(Upsert User: firebase_uid, email)───────┘
+```
+
+> **Chế độ Dev Demo**: Hệ thống hỗ trợ chế độ "Đăng nhập Thử nghiệm (Dev Demo)" cho phép bạn chạy thử ngay toàn bộ luồng kết nối Flutter → NestJS → Supabase trước khi cần cấu hình Google Cloud OAuth và Firebase Service Account.
 
 ---
 
-## 🚀 Hướng dẫn khởi chạy nhanh (Quick Start)
-
-Bạn có thể chạy các lệnh điều phối trực tiếp từ thư mục gốc của monorepo:
+## 🚀 Hướng dẫn khởi chạy nhanh
 
 ### 1. Khởi chạy Backend (NestJS)
-
 ```bash
-# Chế độ phát triển (watch mode - tự động reload khi sửa code)
 npm run dev:be
-
-# Hoặc di chuyển vào thư mục backend
-cd apps/backend
-npm run start:dev
 ```
-- Máy chủ backend sẽ lắng nghe tại: `http://localhost:3000/api`
-- Kiểm tra trạng thái máy chủ (Health Check): `http://localhost:3000/api/health`
+- Server chạy tại: `http://localhost:3000/api`
+- Health check: `http://localhost:3000/api/health`
 
 ### 2. Khởi chạy Frontend (Flutter)
-
 ```bash
 # Chạy trên trình duyệt Chrome (Web)
 npm run dev:fe:chrome
@@ -69,42 +88,18 @@ npm run dev:fe:chrome
 # Hoặc chạy trên Windows Desktop
 npm run dev:fe:windows
 
-# Hoặc tự chọn thiết bị khả dụng
+# Hoặc thiết bị tự chọn
 npm run dev:fe
 ```
 
 ---
 
-## 📋 Danh sách lệnh hữu ích (Available Scripts)
+## ⚙️ Cấu hình Môi trường (.env) cho Backend
 
-| Lệnh | Ý nghĩa |
-| :--- | :--- |
-| `npm run dev:be` | Chạy NestJS backend ở chế độ watch mode |
-| `npm run build:be` | Biên dịch backend NestJS sang thư mục `dist/` |
-| `npm run test:be` | Chạy unit tests cho backend với Vitest |
-| `npm run lint:be` | Kiểm tra cú pháp và code quality backend |
-| `npm run dev:fe` | Chạy ứng dụng Flutter |
-| `npm run dev:fe:chrome` | Chạy Flutter trên Google Chrome |
-| `npm run dev:fe:windows`| Chạy Flutter dưới dạng ứng dụng Windows native |
-| `npm run analyze:fe` | Kiểm tra phân tích tĩnh (static analysis) Flutter |
-| `npm run test:fe` | Chạy unit tests cho Flutter |
-| `npm run build:fe:web` | Build ứng dụng Flutter cho Web |
-| `npm run build:fe:apk` | Build file cài đặt Android APK |
-
----
-
-## 🔌 Tích hợp API giữa Backend & Frontend
-
-- Backend NestJS đã được cấu hình sẵn **CORS** và đặt tiền tố toàn cục là `/api`.
-- Endpoint kiểm tra:
-  - `GET /api` - Thông điệp chào mừng
-  - `GET /api/health` - Trả về trạng thái hoạt động JSON của hệ thống:
-    ```json
-    {
-      "status": "ok",
-      "message": "TienLo NestJS Backend is up and running!",
-      "service": "tienlo-backend",
-      "timestamp": "2026-10-24T..."
-    }
-    ```
-- Frontend Flutter đã tích hợp sẵn thư viện `http` và giao diện trực quan cho phép kiểm tra gửi Ping trực tiếp đến Backend.
+Sao chép file mẫu:
+```bash
+cp apps/backend/.env.example apps/backend/.env
+```
+Điền các giá trị:
+- `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` (Lấy từ Firebase Console).
+- `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (Lấy từ Supabase Dashboard).
