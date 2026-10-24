@@ -24,6 +24,7 @@ apps/frontend/.flutter-plugins-dependencies
 apps/frontend/.packages
 apps/frontend/build/
 apps/frontend/**/.generated/
+apps/frontend/android/.kotlin/
 
 # OS Files
 .DS_Store
