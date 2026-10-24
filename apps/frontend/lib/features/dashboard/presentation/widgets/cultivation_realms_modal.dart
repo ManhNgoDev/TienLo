@@ -60,34 +60,37 @@ class CultivationRealmsModal extends StatelessWidget {
               ),
               const SizedBox(height: 16),
 
-              // 2. Modal Header
+              // 2. Modal Header (responsive with Expanded to avoid overflow)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'BẢNG HỆ THỐNG TU TIÊN',
-                          style: TextStyle(
-                            color: Color(0xFFC59A44),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.8,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'BẢNG HỆ THỐNG TU TIÊN',
+                            style: TextStyle(
+                              color: Color(0xFFC59A44),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 1.6,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '10 Cảnh Giới • Phàm Nhân Đến Phi Tiên',
-                          style: GoogleFonts.playfairDisplay(
-                            color: const Color(0xFFFFF6DF),
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
+                          const SizedBox(height: 3),
+                          Text(
+                            '10 Cảnh Giới • Phàm Nhân Đến Phi Tiên',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.playfairDisplay(
+                              color: const Color(0xFFFFF6DF),
+                              fontSize: 16.5,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.close_rounded, color: Color(0xFF8BA5BA)),
@@ -98,10 +101,10 @@ class CultivationRealmsModal extends StatelessWidget {
               ),
               const SizedBox(height: 14),
 
-              // 3. User Current Status Bar
+              // 3. User Current Status Bar (compact & responsive badges)
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                 decoration: BoxDecoration(
                   color: const Color(0xFF0B1726),
                   borderRadius: BorderRadius.circular(16),
@@ -113,51 +116,85 @@ class CultivationRealmsModal extends StatelessWidget {
                 child: Row(
                   children: [
                     // Realm Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF2C465).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFF2C465), width: 1),
-                      ),
-                      child: Text(
-                        profile.realmIndex == 0
-                            ? 'Phàm Nhân • Phàm Thai'
-                            : '${profile.realmName} • Tầng ${profile.subRealm}',
-                        style: const TextStyle(
-                          color: Color(0xFFF2C465),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF2C465).withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: const Color(0xFFF2C465), width: 1),
+                              ),
+                              child: Text(
+                                profile.realmIndex == 0
+                                    ? 'Phàm Nhân • Phàm Thai'
+                                    : '${profile.realmName} • Tầng ${profile.subRealm}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Color(0xFFF2C465),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 8),
 
-                    // Nguyên Thạch
-                    Row(
-                      children: [
-                        const Icon(Icons.diamond_outlined, color: Color(0xFF38BDF8), size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${profile.spiritStones} Nguyên Thạch',
-                          style: const TextStyle(
-                            color: Color(0xFF38BDF8),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12.5,
+                    // Nguyên Thạch Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF38BDF8).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.35)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.diamond_outlined, color: Color(0xFF38BDF8), size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${profile.spiritStones}',
+                            style: const TextStyle(
+                              color: Color(0xFF38BDF8),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Icon(Icons.auto_awesome, color: Color(0xFFF2C465), size: 16),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${_formatNumber(profile.currentExp)}/${_formatNumber(profile.maxExp)}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // EXP Badge
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF2C465).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFF2C465).withValues(alpha: 0.35)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.auto_awesome, color: Color(0xFFF2C465), size: 13),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${_formatNumber(profile.currentExp)}/${_formatNumber(profile.maxExp)}',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11.5,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -277,7 +314,7 @@ class CultivationRealmsModal extends StatelessWidget {
                             ),
                           ),
 
-                          // EXP requirement
+                          // EXP requirement (Tầng 1-10 tăng lũy tiến từ x0.1 đến x1.9)
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
@@ -285,7 +322,9 @@ class CultivationRealmsModal extends StatelessWidget {
                                 realm.expPerSubRealm > 0
                                     ? (realm.index == 0
                                         ? '${_formatNumber(realm.expPerSubRealm)} EXP đột phá'
-                                        : '${_formatNumber(realm.expPerSubRealm)} EXP/bậc')
+                                        : (realm.minExp > 0 && realm.maxExp > realm.minExp
+                                            ? '${_formatNumber(realm.minExp)} - ${_formatNumber(realm.maxExp)} EXP'
+                                            : '${_formatNumber(realm.expPerSubRealm)} EXP/tầng'))
                                     : 'Cực cảnh',
                                 style: TextStyle(
                                   color: isCurrent ? const Color(0xFFF2C465) : const Color(0xFF7E98AE),
@@ -296,7 +335,7 @@ class CultivationRealmsModal extends StatelessWidget {
                               const SizedBox(height: 2),
                               Text(
                                 realm.subRealms > 1
-                                    ? '${realm.subRealms} bậc'
+                                    ? '${realm.subRealms} tầng (x0.1 ↗ x1.9)'
                                     : (realm.index == 0 ? 'Phàm Thai' : 'Cực Cảnh'),
                                 style: const TextStyle(
                                   color: Color(0xFF5A758D),

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CultivationService } from './cultivation.service.js';
-import { CULTIVATION_REALMS } from './cultivation.constants.js';
+import { calculateSubRealmExp } from './cultivation.constants.js';
 
 describe('CultivationService', () => {
   let service: CultivationService;
@@ -24,7 +24,7 @@ describe('CultivationService', () => {
     expect(profile.allRealms.length).toBe(10);
   });
 
-  it('should breakthrough from Phàm Nhân to Luyện Khí Bậc 1 when reaching 1000 EXP', async () => {
+  it('should breakthrough from Phàm Nhân to Luyện Khí Tầng 1 when reaching 1000 EXP', async () => {
     // Add 1200 EXP to Phàm Nhân (maxExp = 1000)
     const result = await service.addExp('test-user-1', 1200);
     expect(result.levelUp).toBe(true);
@@ -36,15 +36,31 @@ describe('CultivationService', () => {
     expect(result.profile.maxExp).toBe(1000);
   });
 
-  it('should breakthrough to next realm (Kết Đan) when reaching Bậc 10 + 100% EXP in Luyện Khí', async () => {
-    // First reach Luyện Khí Bậc 1 (1000 EXP), then 10 bậc * 1000 EXP = 10,000 EXP => total 11,000 + 500 = 11,500 EXP
-    const result = await service.addExp('test-user-breakthrough', 11500);
+  it('should scale subrealm EXP from Tầng 1 to Tầng 2 by x1.1 (+0.1)', async () => {
+    // Breakthrough into Luyện Khí Tầng 1 (1000 EXP) + 1000 EXP to reach Tầng 2
+    // User starts at Phàm Nhân (1000 needed to reach Luyện Khí Tầng 1)
+    // Then 1000 needed to advance to Luyện Khí Tầng 2
+    // Total 2050 EXP => Luyện Khí Tầng 2 with 50 EXP
+    const result = await service.addExp('test-user-scale', 2050);
+    expect(result.profile.realmIndex).toBe(1);
+    expect(result.profile.subRealm).toBe(2);
+    expect(result.profile.currentExp).toBe(50);
+    // Tầng 2 requires 1100 EXP (1000 * 1.1)
+    expect(result.profile.maxExp).toBe(1100);
+    expect(calculateSubRealmExp(1, 2)).toBe(1100);
+    expect(calculateSubRealmExp(1, 3)).toBe(1300);
+    expect(calculateSubRealmExp(1, 10)).toBe(33550);
+  });
+
+  it('should breakthrough to next realm (Kết Đan) when reaching Tầng 10 + 100% EXP in Luyện Khí', async () => {
+    // 1000 (Phàm Nhân) + 77850 (Tổng 10 tầng Luyện Khí) + 500 = 79350 EXP
+    const result = await service.addExp('test-user-breakthrough', 79350);
     expect(result.levelUp).toBe(true);
     expect(result.realmUp).toBe(true);
     expect(result.profile.realmIndex).toBe(2);
     expect(result.profile.realmName).toBe('Kết Đan');
     expect(result.profile.subRealm).toBe(1);
-    expect(result.profile.maxExp).toBe(2500); // 2.500 EXP/bậc ở Kết Đan
+    expect(result.profile.maxExp).toBe(2500); // 2.500 EXP Tầng 1 ở Kết Đan
     expect(result.profile.currentExp).toBe(500);
   });
 

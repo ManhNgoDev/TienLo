@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { SupabaseService } from '../database/supabase.service.js';
 import {
   CULTIVATION_REALMS,
+  calculateSubRealmExp,
   type CultivationRealmConfig,
 } from './cultivation.constants.js';
 
@@ -48,13 +49,14 @@ export class CultivationService {
           this.logger.warn(`Lỗi đọc user_cultivations: ${error.message}`);
         } else if (data) {
           const realmConfig = this.getRealmConfig(data.realm_index);
+          const maxExp = calculateSubRealmExp(data.realm_index, data.sub_realm);
           return {
             userId: data.user_id,
             realmIndex: data.realm_index,
             realmName: data.realm_name || realmConfig.name,
             subRealm: data.sub_realm,
             currentExp: data.current_exp,
-            maxExp: data.max_exp || realmConfig.expPerSubRealm,
+            maxExp,
             totalExp: Number(data.total_exp || 0),
             spiritStones: data.spirit_stones,
             streakDays: data.streak_days,
@@ -76,7 +78,7 @@ export class CultivationService {
         realmName: defaultRealm.name,
         subRealm: 1,
         currentExp: 0,
-        maxExp: defaultRealm.expPerSubRealm,
+        maxExp: calculateSubRealmExp(0, 1),
         totalExp: 0,
         spiritStones: 0,
         streakDays: 1,
@@ -102,12 +104,13 @@ export class CultivationService {
 
     let realmConfig = this.getRealmConfig(realmIndex);
 
-    // Tính toán thăng bậc hoặc thăng cảnh giới
+    // Tính toán thăng tầng hoặc thăng cảnh giới
     while (currentExp >= maxExp && realmIndex < 9) {
       if (subRealm < realmConfig.subRealms) {
-        // Thăng bậc trong cảnh giới
+        // Thăng tầng trong cảnh giới (Tầng 1 -> Tầng 2 -> ... -> Tầng 10)
         subRealm += 1;
         currentExp -= maxExp;
+        maxExp = calculateSubRealmExp(realmIndex, subRealm);
         levelUp = true;
       } else {
         // Đột phá sang cảnh giới kế tiếp!
@@ -115,7 +118,7 @@ export class CultivationService {
         subRealm = 1;
         currentExp -= maxExp;
         realmConfig = this.getRealmConfig(realmIndex);
-        maxExp = realmConfig.expPerSubRealm || 1000;
+        maxExp = calculateSubRealmExp(realmIndex, subRealm);
         levelUp = true;
         realmUp = true;
       }

@@ -81,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (realmName == 'Phàm Nhân') {
       return 'Phàm Nhân Bắt Đầu\nTu Tiên';
     }
-    return '$realmName Bậc ${_cultivationProfile?.subRealm ?? 1}\nTu Tiên Lộ';
+    return '$realmName Tầng ${_cultivationProfile?.subRealm ?? 1}\nTu Tiên Lộ';
   }
 
   @override
