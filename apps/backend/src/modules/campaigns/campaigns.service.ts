@@ -134,20 +134,30 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
         let response: any;
         try {
           response = await this.genAiClient.models.generateContent({
-            model: 'gemini-2.0-flash',
+            model: 'gemini-2.5-flash',
             contents: prompt,
             config: {
               responseMimeType: 'application/json',
             },
           });
         } catch (_) {
-          response = await this.genAiClient.models.generateContent({
-            model: 'gemini-1.5-flash',
-            contents: prompt,
-            config: {
-              responseMimeType: 'application/json',
-            },
-          });
+          try {
+            response = await this.genAiClient.models.generateContent({
+              model: 'gemini-2.0-flash',
+              contents: prompt,
+              config: {
+                responseMimeType: 'application/json',
+              },
+            });
+          } catch (__) {
+            response = await this.genAiClient.models.generateContent({
+              model: 'gemini-1.5-flash',
+              contents: prompt,
+              config: {
+                responseMimeType: 'application/json',
+              },
+            });
+          }
         }
 
         const text = response.text?.trim() || '';
@@ -561,16 +571,24 @@ Hãy trả về JSON theo đúng định dạng sau (chỉ JSON thuần túy, kh
         let response: any;
         try {
           response = await this.genAiClient.models.generateContent({
-            model: 'gemini-2.0-flash',
+            model: 'gemini-2.5-flash',
             contents: prompt,
             config: { responseMimeType: 'application/json' },
           });
         } catch (_) {
-          response = await this.genAiClient.models.generateContent({
-            model: 'gemini-1.5-flash',
-            contents: prompt,
-            config: { responseMimeType: 'application/json' },
-          });
+          try {
+            response = await this.genAiClient.models.generateContent({
+              model: 'gemini-2.0-flash',
+              contents: prompt,
+              config: { responseMimeType: 'application/json' },
+            });
+          } catch (__) {
+            response = await this.genAiClient.models.generateContent({
+              model: 'gemini-1.5-flash',
+              contents: prompt,
+              config: { responseMimeType: 'application/json' },
+            });
+          }
         }
 
         const text = response.text?.trim() || '';
