@@ -13,13 +13,13 @@
     "test:be": "npm --prefix apps/backend run test",
     "lint:be": "npm --prefix apps/backend run lint",
     "dev:fe": "cd apps/frontend && flutter run",
-    "dev:fe:chrome": "cd apps/frontend && flutter run -d chrome",
-    "dev:fe:windows": "cd apps/frontend && flutter run -d windows",
     "build:fe:apk": "cd apps/frontend && flutter build apk",
-    "build:fe:web": "cd apps/frontend && flutter build web",
+    "build:fe:appbundle": "cd apps/frontend && flutter build appbundle",
+    "build:fe:ios": "cd apps/frontend && flutter build ios --no-codesign",
     "test:fe": "cd apps/frontend && flutter test",
     "analyze:fe": "cd apps/frontend && flutter analyze"
   },
+
   "keywords": [
     "monorepo",
     "nestjs",

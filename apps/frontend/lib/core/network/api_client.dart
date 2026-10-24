@@ -5,7 +5,8 @@ import '../constants/api_constants.dart';
 class ApiClient {
   final String baseUrl;
 
-  ApiClient({this.baseUrl = ApiConstants.defaultBaseUrl});
+  ApiClient({String? baseUrl}) : baseUrl = baseUrl ?? ApiConstants.defaultBaseUrl;
+
 
   Map<String, String> _buildHeaders(String? token) {
     final headers = {

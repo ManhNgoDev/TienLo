@@ -80,17 +80,15 @@ npm run dev:be
 - Server chạy tại: `http://localhost:3000/api`
 - Health check: `http://localhost:3000/api/health`
 
-### 2. Khởi chạy Frontend (Flutter)
+### 2. Khởi chạy Frontend Mobile (Flutter)
 ```bash
-# Chạy trên trình duyệt Chrome (Web)
-npm run dev:fe:chrome
-
-# Hoặc chạy trên Windows Desktop
-npm run dev:fe:windows
-
-# Hoặc thiết bị tự chọn
+# Chạy trực tiếp trên thiết bị Android Emulator (Pixel) hoặc điện thoại thật
 npm run dev:fe
+
+# Hoặc chỉ định rõ thiết bị
+flutter run -d emulator-5554
 ```
+
 
 ---
 
