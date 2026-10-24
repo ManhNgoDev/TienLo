@@ -18,17 +18,17 @@ export interface CultivationRealmConfig {
  */
 export function calculateSubRealmExp(realmIndex: number, subRealm: number): number {
   if (realmIndex === 0) return 1000;
-  if (realmIndex >= 9) return 9999999999999999;
+  if (realmIndex >= 9) return 99999999999;
 
   const baseExps: Record<number, number> = {
-    1: 1000,           // Luyện Khí (Tầng 1: 1.000 -> Tầng 10: 33.550)
-    2: 35000,          // Kết Đan (Tầng 1: 35.000 -> Tầng 10: 1.173.050)
-    3: 1250000,        // Nguyên Anh (Tầng 1: 1.250.000 -> Tầng 10: 41.902.700)
-    4: 45000000,       // Hóa Thần (Tầng 1: 45.000.000 -> Tầng 10: 1.508.495.800)
-    5: 1600000000,     // Luyện Hư (Tầng 1: 1.600.000.000 -> Tầng 10: 53.635.405.800)
-    6: 55000000000,    // Đại Thừa (Tầng 1: 55.000.000.000 -> Tầng 10: 1.843.717.075.200)
-    7: 2000000000000,  // Hợp Thể (Tầng 1: 2.000.000.000.000 -> Tầng 10: 67.044.257.280.000)
-    8: 70000000000000, // Độ Kiếp (Tầng 1: 70.000.000.000.000 -> Tầng 10: 2.346.549.004.800.000)
+    1: 1000,       // Luyện Khí (Tầng 1: 1.000 -> Tầng 10: 6.050)
+    2: 7500,       // Kết Đan (Tầng 1: 7.500 -> Tầng 10: 44.150)
+    3: 55000,      // Nguyên Anh (Tầng 1: 55.000 -> Tầng 10: 323.350)
+    4: 400000,     // Hóa Thần (Tầng 1: 400.000 -> Tầng 10: 2.351.900)
+    5: 3000000,    // Luyện Hư (Tầng 1: 3.000.000 -> Tầng 10: 17.638.150)
+    6: 22000000,   // Đại Thừa (Tầng 1: 22.000.000 -> Tầng 10: 129.346.400)
+    7: 160000000,  // Hợp Thể (Tầng 1: 160.000.000 -> Tầng 10: 940.701.800)
+    8: 1200000000, // Độ Kiếp (Tầng 1: 1.200.000.000 -> Tầng 10: 7.055.263.300 ~ 7.05 Tỷ)
   };
 
   const base = baseExps[realmIndex] || 1000;
@@ -38,10 +38,10 @@ export function calculateSubRealmExp(realmIndex: number, subRealm: number): numb
   let exp = base;
   for (let t = 2; t <= targetTier; t++) {
     // Tầng 2: 1.10x (+0.10)
-    // Tầng 3: 1.20x (+0.20)
+    // Tầng 3: 1.13x (+0.13)
     // ...
-    // Capped at 5.0x
-    const factor = Math.min(5.0, 1.0 + 0.1 + (t - 2) * 0.1);
+    // Capped at 1.35x
+    const factor = Math.min(1.35, 1.0 + 0.10 + (t - 2) * 0.03);
     exp = Math.round((exp * factor) / 50) * 50;
   }
   return exp;
@@ -49,14 +49,14 @@ export function calculateSubRealmExp(realmIndex: number, subRealm: number): numb
 
 export const CULTIVATION_REALMS: CultivationRealmConfig[] = [
   { index: 0, name: 'Phàm Nhân', subRealms: 1, expPerSubRealm: 1000, minExp: 1000, maxExp: 1000, title: 'Phàm Thai Chưa Tỉnh' },
-  { index: 1, name: 'Luyện Khí', subRealms: 10, expPerSubRealm: 1000, minExp: 1000, maxExp: 33550, title: 'Luyện Khí Kỳ Tu Sĩ' },
-  { index: 2, name: 'Kết Đan', subRealms: 10, expPerSubRealm: 35000, minExp: 35000, maxExp: 1173050, title: 'Kim Đan Đại Sư' },
-  { index: 3, name: 'Nguyên Anh', subRealms: 10, expPerSubRealm: 1250000, minExp: 1250000, maxExp: 41902700, title: 'Nguyên Anh Lão Tổ' },
-  { index: 4, name: 'Hóa Thần', subRealms: 10, expPerSubRealm: 45000000, minExp: 45000000, maxExp: 1508495800, title: 'Hóa Thần Chân Quân' },
-  { index: 5, name: 'Luyện Hư', subRealms: 10, expPerSubRealm: 1600000000, minExp: 1600000000, maxExp: 53635405800, title: 'Luyện Hư Chí Tôn' },
-  { index: 6, name: 'Đại Thừa', subRealms: 10, expPerSubRealm: 55000000000, minExp: 55000000000, maxExp: 1843717075200, title: 'Đại Thừa Cường Giả' },
-  { index: 7, name: 'Hợp Thể', subRealms: 10, expPerSubRealm: 2000000000000, minExp: 2000000000000, maxExp: 67044257280000, title: 'Hợp Thể Tiên Tôn' },
-  { index: 8, name: 'Độ Kiếp', subRealms: 10, expPerSubRealm: 70000000000000, minExp: 70000000000000, maxExp: 2346549004800000, title: 'Chuẩn Tiên Thiên Kiếp' },
+  { index: 1, name: 'Luyện Khí', subRealms: 10, expPerSubRealm: 1000, minExp: 1000, maxExp: 6050, title: 'Luyện Khí Kỳ Tu Sĩ' },
+  { index: 2, name: 'Kết Đan', subRealms: 10, expPerSubRealm: 7500, minExp: 7500, maxExp: 44150, title: 'Kim Đan Đại Sư' },
+  { index: 3, name: 'Nguyên Anh', subRealms: 10, expPerSubRealm: 55000, minExp: 55000, maxExp: 323350, title: 'Nguyên Anh Lão Tổ' },
+  { index: 4, name: 'Hóa Thần', subRealms: 10, expPerSubRealm: 400000, minExp: 400000, maxExp: 2351900, title: 'Hóa Thần Chân Quân' },
+  { index: 5, name: 'Luyện Hư', subRealms: 10, expPerSubRealm: 3000000, minExp: 3000000, maxExp: 17638150, title: 'Luyện Hư Chí Tôn' },
+  { index: 6, name: 'Đại Thừa', subRealms: 10, expPerSubRealm: 22000000, minExp: 22000000, maxExp: 129346400, title: 'Đại Thừa Cường Giả' },
+  { index: 7, name: 'Hợp Thể', subRealms: 10, expPerSubRealm: 160000000, minExp: 160000000, maxExp: 940701800, title: 'Hợp Thể Tiên Tôn' },
+  { index: 8, name: 'Độ Kiếp', subRealms: 10, expPerSubRealm: 1200000000, minExp: 1200000000, maxExp: 7055263300, title: 'Chuẩn Tiên Thiên Kiếp' },
   { index: 9, name: 'Phi Tiên', subRealms: 1, expPerSubRealm: 0, minExp: 0, maxExp: 0, title: 'Chân Tiên Phi Thăng' },
 ];
 

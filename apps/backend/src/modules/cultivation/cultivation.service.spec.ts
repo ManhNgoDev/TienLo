@@ -48,19 +48,19 @@ describe('CultivationService', () => {
     // Tầng 2 requires 1100 EXP (1000 * 1.1)
     expect(result.profile.maxExp).toBe(1100);
     expect(calculateSubRealmExp(1, 2)).toBe(1100);
-    expect(calculateSubRealmExp(1, 3)).toBe(1300);
-    expect(calculateSubRealmExp(1, 10)).toBe(33550);
+    expect(calculateSubRealmExp(1, 3)).toBe(1250);
+    expect(calculateSubRealmExp(1, 10)).toBe(6050);
   });
 
   it('should breakthrough to next realm (Kết Đan) when reaching Tầng 10 + 100% EXP in Luyện Khí', async () => {
-    // 1000 (Phàm Nhân) + 77850 (Tổng 10 tầng Luyện Khí) + 500 = 79350 EXP
-    const result = await service.addExp('test-user-breakthrough', 79350);
+    // 1000 (Phàm Nhân) + 25400 (Tổng 10 tầng Luyện Khí) + 500 = 26900 EXP
+    const result = await service.addExp('test-user-breakthrough', 26900);
     expect(result.levelUp).toBe(true);
     expect(result.realmUp).toBe(true);
     expect(result.profile.realmIndex).toBe(2);
     expect(result.profile.realmName).toBe('Kết Đan');
     expect(result.profile.subRealm).toBe(1);
-    expect(result.profile.maxExp).toBe(35000); // 35.000 Linh Lực Tầng 1 ở Kết Đan (tiếp nối từ 33.550 của Luyện Khí Tầng 10)
+    expect(result.profile.maxExp).toBe(7500); // 7.500 Linh Lực Tầng 1 ở Kết Đan (tiếp nối từ 6.050 của Luyện Khí Tầng 10)
     expect(result.profile.currentExp).toBe(500);
   });
 
@@ -103,7 +103,7 @@ describe('CultivationService', () => {
 
     it('should demote realm from Kết Đan Tầng 1 to Luyện Khí Tầng 10 when penalized', async () => {
       // Breakthrough into Kết Đan Tầng 1 with 500 Linh Lực
-      await service.addExp('test-user-demote-realm', 79350);
+      await service.addExp('test-user-demote-realm', 26900);
       const penalty = await service.penalizeExp('test-user-demote-realm', 2, 800, 'Bỏ lỡ nhiệm vụ Kết Đan');
       expect(penalty.demotedLevel).toBe(true);
       expect(penalty.demotedRealm).toBe(true);
@@ -111,9 +111,9 @@ describe('CultivationService', () => {
       expect(penalty.previousSubRealm).toBe(1);
       expect(penalty.currentRealmName).toBe('Luyện Khí');
       expect(penalty.currentSubRealm).toBe(10);
-      // Luyện Khí Tầng 10 maxExp = 33550. 500 - 800 = -300 => 33550 - 300 = 33250
-      expect(penalty.profile.currentExp).toBe(33250);
-      expect(penalty.profile.maxExp).toBe(33550);
+      // Luyện Khí Tầng 10 maxExp = 6050. 500 - 800 = -300 => 6050 - 300 = 5750
+      expect(penalty.profile.currentExp).toBe(5750);
+      expect(penalty.profile.maxExp).toBe(6050);
     });
   });
 });

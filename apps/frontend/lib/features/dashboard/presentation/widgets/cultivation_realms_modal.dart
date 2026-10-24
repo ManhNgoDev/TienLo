@@ -41,14 +41,14 @@ class CultivationRealmsModal extends StatelessWidget {
     if (realmIndex >= 9) return 9999999999999999;
 
     const baseExps = {
-      1: 1000,           // Luyện Khí (Tầng 1: 1.000 -> Tầng 10: 33.550)
-      2: 35000,          // Kết Đan (Tầng 1: 35.000 -> Tầng 10: 1.173.050)
-      3: 1250000,        // Nguyên Anh (Tầng 1: 1.250.000 -> Tầng 10: 41.902.700)
-      4: 45000000,       // Hóa Thần (Tầng 1: 45.000.000 -> Tầng 10: 1.508.495.800)
-      5: 1600000000,     // Luyện Hư (Tầng 1: 1.600.000.000 -> Tầng 10: 53.635.405.800)
-      6: 55000000000,    // Đại Thừa (Tầng 1: 55.000.000.000 -> Tầng 10: 1.843.717.075.200)
-      7: 2000000000000,  // Hợp Thể (Tầng 1: 2.000.000.000.000 -> Tầng 10: 67.044.257.280.000)
-      8: 70000000000000, // Độ Kiếp (Tầng 1: 70.000.000.000.000 -> Tầng 10: 2.346.549.004.800.000)
+      1: 1000,       // Luyện Khí (Tầng 1: 1.000 -> Tầng 10: 6.050)
+      2: 7500,       // Kết Đan (Tầng 1: 7.500 -> Tầng 10: 44.150)
+      3: 55000,      // Nguyên Anh (Tầng 1: 55.000 -> Tầng 10: 323.350)
+      4: 400000,     // Hóa Thần (Tầng 1: 400.000 -> Tầng 10: 2.351.900)
+      5: 3000000,    // Luyện Hư (Tầng 1: 3.000.000 -> Tầng 10: 17.638.150)
+      6: 22000000,   // Đại Thừa (Tầng 1: 22.000.000 -> Tầng 10: 129.346.400)
+      7: 160000000,  // Hợp Thể (Tầng 1: 160.000.000 -> Tầng 10: 940.701.800)
+      8: 1200000000, // Độ Kiếp (Tầng 1: 1.200.000.000 -> Tầng 10: 7.055.263.300 ~ 7.05 Tỷ)
     };
 
     final base = baseExps[realmIndex] ?? 1000;
@@ -57,7 +57,7 @@ class CultivationRealmsModal extends StatelessWidget {
 
     double exp = base.toDouble();
     for (int t = 2; t <= targetTier; t++) {
-      final factor = (1.0 + 0.1 + (t - 2) * 0.1).clamp(1.0, 5.0);
+      final factor = (1.0 + 0.10 + (t - 2) * 0.03).clamp(1.0, 1.35);
       exp = ((exp * factor) / 50).round() * 50.0;
     }
     return exp.toInt();
@@ -76,11 +76,11 @@ class CultivationRealmsModal extends StatelessWidget {
         for (int t = 1; t <= 10; t++) {
           final exp = _calculateSubRealmExp(realm.index, t);
           totalExp += exp;
-          final factor = (1.0 + 0.1 + (t - 2) * 0.1).clamp(1.0, 5.0);
+          final factor = (1.0 + 0.10 + (t - 2) * 0.03).clamp(1.0, 1.35);
           tiersData.add({
             'tier': t,
             'exp': exp,
-            'factor': t == 1 ? 'Khởi đầu' : 'x${factor.toStringAsFixed(1)} (+${((factor - 1) * 100).toInt()}%)',
+            'factor': t == 1 ? 'Khởi đầu' : 'x${factor.toStringAsFixed(2)} (+${((factor - 1) * 100).round()}%)',
           });
         }
 
@@ -154,7 +154,7 @@ class CultivationRealmsModal extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Quy tắc: Tăng từ x0.1 (x1.1) ↗ x1.9',
+                        'Quy tắc: Tăng từ x0.1 (x1.1) ↗ x1.35',
                         style: TextStyle(color: Color(0xFFBAC7D5), fontSize: 11),
                       ),
                       Text(
