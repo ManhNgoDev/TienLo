@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class AccountSettingsCard extends StatelessWidget {
-  final int goldCoins;
   final int spiritStones;
   final VoidCallback onSignOut;
   final VoidCallback? onRewardStoreTap;
@@ -10,7 +9,6 @@ class AccountSettingsCard extends StatelessWidget {
 
   const AccountSettingsCard({
     super.key,
-    required this.goldCoins,
     required this.spiritStones,
     required this.onSignOut,
     this.onRewardStoreTap,
@@ -118,10 +116,10 @@ class AccountSettingsCard extends StatelessWidget {
               child: Column(
                 children: [
                   _buildTile(
-                    icon: Icons.monetization_on_outlined,
-                    iconColor: const Color(0xFFFBBF24),
+                    icon: Icons.diamond_outlined,
+                    iconColor: const Color(0xFF38BDF8),
                     title: 'Kho phần thưởng',
-                    subtitle: 'Số dư: ${_formatNumber(goldCoins)} vàng • $spiritStones Nguyên Thạch',
+                    subtitle: 'Số dư: ${_formatNumber(spiritStones)} Nguyên Thạch',
                     onTap: onRewardStoreTap ?? () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(

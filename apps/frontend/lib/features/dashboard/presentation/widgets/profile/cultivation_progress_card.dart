@@ -8,6 +8,7 @@ class CultivationProgressCard extends StatelessWidget {
   final int maxExp;
   final int expNeeded;
   final int progressPercent;
+  final VoidCallback? onTap;
 
   const CultivationProgressCard({
     super.key,
@@ -16,6 +17,7 @@ class CultivationProgressCard extends StatelessWidget {
     required this.maxExp,
     required this.expNeeded,
     required this.progressPercent,
+    this.onTap,
   });
 
   String _formatNumber(int value) {
@@ -57,157 +59,186 @@ class CultivationProgressCard extends StatelessWidget {
                 letterSpacing: 1.6,
               ),
             ),
-            Text(
-              '$progressPercent%',
-              style: const TextStyle(
-                color: Color(0xFFE8B95E),
-                fontSize: 11.5,
-                fontWeight: FontWeight.bold,
-              ),
+            Row(
+              children: [
+                Text(
+                  '$progressPercent%',
+                  style: const TextStyle(
+                    color: Color(0xFFF2C465),
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (onTap != null) ...[
+                  const SizedBox(width: 4),
+                  const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFFE8B95E), size: 11),
+                ],
+              ],
             ),
           ],
         ),
         const SizedBox(height: 10),
 
         // Progress Card
-        ClipRRect(
-          borderRadius: BorderRadius.circular(22),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: const Color(0xFF091726).withValues(alpha: 0.40),
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(
-                  color: const Color(0xFFC59A44).withValues(alpha: 0.65),
-                  width: 1.2,
+        GestureDetector(
+          onTap: onTap,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(22),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF091726).withValues(alpha: 0.40),
+                  borderRadius: BorderRadius.circular(22),
+                  border: Border.all(
+                    color: const Color(0xFFC59A44).withValues(alpha: 0.65),
+                    width: 1.2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      blurRadius: 18,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      // Trophy Icon Box
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF281C10).withValues(alpha: 0.7),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(
-                            color: const Color(0xFFF59E0B).withValues(alpha: 0.7),
-                            width: 1.2,
+                child: Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Linh Quang Icon Box
+                        Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: const Color(0xFF0F1E2E),
+                            border: Border.all(
+                              color: const Color(0xFFF2C465),
+                              width: 1.4,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFF2C465).withValues(alpha: 0.30),
+                                blurRadius: 10,
+                                spreadRadius: 1,
+                              ),
+                            ],
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.auto_awesome, color: Color(0xFFF2C465), size: 22),
                           ),
                         ),
-                        child: const Center(
-                          child: Icon(Icons.emoji_events_rounded, color: Color(0xFFFBBF24), size: 22),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
+                        const SizedBox(width: 14),
 
-                      // Text column
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'CẤP NHÂN VẬT TIẾP THEO',
-                                  style: TextStyle(
-                                    color: Color(0xFF8BA5BA),
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 1.2,
+                        // Text column
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'MỤC TIÊU ĐỘT PHÁ',
+                                    style: TextStyle(
+                                      color: Color(0xFF8BA5BA),
+                                      fontSize: 10.5,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 1.2,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  '${_formatNumber(expNeeded)} Linh Lực nữa',
-                                  style: const TextStyle(
-                                    color: Color(0xFFFB923C),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              nextTitle,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.playfairDisplay(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Progress Bar
-                  Container(
-                    height: 5,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0C1624),
-                      borderRadius: BorderRadius.circular(2.5),
-                    ),
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        return Stack(
-                          children: [
-                            Container(
-                              width: constraints.maxWidth * percent,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFFE5B869), Color(0xFFF6CE70)],
-                                ),
-                                borderRadius: BorderRadius.circular(2.5),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFFF2C465).withValues(alpha: 0.5),
-                                    blurRadius: 6,
+                                  Text(
+                                    'Còn thiếu ${_formatNumber(expNeeded)} Linh Lực',
+                                    style: const TextStyle(
+                                      color: Color(0xFFFB923C),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ],
-                        );
-                      },
+                              const SizedBox(height: 3),
+                              Text(
+                                nextTitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.playfairDisplay(
+                                  color: const Color(0xFFFFF6DF),
+                                  fontSize: 16.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
+                    const SizedBox(height: 16),
 
-                  // Bottom EXP numbers
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${_formatNumber(currentExp)} Linh Lực',
-                        style: const TextStyle(
-                          color: Color(0xFF8BA5BA),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
+                    // Progress Bar
+                    Container(
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0A1420),
+                        borderRadius: BorderRadius.circular(3.5),
+                        border: Border.all(
+                          color: const Color(0xFF1E2F40),
+                          width: 0.8,
                         ),
                       ),
-                      Text(
-                        '${_formatNumber(maxExp)} Linh Lực',
-                        style: const TextStyle(
-                          color: Color(0xFF8BA5BA),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w500,
-                        ),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return Stack(
+                            children: [
+                              Container(
+                                width: constraints.maxWidth * percent,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFFD97706), Color(0xFFF59E0B), Color(0xFFFDE68A)],
+                                  ),
+                                  borderRadius: BorderRadius.circular(3.5),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFFF2C465).withValues(alpha: 0.6),
+                                      blurRadius: 8,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Bottom Linh Lực numbers
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '${_formatNumber(currentExp)} Linh Lực',
+                          style: const TextStyle(
+                            color: Color(0xFFBAC7D5),
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          'Mục tiêu: ${_formatNumber(maxExp)} Linh Lực',
+                          style: const TextStyle(
+                            color: Color(0xFF8BA5BA),
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

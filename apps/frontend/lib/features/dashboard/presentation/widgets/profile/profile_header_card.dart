@@ -7,7 +7,6 @@ class ProfileHeaderCard extends StatelessWidget {
   final String username;
   final String? avatarUrl;
   final String joinedDate;
-  final String rankBadge;
   final int streakDays;
   final int completedQuests;
   final int totalExp;
@@ -19,7 +18,6 @@ class ProfileHeaderCard extends StatelessWidget {
     required this.username,
     this.avatarUrl,
     required this.joinedDate,
-    required this.rankBadge,
     required this.streakDays,
     required this.completedQuests,
     required this.totalExp,
@@ -181,35 +179,6 @@ class ProfileHeaderCard extends StatelessWidget {
                   color: Color(0xFF8BA5BA),
                   fontSize: 11.5,
                   fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              // 4. Rank Badge Pill
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1E180A).withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: const Color(0xFFF59E0B).withValues(alpha: 0.7),
-                    width: 1.2,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.emoji_events_outlined, color: Color(0xFFFBBF24), size: 14),
-                    const SizedBox(width: 5),
-                    Text(
-                      rankBadge,
-                      style: const TextStyle(
-                        color: Color(0xFFFBBF24),
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
                 ),
               ),
               const SizedBox(height: 18),

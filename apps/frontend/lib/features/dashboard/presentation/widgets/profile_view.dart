@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../auth/domain/user_model.dart';
 import '../../data/cultivation_repository.dart';
+import 'cultivation_realms_modal.dart';
 import 'profile/account_settings_card.dart';
 import 'profile/cultivation_progress_card.dart';
-import 'profile/featured_achievements_card.dart';
 import 'profile/profile_header_card.dart';
 
 class ProfileView extends StatefulWidget {
@@ -219,46 +219,37 @@ class _ProfileViewState extends State<ProfileView> {
         ? widget.user.email.split('@')[0]
         : 'daohuu';
     final username = userData?['username']?.toString() ?? '@${emailPrefix.toLowerCase()}';
-    final joinedDate = userData?['joinedDate']?.toString() ?? 'Người chơi từ 06/2024';
-    final rankBadge = userData?['rankBadge']?.toString() ?? 'Rank Bạc • Top 18%';
+    final joinedDate = userData?['joinedDate']?.toString() ?? 'Người chơi từ 10/2026';
 
     final streakDays = (statsData?['streakDays'] as num?)?.toInt() ??
         widget.cultivationProfile?.streakDays ??
         1;
-    final completedQuests = (statsData?['completedQuests'] as num?)?.toInt() ?? 47;
+    final completedQuests = (statsData?['completedQuests'] as num?)?.toInt() ?? 3;
     final totalExp = (statsData?['totalExp'] as num?)?.toInt() ??
         widget.cultivationProfile?.totalExp ??
         widget.cultivationProfile?.currentExp ??
-        2480;
+        300;
 
     final spiritStones = (statsData?['spiritStones'] as num?)?.toInt() ??
         widget.cultivationProfile?.spiritStones ??
         90;
-    final goldCoins = (statsData?['goldCoins'] as num?)?.toInt() ?? 1260;
 
     final nextTitle = progressData?['nextTitle']?.toString() ??
         (widget.cultivationProfile?.realmIndex == 0
             ? 'Luyện Khí Tầng 1 • Tiên Lộ Tu Sĩ'
-            : '${widget.cultivationProfile?.realmName} Tầng ${(widget.cultivationProfile?.subRealm ?? 1) + 1}');
+            : (widget.cultivationProfile?.subRealm != null && widget.cultivationProfile!.subRealm >= 10
+                ? 'Đột Phá Cảnh Giới Kế Tiếp'
+                : '${widget.cultivationProfile?.realmName} Tầng ${(widget.cultivationProfile?.subRealm ?? 1) + 1}'));
     final currentExp = (progressData?['currentExp'] as num?)?.toInt() ??
         widget.cultivationProfile?.currentExp ??
-        680;
+        300;
     final maxExp = (progressData?['maxExp'] as num?)?.toInt() ??
         widget.cultivationProfile?.maxExp ??
         1000;
     final expNeeded = (progressData?['expNeeded'] as num?)?.toInt() ??
-        (maxExp - currentExp).clamp(0, 9999999);
+        (maxExp - currentExp).clamp(0, 9999999999999);
     final progressPercent = (progressData?['progressPercent'] as num?)?.toInt() ??
-        (maxExp > 0 ? ((currentExp / maxExp) * 100).toInt() : 68);
-
-    final featuredAchievements = (_apiProfileData?['featuredAchievements'] as List?)
-            ?.map((e) => e as Map<String, dynamic>)
-            .toList() ??
-        [];
-    final allAchievements = (_apiProfileData?['allAchievements'] as List?)
-            ?.map((e) => e as Map<String, dynamic>)
-            .toList() ??
-        [];
+        (maxExp > 0 ? ((currentExp / maxExp) * 100).toInt() : 30);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -330,13 +321,12 @@ class _ProfileViewState extends State<ProfileView> {
         ),
         const SizedBox(height: 18),
 
-        // 2. Main Profile Card
+        // 2. Main Profile Card (No rank)
         ProfileHeaderCard(
           displayName: displayName,
           username: username,
           avatarUrl: widget.user.photoUrl,
           joinedDate: joinedDate,
-          rankBadge: rankBadge,
           streakDays: streakDays,
           completedQuests: completedQuests,
           totalExp: totalExp,
@@ -344,26 +334,23 @@ class _ProfileViewState extends State<ProfileView> {
         ),
         const SizedBox(height: 20),
 
-        // 3. Section: TIẾN ĐỘ TU LUYỆN
+        // 3. Section: TIẾN ĐỘ TU LUYỆN (Click to open Realms modal)
         CultivationProgressCard(
           nextTitle: nextTitle,
           currentExp: currentExp,
           maxExp: maxExp,
           expNeeded: expNeeded,
           progressPercent: progressPercent,
+          onTap: () {
+            if (widget.cultivationProfile != null) {
+              CultivationRealmsModal.show(context, widget.cultivationProfile!);
+            }
+          },
         ),
         const SizedBox(height: 20),
 
-        // 4. Section: THÀNH TỰU NỔI BẬT
-        FeaturedAchievementsCard(
-          featuredAchievements: featuredAchievements,
-          allAchievements: allAchievements,
-        ),
-        const SizedBox(height: 20),
-
-        // 5. Section: TÀI KHOẢN
+        // 4. Section: TÀI KHOẢN (Only Nguyên Thạch)
         AccountSettingsCard(
-          goldCoins: goldCoins,
           spiritStones: spiritStones,
           onSignOut: widget.onSignOut,
         ),
