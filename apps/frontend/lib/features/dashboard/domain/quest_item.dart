@@ -48,8 +48,16 @@ class QuestItem {
     if (code == Icons.auto_awesome.codePoint) return Icons.auto_awesome;
     if (code == Icons.military_tech_rounded.codePoint) return Icons.military_tech_rounded;
     if (code == Icons.track_changes_rounded.codePoint) return Icons.track_changes_rounded;
-    // ignore: non_const_argument_for_const_parameter
-    return IconData(code, fontFamily: 'MaterialIcons');
+    if (code == Icons.menu_book_rounded.codePoint) return Icons.menu_book_rounded;
+    if (code == Icons.code_rounded.codePoint) return Icons.code_rounded;
+    if (code == Icons.self_improvement_rounded.codePoint) return Icons.self_improvement_rounded;
+    if (code == Icons.bolt_rounded.codePoint) return Icons.bolt_rounded;
+    if (code == Icons.emoji_events_rounded.codePoint) return Icons.emoji_events_rounded;
+    if (code == Icons.favorite_rounded.codePoint) return Icons.favorite_rounded;
+    if (code == Icons.timer_rounded.codePoint) return Icons.timer_rounded;
+    if (code == Icons.local_fire_department_rounded.codePoint) return Icons.local_fire_department_rounded;
+    if (code == Icons.diamond_outlined.codePoint) return Icons.diamond_outlined;
+    return Icons.fitness_center_rounded;
   }
 
   factory QuestItem.fromJson(Map<String, dynamic> json) => QuestItem(
