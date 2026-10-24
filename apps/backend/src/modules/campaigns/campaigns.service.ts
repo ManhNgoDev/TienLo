@@ -131,13 +131,24 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
   ]
 }`;
 
-        const response = await this.genAiClient.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: prompt,
-          config: {
-            responseMimeType: 'application/json',
-          },
-        });
+        let response: any;
+        try {
+          response = await this.genAiClient.models.generateContent({
+            model: 'gemini-2.0-flash',
+            contents: prompt,
+            config: {
+              responseMimeType: 'application/json',
+            },
+          });
+        } catch (_) {
+          response = await this.genAiClient.models.generateContent({
+            model: 'gemini-1.5-flash',
+            contents: prompt,
+            config: {
+              responseMimeType: 'application/json',
+            },
+          });
+        }
 
         const text = response.text?.trim() || '';
         const parsed = JSON.parse(text);
