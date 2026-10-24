@@ -4,25 +4,17 @@
 -- Tương thích hoàn toàn với Firebase Auth / Google Sign-In UID
 -- ========================================================
 
--- Tự động chuyển đổi nếu bạn đã tạo bảng với kiểu UUID trước đó
+-- Tự động gỡ bỏ các ràng buộc Foreign Key cũ trước khi chuyển kiểu dữ liệu:
 DO $$ 
 BEGIN
-    IF EXISTS (
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'public' AND table_name = 'user_cultivations' AND column_name = 'user_id' AND data_type = 'uuid'
-    ) THEN
-        ALTER TABLE public.user_cultivations DROP CONSTRAINT IF EXISTS user_cultivations_user_id_fkey;
-        ALTER TABLE public.user_cultivations ALTER COLUMN user_id TYPE TEXT USING user_id::TEXT;
-    END IF;
+    -- 1. Gỡ bỏ tất cả Foreign Key constraints cũ để tránh lỗi xung đột kiểu UUID và TEXT
+    ALTER TABLE IF EXISTS public.quests DROP CONSTRAINT IF EXISTS quests_campaign_id_fkey;
+    ALTER TABLE IF EXISTS public.quests DROP CONSTRAINT IF EXISTS quests_user_id_fkey;
+    ALTER TABLE IF EXISTS public.campaigns DROP CONSTRAINT IF EXISTS campaigns_user_id_fkey;
+    ALTER TABLE IF EXISTS public.user_cultivations DROP CONSTRAINT IF EXISTS user_cultivations_user_id_fkey;
+    ALTER TABLE IF EXISTS public.spirit_stone_transactions DROP CONSTRAINT IF EXISTS spirit_stone_transactions_user_id_fkey;
 
-    IF EXISTS (
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'public' AND table_name = 'campaigns' AND column_name = 'user_id' AND data_type = 'uuid'
-    ) THEN
-        ALTER TABLE public.campaigns DROP CONSTRAINT IF EXISTS campaigns_user_id_fkey;
-        ALTER TABLE public.campaigns ALTER COLUMN user_id TYPE TEXT USING user_id::TEXT;
-    END IF;
-
+    -- 2. Chuyển đổi campaigns(id, user_id)
     IF EXISTS (
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'public' AND table_name = 'campaigns' AND column_name = 'id' AND data_type = 'uuid'
@@ -32,10 +24,17 @@ BEGIN
 
     IF EXISTS (
         SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'public' AND table_name = 'quests' AND column_name = 'user_id' AND data_type = 'uuid'
+        WHERE table_schema = 'public' AND table_name = 'campaigns' AND column_name = 'user_id' AND data_type = 'uuid'
     ) THEN
-        ALTER TABLE public.quests DROP CONSTRAINT IF EXISTS quests_user_id_fkey;
-        ALTER TABLE public.quests ALTER COLUMN user_id TYPE TEXT USING user_id::TEXT;
+        ALTER TABLE public.campaigns ALTER COLUMN user_id TYPE TEXT USING user_id::TEXT;
+    END IF;
+
+    -- 3. Chuyển đổi quests(id, campaign_id, user_id)
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'quests' AND column_name = 'campaign_id' AND data_type = 'uuid'
+    ) THEN
+        ALTER TABLE public.quests ALTER COLUMN campaign_id TYPE TEXT USING campaign_id::TEXT;
     END IF;
 
     IF EXISTS (
@@ -47,16 +46,24 @@ BEGIN
 
     IF EXISTS (
         SELECT 1 FROM information_schema.columns 
-        WHERE table_schema = 'public' AND table_name = 'quests' AND column_name = 'campaign_id' AND data_type = 'uuid'
+        WHERE table_schema = 'public' AND table_name = 'quests' AND column_name = 'user_id' AND data_type = 'uuid'
     ) THEN
-        ALTER TABLE public.quests ALTER COLUMN campaign_id TYPE TEXT USING campaign_id::TEXT;
+        ALTER TABLE public.quests ALTER COLUMN user_id TYPE TEXT USING user_id::TEXT;
     END IF;
 
+    -- 4. Chuyển đổi user_cultivations(user_id)
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'public' AND table_name = 'user_cultivations' AND column_name = 'user_id' AND data_type = 'uuid'
+    ) THEN
+        ALTER TABLE public.user_cultivations ALTER COLUMN user_id TYPE TEXT USING user_id::TEXT;
+    END IF;
+
+    -- 5. Chuyển đổi spirit_stone_transactions(user_id)
     IF EXISTS (
         SELECT 1 FROM information_schema.columns 
         WHERE table_schema = 'public' AND table_name = 'spirit_stone_transactions' AND column_name = 'user_id' AND data_type = 'uuid'
     ) THEN
-        ALTER TABLE public.spirit_stone_transactions DROP CONSTRAINT IF EXISTS spirit_stone_transactions_user_id_fkey;
         ALTER TABLE public.spirit_stone_transactions ALTER COLUMN user_id TYPE TEXT USING user_id::TEXT;
     END IF;
 END $$;
