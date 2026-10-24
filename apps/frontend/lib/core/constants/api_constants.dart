@@ -4,7 +4,7 @@ class ApiConstants {
   static String? customBaseUrl;
 
   /// Đường dẫn máy chủ Backend đã deploy trên Render (dành cho bản build APK)
-  static String productionRenderUrl = 'https://tienlo-backend.onrender.com/api';
+  static String productionRenderUrl = 'https://tienlo.onrender.com/api';
 
   /// Nhận biến môi trường khi build: flutter build apk --dart-define=BACKEND_URL=https://...
   static const String envBackendUrl = String.fromEnvironment('BACKEND_URL', defaultValue: '');

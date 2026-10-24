@@ -142,7 +142,7 @@ class _ServerWaitingScreenState extends State<ServerWaitingScreen>
               controller: textCtrl,
               style: const TextStyle(color: Colors.white, fontSize: 13),
               decoration: InputDecoration(
-                hintText: 'https://tienlo-backend.onrender.com/api',
+                hintText: 'https://tienlo.onrender.com/api',
                 hintStyle: const TextStyle(color: Color(0xFF5A758D)),
                 filled: true,
                 fillColor: const Color(0xFF060F1A),
