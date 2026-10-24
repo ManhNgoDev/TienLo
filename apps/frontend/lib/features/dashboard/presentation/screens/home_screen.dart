@@ -13,7 +13,7 @@ import '../widgets/create_campaign_card.dart';
 import '../widgets/cultivation_realms_modal.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import '../widgets/daily_quests_section.dart';
-import '../widgets/profile_modal.dart';
+import '../widgets/profile_view.dart';
 import '../widgets/statistics_view.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -348,17 +348,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _showProfileModal() {
-    ProfileModal.show(
-      context,
-      user: widget.user,
-      onSignOut: () async {
-        await _authRepository.signOut();
-        widget.onLogout();
-      },
-    );
-  }
-
   Widget _buildAvatarText() {
     final name = widget.user.displayName.trim();
     final letter = name.isNotEmpty ? name[0].toUpperCase() : 'M';
@@ -434,6 +423,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           isLoading: _isLoadingStats,
                           onRefresh: _loadStatistics,
                         ),
+                      ] else if (_currentNavIndex == 3) ...[
+                        // Tab 3: CÁ NHÂN (HỒ SƠ TU LUYỆN)
+                        ProfileView(
+                          user: widget.user,
+                          cultivationProfile: _cultivationProfile,
+                          onSignOut: () async {
+                            await _authRepository.signOut();
+                            widget.onLogout();
+                          },
+                        ),
                       ] else ...[
                         // Tab 0: HÔM NAY (DASHBOARD)
                         // Top Header: Title & Avatar
@@ -477,9 +476,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ],
                               ),
                             ),
-                            // Avatar Icon
+                            // Avatar Icon (Tap opens Profile Tab)
                             GestureDetector(
-                              onTap: _showProfileModal,
+                              onTap: () => setState(() => _currentNavIndex = 3),
                               child: Container(
                                 width: 44,
                                 height: 44,
@@ -576,10 +575,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (_cultivationProfile != null) {
                     CultivationRealmsModal.show(context, _cultivationProfile!);
                   }
-                  return;
-                }
-                if (index == 3) {
-                  _showProfileModal();
                   return;
                 }
                 setState(() {

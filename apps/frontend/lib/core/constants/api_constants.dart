@@ -14,6 +14,7 @@ class ApiConstants {
   static const String authSync = '/auth/sync';
   static const String authMe = '/auth/me';
   static const String userProfile = '/users/profile';
+  static const String userAchievements = '/users/achievements';
   static const String health = '/health';
 
   // Cultivation & Campaigns

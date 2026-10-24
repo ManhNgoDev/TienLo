@@ -210,4 +210,56 @@ class CultivationRepository {
     }
     return null;
   }
+
+  Future<Map<String, dynamic>?> getFullUserProfile() async {
+    final token = await _getToken();
+    try {
+      final res = await _apiClient.get(
+        ApiConstants.userProfile,
+        token: token,
+      );
+      if (res is Map<String, dynamic>) {
+        return res;
+      }
+    } catch (e) {
+      debugPrint('Error getFullUserProfile: $e');
+    }
+    return null;
+  }
+
+  Future<bool> updateUserProfile({String? displayName, String? username, String? avatarUrl}) async {
+    final token = await _getToken();
+    try {
+      final body = <String, dynamic>{};
+      if (displayName != null) body['displayName'] = displayName;
+      if (username != null) body['username'] = username;
+      if (avatarUrl != null) body['avatarUrl'] = avatarUrl;
+
+      final res = await _apiClient.put(
+        ApiConstants.userProfile,
+        token: token,
+        body: body,
+      );
+      return res != null;
+    } catch (e) {
+      debugPrint('Error updateUserProfile: $e');
+      return false;
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getUserAchievements() async {
+    final token = await _getToken();
+    try {
+      final res = await _apiClient.get(
+        ApiConstants.userAchievements,
+        token: token,
+      );
+      if (res is List) {
+        return res.cast<Map<String, dynamic>>();
+      }
+    } catch (e) {
+      debugPrint('Error getUserAchievements: $e');
+    }
+    return [];
+  }
 }
