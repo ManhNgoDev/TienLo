@@ -16,7 +16,7 @@ export class SupabaseService implements OnModuleInit {
   private readonly logger = new Logger(SupabaseService.name);
   private client: SupabaseClient | null = null;
 
-  // In-memory fallback khi dev chưa điền credentials Supabase
+  // In-memory fallback khi dev chưa tạo bảng hoặc chưa điền credentials Supabase
   private readonly inMemoryUsers = new Map<string, UserRecord>();
 
   onModuleInit() {
@@ -56,35 +56,44 @@ export class SupabaseService implements OnModuleInit {
     const now = new Date().toISOString();
 
     if (this.client) {
-      const { data: user, error } = await this.client
-        .from('users')
-        .upsert(
-          {
-            firebase_uid: data.firebase_uid,
-            email: data.email,
-            display_name: data.display_name,
-            avatar_url: data.avatar_url,
-            updated_at: now,
-          },
-          { onConflict: 'firebase_uid' },
-        )
-        .select()
-        .single();
+      try {
+        const { data: user, error } = await this.client
+          .from('users')
+          .upsert(
+            {
+              firebase_uid: data.firebase_uid,
+              email: data.email,
+              display_name: data.display_name,
+              avatar_url: data.avatar_url,
+              updated_at: now,
+            },
+            { onConflict: 'firebase_uid' },
+          )
+          .select()
+          .maybeSingle();
 
-      if (error) {
-        this.logger.error(`Lỗi Supabase upsertUser: ${error.message}`);
-        throw error;
+        if (error) {
+          this.logger.warn(
+            `Chưa tìm thấy bảng 'users' trên Supabase (${error.message}). Tạm thời lưu user vào bộ nhớ đệm để không gián đoạn đăng nhập. Hãy tạo bảng 'users' trên Supabase SQL Editor.`,
+          );
+        } else if (user) {
+          return user as UserRecord;
+        }
+      } catch (err: any) {
+        this.logger.warn(
+          `Lỗi kết nối bảng Supabase: ${err.message || err}. Dùng bộ nhớ tạm.`,
+        );
       }
-      return user as UserRecord;
     }
 
     // In-memory fallback
     const existing = this.inMemoryUsers.get(data.firebase_uid);
     const record: UserRecord = {
-      id: existing ? existing.id : `mock-id-${Date.now()}`,
+      id: existing ? existing.id : `user-${data.firebase_uid.substring(0, 8)}`,
       firebase_uid: data.firebase_uid,
       email: data.email,
-      display_name: data.display_name || existing?.display_name || 'Người dùng TienLo',
+      display_name:
+        data.display_name || existing?.display_name || 'Người dùng TienLo',
       avatar_url: data.avatar_url || existing?.avatar_url,
       created_at: existing ? existing.created_at : now,
       updated_at: now,
@@ -95,17 +104,19 @@ export class SupabaseService implements OnModuleInit {
 
   async getUserByFirebaseUid(firebase_uid: string): Promise<UserRecord | null> {
     if (this.client) {
-      const { data: user, error } = await this.client
-        .from('users')
-        .select('*')
-        .eq('firebase_uid', firebase_uid)
-        .maybeSingle();
+      try {
+        const { data: user, error } = await this.client
+          .from('users')
+          .select('*')
+          .eq('firebase_uid', firebase_uid)
+          .maybeSingle();
 
-      if (error) {
-        this.logger.error(`Lỗi Supabase getUserByFirebaseUid: ${error.message}`);
-        return null;
-      }
-      return user as UserRecord | null;
+        if (error) {
+          this.logger.warn(`Lỗi Supabase getUserByFirebaseUid: ${error.message}`);
+        } else if (user) {
+          return user as UserRecord;
+        }
+      } catch (_) {}
     }
 
     return this.inMemoryUsers.get(firebase_uid) || null;
