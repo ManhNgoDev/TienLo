@@ -72,4 +72,48 @@ describe('CultivationService', () => {
     const afterSpend = await service.addSpiritStones('test-user-stones', -25, 'Mua đan dược');
     expect(afterSpend.spiritStones).toBe(5);
   });
+
+  describe('penalizeExp & Degradation Rules', () => {
+    it('should degrade subrealm from Luyện Khí Tầng 2 to Tầng 1 when penalized', async () => {
+      // Setup user at Luyện Khí Tầng 2 with 50 Linh Lực
+      await service.addExp('test-user-demote-sub', 2050);
+      const penalty = await service.penalizeExp('test-user-demote-sub', 1, 200, 'Bỏ lỡ nhiệm vụ');
+      expect(penalty.demotedLevel).toBe(true);
+      expect(penalty.demotedRealm).toBe(false);
+      expect(penalty.previousSubRealm).toBe(2);
+      expect(penalty.currentSubRealm).toBe(1);
+      expect(penalty.currentRealmName).toBe('Luyện Khí');
+      // Tầng 1 has maxExp = 1000. 50 - 200 = -150 => 1000 - 150 = 850
+      expect(penalty.profile.currentExp).toBe(850);
+      expect(penalty.profile.maxExp).toBe(1000);
+    });
+
+    it('should NOT degrade from Luyện Khí Tầng 1 to Phàm Nhân, stops at Luyện Khí Tầng 1 (0 Linh Lực)', async () => {
+      // User advances to Luyện Khí Tầng 1 with 200 Linh Lực
+      await service.addExp('test-user-protect', 1200);
+      const penalty = await service.penalizeExp('test-user-protect', 3, 500, 'Bỏ lỡ 3 nhiệm vụ');
+      // User must stay in Luyện Khí Tầng 1 with 0 Linh Lực
+      expect(penalty.demotedRealm).toBe(false);
+      expect(penalty.profile.realmIndex).toBe(1);
+      expect(penalty.profile.realmName).toBe('Luyện Khí');
+      expect(penalty.profile.subRealm).toBe(1);
+      expect(penalty.profile.currentExp).toBe(0);
+      expect(penalty.profile.maxExp).toBe(1000);
+    });
+
+    it('should demote realm from Kết Đan Tầng 1 to Luyện Khí Tầng 10 when penalized', async () => {
+      // Breakthrough into Kết Đan Tầng 1 with 500 Linh Lực
+      await service.addExp('test-user-demote-realm', 79350);
+      const penalty = await service.penalizeExp('test-user-demote-realm', 2, 800, 'Bỏ lỡ nhiệm vụ Kết Đan');
+      expect(penalty.demotedLevel).toBe(true);
+      expect(penalty.demotedRealm).toBe(true);
+      expect(penalty.previousRealmName).toBe('Kết Đan');
+      expect(penalty.previousSubRealm).toBe(1);
+      expect(penalty.currentRealmName).toBe('Luyện Khí');
+      expect(penalty.currentSubRealm).toBe(10);
+      // Luyện Khí Tầng 10 maxExp = 33550. 500 - 800 = -300 => 33550 - 300 = 33250
+      expect(penalty.profile.currentExp).toBe(33250);
+      expect(penalty.profile.maxExp).toBe(33550);
+    });
+  });
 });

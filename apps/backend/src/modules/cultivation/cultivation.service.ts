@@ -200,4 +200,127 @@ export class CultivationService {
     this.inMemoryState.set(userId, updatedProfile);
     return updatedProfile;
   }
+
+  async penalizeExp(
+    userId: string,
+    uncompletedCount: number,
+    customPenalty?: number,
+    reason?: string,
+  ): Promise<{
+    profile: UserCultivationState;
+    penaltyExp: number;
+    uncompletedCount: number;
+    reason: string;
+    demotedLevel: boolean;
+    demotedRealm: boolean;
+    previousRealmName: string;
+    previousSubRealm: number;
+    currentRealmName: string;
+    currentSubRealm: number;
+  }> {
+    const profile = await this.getProfile(userId);
+    let { realmIndex, subRealm, currentExp, maxExp, totalExp, streakDays } = profile;
+
+    const prevRealmIndex = realmIndex;
+    const prevSubRealm = subRealm;
+    const prevRealmName = profile.realmName;
+
+    // Tính toán lượng linh lực phạt: mỗi nhiệm vụ chưa làm phạt 150 Linh Lực (hoặc customPenalty)
+    const penaltyExp = customPenalty && customPenalty > 0
+      ? customPenalty
+      : Math.max(100, (uncompletedCount || 1) * 150);
+
+    const actualReason = reason || `Chưa hoàn thành ${uncompletedCount || 1} nhiệm vụ hôm qua, tâm ma quấy nhiễu!`;
+
+    // Gián đoạn chuỗi ngày tu luyện
+    streakDays = 0;
+
+    // Trừ linh lực
+    currentExp -= penaltyExp;
+    totalExp = Math.max(0, totalExp - penaltyExp);
+
+    let demotedLevel = false;
+    let demotedRealm = false;
+
+    let realmConfig = this.getRealmConfig(realmIndex);
+
+    // Xử lý tụt tầng và tụt cảnh giới
+    while (currentExp < 0) {
+      // RULE BẢO HIỂM: Nếu ở Luyện Khí Tầng 1, không bao giờ tụt xuống Phàm Nhân, dừng lại ở Luyện Khí Tầng 1 (0 Linh Lực)
+      if (realmIndex === 1 && subRealm === 1) {
+        currentExp = 0;
+        break;
+      }
+
+      // Nếu đang là Phàm Nhân (realm 0), sàn là 0 Linh Lực
+      if (realmIndex === 0) {
+        currentExp = 0;
+        break;
+      }
+
+      if (subRealm > 1) {
+        // Tụt tầng trong cảnh giới (Tầng X -> Tầng X - 1)
+        subRealm -= 1;
+        maxExp = calculateSubRealmExp(realmIndex, subRealm);
+        currentExp = maxExp + currentExp; // currentExp âm nên sẽ thành maxExp - |currentExp|
+        demotedLevel = true;
+      } else {
+        // subRealm === 1 và realmIndex > 1: Tụt Cảnh Giới!
+        realmIndex -= 1;
+        subRealm = 10;
+        realmConfig = this.getRealmConfig(realmIndex);
+        maxExp = calculateSubRealmExp(realmIndex, 10);
+        currentExp = maxExp + currentExp;
+        demotedLevel = true;
+        demotedRealm = true;
+      }
+    }
+
+    realmConfig = this.getRealmConfig(realmIndex);
+
+    const updatedProfile: UserCultivationState = {
+      ...profile,
+      realmIndex,
+      realmName: realmConfig.name,
+      subRealm,
+      currentExp,
+      maxExp,
+      totalExp,
+      streakDays,
+      title: realmConfig.title,
+    };
+
+    // Lưu vào database
+    const client = this.supabaseService.getClient();
+    if (client) {
+      try {
+        await client.from('user_cultivations').upsert({
+          user_id: userId,
+          realm_index: realmIndex,
+          realm_name: realmConfig.name,
+          sub_realm: subRealm,
+          current_exp: currentExp,
+          max_exp: maxExp,
+          total_exp: totalExp,
+          streak_days: streakDays,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id' });
+      } catch (_) {}
+    }
+
+    this.inMemoryState.set(userId, updatedProfile);
+
+    return {
+      profile: updatedProfile,
+      penaltyExp,
+      uncompletedCount,
+      reason: actualReason,
+      demotedLevel,
+      demotedRealm,
+      previousRealmName: prevRealmName,
+      previousSubRealm: prevSubRealm,
+      currentRealmName: realmConfig.name,
+      currentSubRealm: subRealm,
+    };
+  }
 }

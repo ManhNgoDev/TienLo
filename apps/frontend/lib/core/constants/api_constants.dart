@@ -21,6 +21,7 @@ class ApiConstants {
   static const String cultivationProfile = '/cultivation/profile';
   static const String cultivationAddExp = '/cultivation/add-exp';
   static const String cultivationAddStones = '/cultivation/add-stones';
+  static const String cultivationPenalize = '/cultivation/penalize';
   static const String campaignsAiGenerate = '/campaigns/ai-generate';
   static const String campaignsList = '/campaigns';
   static const String campaignsStatistics = '/campaigns/statistics';

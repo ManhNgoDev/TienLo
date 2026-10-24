@@ -36,4 +36,19 @@ export class CultivationController {
       description || 'Thưởng hoạt động tu tiên',
     );
   }
+
+  @Post('penalize')
+  async penalize(
+    @CurrentUser() user: IAuthUser,
+    @Body('uncompletedCount') uncompletedCount: number,
+    @Body('customPenalty') customPenalty?: number,
+    @Body('reason') reason?: string,
+  ) {
+    return this.cultivationService.penalizeExp(
+      user.uid,
+      Math.max(1, Number(uncompletedCount) || 1),
+      customPenalty ? Number(customPenalty) : undefined,
+      reason,
+    );
+  }
 }

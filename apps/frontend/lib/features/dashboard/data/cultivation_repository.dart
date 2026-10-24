@@ -262,4 +262,31 @@ class CultivationRepository {
     }
     return [];
   }
+
+  Future<Map<String, dynamic>?> penalizeExp({
+    required int uncompletedCount,
+    int? customPenalty,
+    String? reason,
+  }) async {
+    final token = await _getToken();
+    try {
+      final body = <String, dynamic>{
+        'uncompletedCount': uncompletedCount,
+      };
+      if (customPenalty != null) body['customPenalty'] = customPenalty;
+      if (reason != null) body['reason'] = reason;
+
+      final res = await _apiClient.post(
+        ApiConstants.cultivationPenalize,
+        token: token,
+        body: body,
+      );
+      if (res is Map<String, dynamic>) {
+        return res;
+      }
+    } catch (e) {
+      debugPrint('Error penalizeExp: $e');
+    }
+    return null;
+  }
 }

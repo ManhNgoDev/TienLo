@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../auth/domain/user_model.dart';
 import '../../data/cultivation_repository.dart';
 import 'cultivation_realms_modal.dart';
+import 'penalty_dialog.dart';
 import 'profile/account_settings_card.dart';
 import 'profile/cultivation_progress_card.dart';
 import 'profile/profile_header_card.dart';
@@ -186,6 +187,46 @@ class _ProfileViewState extends State<ProfileView> {
                   title: const Text('Thông báo nhắc nhở rèn luyện', style: TextStyle(color: Colors.white, fontSize: 13.5)),
                   value: true,
                   onChanged: (val) {},
+                ),
+                const Divider(color: Color(0xFF1E2F40)),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.bolt_rounded, color: Color(0xFFEF4444), size: 18),
+                  ),
+                  title: const Text('Thử nghiệm Thiên Đạo Phạt', style: TextStyle(color: Color(0xFFFCA5A5), fontSize: 13, fontWeight: FontWeight.bold)),
+                  subtitle: const Text('Mô phỏng bỏ lỡ nhiệm vụ để kiểm tra tụt tầng', style: TextStyle(color: Color(0xFF8BA5BA), fontSize: 10.5)),
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    final penalty = await _cultivationRepository.penalizeExp(
+                      uncompletedCount: 2,
+                      customPenalty: 400,
+                      reason: 'Thử nghiệm Thiên Đạo trừng phạt do bỏ lỡ nhiệm vụ!',
+                    );
+                    if (penalty != null && mounted) {
+                      PenaltyDialog.show(
+                        context,
+                        uncompletedCount: (penalty['uncompletedCount'] as num?)?.toInt() ?? 2,
+                        penaltyExp: (penalty['penaltyExp'] as num?)?.toInt() ?? 400,
+                        reason: penalty['reason']?.toString() ?? 'Chưa hoàn thành nhiệm vụ',
+                        demotedLevel: penalty['demotedLevel'] == true,
+                        demotedRealm: penalty['demotedRealm'] == true,
+                        previousRealmName: penalty['previousRealmName']?.toString() ?? '',
+                        previousSubRealm: (penalty['previousSubRealm'] as num?)?.toInt() ?? 1,
+                        currentRealmName: penalty['currentRealmName']?.toString() ?? '',
+                        currentSubRealm: (penalty['currentSubRealm'] as num?)?.toInt() ?? 1,
+                        onDismiss: () {
+                          _loadProfileData();
+                        },
+                      );
+                    }
+                  },
                 ),
                 const SizedBox(height: 12),
                 SizedBox(

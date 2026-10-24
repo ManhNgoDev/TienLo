@@ -13,6 +13,7 @@ import '../widgets/create_campaign_card.dart';
 import '../widgets/cultivation_realms_modal.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import '../widgets/daily_quests_section.dart';
+import '../widgets/penalty_dialog.dart';
 import '../widgets/profile_view.dart';
 import '../widgets/statistics_view.dart';
 
@@ -161,8 +162,20 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       // 4. Kiểm tra chuyển sang ngày mới:
+      Map<String, dynamic>? penaltyData;
       final bool isNewDay = lastDate != null && lastDate != todayStr;
       if (isNewDay) {
+        // Kiểm tra xem hôm trước có nhiệm vụ nào chưa hoàn thành không
+        final uncompletedYesterday = loadedQuests.where((q) => !q.isCompleted).toList();
+        if (uncompletedYesterday.isNotEmpty) {
+          try {
+            penaltyData = await _cultivationRepository.penalizeExp(
+              uncompletedCount: uncompletedYesterday.length,
+              reason: 'Chưa hoàn thành ${uncompletedYesterday.length} nhiệm vụ ngày hôm trước!',
+            );
+          } catch (_) {}
+        }
+
         if (_activeCampaignTitle != null) {
           loadedQuests.clear();
           loadedQuests.addAll(GoalAnalyzerService.analyzeGoalAndCreateQuests(_activeCampaignTitle!));
@@ -192,6 +205,29 @@ class _HomeScreenState extends State<HomeScreen> {
         });
         if (isNewDay && _quests.isNotEmpty) {
           _saveLocalQuests();
+        }
+
+        // Nếu có hình phạt Thiên Đạo, giáng lâm dialog
+        if (penaltyData != null) {
+          final data = penaltyData;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            PenaltyDialog.show(
+              context,
+              uncompletedCount: (data['uncompletedCount'] as num?)?.toInt() ?? 1,
+              penaltyExp: (data['penaltyExp'] as num?)?.toInt() ?? 150,
+              reason: data['reason']?.toString() ?? 'Chưa hoàn thành nhiệm vụ ngày hôm trước',
+              demotedLevel: data['demotedLevel'] == true,
+              demotedRealm: data['demotedRealm'] == true,
+              previousRealmName: data['previousRealmName']?.toString() ?? '',
+              previousSubRealm: (data['previousSubRealm'] as num?)?.toInt() ?? 1,
+              currentRealmName: data['currentRealmName']?.toString() ?? '',
+              currentSubRealm: (data['currentSubRealm'] as num?)?.toInt() ?? 1,
+              onDismiss: () {
+                _loadCultivationProfile();
+                _loadStatistics();
+              },
+            );
+          });
         }
       }
       _loadStatistics();
