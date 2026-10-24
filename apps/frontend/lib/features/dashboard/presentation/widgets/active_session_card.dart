@@ -28,19 +28,19 @@ class ActiveSessionCard extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: const Color(0xFF07121E).withValues(alpha: 0.88),
+            color: const Color(0xFF091726).withValues(alpha: 0.40),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: const Color(0xFFC59A44),
-              width: 1.4,
+              color: const Color(0xFFC59A44).withValues(alpha: 0.65),
+              width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.45),
+                color: Colors.black.withValues(alpha: 0.25),
                 blurRadius: 18,
                 offset: const Offset(0, 4),
               ),

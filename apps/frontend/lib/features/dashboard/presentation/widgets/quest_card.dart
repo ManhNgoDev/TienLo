@@ -42,22 +42,24 @@ class QuestCard extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
           decoration: BoxDecoration(
-            color: const Color(0xFF07121E).withValues(alpha: 0.88),
+            color: quest.isCompleted
+                ? const Color(0xFF071828).withValues(alpha: 0.30)
+                : const Color(0xFF091726).withValues(alpha: 0.40),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
               color: quest.isCompleted
-                  ? const Color(0xFFC59A44).withValues(alpha: 0.4)
-                  : const Color(0xFFC59A44),
-              width: 1.3,
+                  ? const Color(0xFFC59A44).withValues(alpha: 0.35)
+                  : const Color(0xFFC59A44).withValues(alpha: 0.65),
+              width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.4),
+                color: Colors.black.withValues(alpha: 0.22),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),
@@ -71,11 +73,11 @@ class QuestCard extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF0A1422),
+                  color: const Color(0xFF081626).withValues(alpha: 0.50),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: quest.iconColor,
-                    width: 1.3,
+                    color: quest.iconColor.withValues(alpha: 0.8),
+                    width: 1.2,
                   ),
                 ),
                 child: Center(

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
@@ -50,61 +51,70 @@ class CustomBottomNavBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0A121D).withValues(alpha: 0.95),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(
-          color: const Color(0xFF2A3D54).withValues(alpha: 0.8),
-          width: 1.2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.5),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildNavItem(index: 0, icon: Icons.home_rounded, label: 'Hôm nay'),
-          _buildNavItem(index: 1, icon: Icons.explore_outlined, label: 'Bản đồ'),
-
-          // Center Floating Celestial Sparkle Button
-          GestureDetector(
-            onTap: onSparkleTap,
-            child: Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFFDE68A), Color(0xFFD97706)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: const Color(0xFF091726).withValues(alpha: 0.50),
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(
+                color: const Color(0xFFC59A44).withValues(alpha: 0.60),
+                width: 1.2,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFD97706).withValues(alpha: 0.6),
-                    blurRadius: 14,
-                    spreadRadius: 2,
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                _buildNavItem(index: 0, icon: Icons.home_rounded, label: 'Hôm nay'),
+                _buildNavItem(index: 1, icon: Icons.explore_outlined, label: 'Bản đồ'),
+
+                // Center Floating Celestial Sparkle Button
+                GestureDetector(
+                  onTap: onSparkleTap,
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFDE68A), Color(0xFFD97706)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFD97706).withValues(alpha: 0.6),
+                          blurRadius: 14,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(
+                      Icons.auto_awesome,
+                      color: Color(0xFF111827),
+                      size: 22,
+                    ),
                   ),
-                ],
-              ),
-              child: const Icon(
-                Icons.auto_awesome,
-                color: Color(0xFF111827),
-                size: 22,
-              ),
+                ),
+
+                _buildNavItem(index: 2, icon: Icons.bolt_rounded, label: 'Nhân vật'),
+                _buildNavItem(index: 3, icon: Icons.person_outline_rounded, label: 'Cá nhân'),
+              ],
             ),
           ),
-
-          _buildNavItem(index: 2, icon: Icons.bolt_rounded, label: 'Nhân vật'),
-          _buildNavItem(index: 3, icon: Icons.person_outline_rounded, label: 'Cá nhân'),
-        ],
+        ),
       ),
     );
   }
 }
+

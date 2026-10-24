@@ -38,18 +38,18 @@ class CharacterCard extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF07121E).withValues(alpha: 0.88),
+              color: const Color(0xFF091726).withValues(alpha: 0.40),
               borderRadius: BorderRadius.circular(22),
               border: Border.all(
-                color: const Color(0xFFC59A44),
-                width: 1.4,
+                color: const Color(0xFFC59A44).withValues(alpha: 0.65),
+                width: 1.2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.45),
+                  color: Colors.black.withValues(alpha: 0.25),
                   blurRadius: 18,
                   offset: const Offset(0, 4),
                 ),
@@ -59,10 +59,10 @@ class CharacterCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: const Color(0xFF091422).withValues(alpha: 0.65),
+                color: const Color(0xFF0C2034).withValues(alpha: 0.28),
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(
-                  color: const Color(0xFFC59A44).withValues(alpha: 0.75),
+                  color: const Color(0xFFC59A44).withValues(alpha: 0.45),
                   width: 1.0,
                 ),
               ),
@@ -75,10 +75,10 @@ class CharacterCard extends StatelessWidget {
                     height: 58,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color(0xFF0A1422),
+                      color: const Color(0xFF081524).withValues(alpha: 0.50),
                       border: Border.all(
-                        color: const Color(0xFFC59A44),
-                        width: 1.3,
+                        color: const Color(0xFFC59A44).withValues(alpha: 0.70),
+                        width: 1.2,
                       ),
                     ),
                     child: const Center(

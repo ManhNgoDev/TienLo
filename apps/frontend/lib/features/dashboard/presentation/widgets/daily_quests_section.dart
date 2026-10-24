@@ -20,20 +20,20 @@ class DailyQuestsSection extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 26),
           decoration: BoxDecoration(
-            color: const Color(0xFF07121E).withValues(alpha: 0.88),
+            color: const Color(0xFF091726).withValues(alpha: 0.40),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: const Color(0xFFC59A44).withValues(alpha: 0.7),
+              color: const Color(0xFFC59A44).withValues(alpha: 0.65),
               width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.4),
+                color: Colors.black.withValues(alpha: 0.22),
                 blurRadius: 16,
                 offset: const Offset(0, 4),
               ),

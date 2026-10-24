@@ -14,7 +14,6 @@ import '../widgets/cultivation_realms_modal.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import '../widgets/daily_quests_section.dart';
 import '../widgets/profile_modal.dart';
-import '../widgets/quick_actions_section.dart';
 
 class HomeScreen extends StatefulWidget {
   final UserModel user;
@@ -51,6 +50,28 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<QuestItem> _quests = [];
 
   int get _completedCount => _quests.where((q) => q.isCompleted || q.isXpClaimed).length;
+
+  String _toRoman(int number) {
+    const romanMap = {
+      1: 'I',
+      2: 'II',
+      3: 'III',
+      4: 'IV',
+      5: 'V',
+      6: 'VI',
+      7: 'VII',
+      8: 'VIII',
+      9: 'IX',
+      10: 'X',
+    };
+    return romanMap[number] ?? '$number';
+  }
+
+  String get _currentChapterText {
+    final realmIdx = _cultivationProfile?.realmIndex ?? 0;
+    final roman = _toRoman(realmIdx + 1);
+    return 'CHƯƠNG $roman • NGÀY THỨ $_streakDays';
+  }
 
   String get _currentStoryTitle {
     final realmName = _cultivationProfile?.realmName ?? 'Phàm Nhân';
@@ -339,15 +360,15 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // 2. Dark Ambient Overlays
+          // 2. Lighter Ambient Overlays (Bright, fantasy, celestial view)
           Positioned.fill(
             child: Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    const Color(0xFF070B12).withValues(alpha: 0.7),
-                    const Color(0xFF0B1424).withValues(alpha: 0.8),
-                    const Color(0xFF070B12).withValues(alpha: 0.95),
+                    const Color(0xFF070B12).withValues(alpha: 0.12),
+                    const Color(0xFF0B1424).withValues(alpha: 0.25),
+                    const Color(0xFF070B12).withValues(alpha: 0.45),
                   ],
                   stops: const [0.0, 0.45, 1.0],
                   begin: Alignment.topCenter,
@@ -373,25 +394,40 @@ class _HomeScreenState extends State<HomeScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: ShaderMask(
-                              shaderCallback: (bounds) => const LinearGradient(
-                                colors: [
-                                  Color(0xFFFFFFFF),
-                                  Color(0xFFFFF2D1),
-                                  Color(0xFFF6CE70),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ).createShader(bounds),
-                              child: Text(
-                                _currentStoryTitle,
-                                style: GoogleFonts.dancingScript(
-                                  color: Colors.white,
-                                  fontSize: 34,
-                                  fontWeight: FontWeight.bold,
-                                  height: 1.15,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _currentChapterText,
+                                  style: const TextStyle(
+                                    color: Color(0xFFE8B95E),
+                                    fontSize: 10.5,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1.8,
+                                  ),
                                 ),
-                              ),
+                                const SizedBox(height: 3),
+                                ShaderMask(
+                                  shaderCallback: (bounds) => const LinearGradient(
+                                    colors: [
+                                      Color(0xFFFFFFFF),
+                                      Color(0xFFFFF2D1),
+                                      Color(0xFFF6CE70),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ).createShader(bounds),
+                                  child: Text(
+                                    _currentStoryTitle,
+                                    style: GoogleFonts.dancingScript(
+                                      color: Colors.white,
+                                      fontSize: 34,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1.15,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           // Avatar Icon
@@ -473,10 +509,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         completedCount: _completedCount,
                         onToggleQuest: _toggleQuest,
                       ),
-                      const SizedBox(height: 24),
-
-                      // Section 4: HOẠT ĐỘNG NHANH
-                      const QuickActionsSection(),
                     ],
                   ),
                 ),

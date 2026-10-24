@@ -18,19 +18,19 @@ class CreateCampaignCard extends StatelessWidget {
     return ClipRRect(
       borderRadius: BorderRadius.circular(22),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: const Color(0xFF07121E).withValues(alpha: 0.88),
+            color: const Color(0xFF091726).withValues(alpha: 0.40),
             borderRadius: BorderRadius.circular(22),
             border: Border.all(
-              color: const Color(0xFFC59A44),
-              width: 1.4,
+              color: const Color(0xFFC59A44).withValues(alpha: 0.65),
+              width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.45),
+                color: Colors.black.withValues(alpha: 0.25),
                 blurRadius: 18,
                 offset: const Offset(0, 4),
               ),
@@ -46,10 +46,10 @@ class CreateCampaignCard extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF0A1422),
+                      color: const Color(0xFF081524).withValues(alpha: 0.50),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(
-                        color: const Color(0xFFC59A44),
+                        color: const Color(0xFFC59A44).withValues(alpha: 0.70),
                         width: 1.2,
                       ),
                     ),
@@ -94,11 +94,11 @@ class CreateCampaignCard extends StatelessWidget {
               // Bottom Input Bar with Arrow Button
               Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF07101B),
+                  color: const Color(0xFF061424).withValues(alpha: 0.50),
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
-                    color: const Color(0xFFC59A44),
-                    width: 1.2,
+                    color: const Color(0xFFC59A44).withValues(alpha: 0.55),
+                    width: 1.1,
                   ),
                 ),
                 padding: const EdgeInsets.only(left: 16, right: 5, top: 4, bottom: 4),
@@ -132,10 +132,10 @@ class CreateCampaignCard extends StatelessWidget {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF0A1522),
+                          color: const Color(0xFF0A1D30).withValues(alpha: 0.65),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: const Color(0xFFC59A44),
+                            color: const Color(0xFFC59A44).withValues(alpha: 0.70),
                             width: 1.2,
                           ),
                         ),
