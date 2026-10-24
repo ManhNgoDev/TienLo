@@ -156,7 +156,13 @@ class CharacterCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          '${_formatExp(currentExp)} / ${_formatExp(maxExp)} EXP để lên cấp',
+                          profile != null
+                              ? (profile!.realmIndex == 0
+                                  ? '${_formatExp(currentExp)} / ${_formatExp(maxExp)} EXP đột phá Tiên Lộ'
+                                  : (profile!.subRealm >= 10
+                                      ? '${_formatExp(currentExp)} / ${_formatExp(maxExp)} EXP đột phá Cảnh Giới'
+                                      : '${_formatExp(currentExp)} / ${_formatExp(maxExp)} EXP đột phá Tầng ${profile!.subRealm + 1}'))
+                              : '${_formatExp(currentExp)} / ${_formatExp(maxExp)} EXP để đột phá',
                           style: const TextStyle(
                             color: Color(0xFF8BA5BA),
                             fontSize: 11,
