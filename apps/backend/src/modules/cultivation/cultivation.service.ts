@@ -67,7 +67,7 @@ export class CultivationService {
       }
     }
 
-    // In-memory fallback (Khởi đầu: Phàm Nhân, 0 / 1.000 EXP, 50 Linh Thạch)
+    // In-memory fallback (Khởi đầu: Phàm Nhân, 0 / 1.000 EXP, 0 Nguyên Thạch)
     if (!this.inMemoryState.has(userId)) {
       const defaultRealm = CULTIVATION_REALMS[0]; // Phàm Nhân
       this.inMemoryState.set(userId, {
@@ -78,7 +78,7 @@ export class CultivationService {
         currentExp: 0,
         maxExp: defaultRealm.expPerSubRealm,
         totalExp: 0,
-        spiritStones: 50,
+        spiritStones: 0,
         streakDays: 1,
         title: defaultRealm.title,
         allRealms: CULTIVATION_REALMS,

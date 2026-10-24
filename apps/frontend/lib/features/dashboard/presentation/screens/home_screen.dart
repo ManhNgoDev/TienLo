@@ -98,8 +98,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentNavIndex = 0;
   int _currentExp = 0;
   int _maxExp = 1000;
-  final int _streakDays = 1;
-  int _spiritStones = 50;
+  int _streakDays = 1;
+  int _spiritStones = 0;
   CultivationProfileModel? _cultivationProfile;
   bool _isGeneratingAi = false;
 
@@ -111,6 +111,37 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<QuestItem> _quests = [];
 
   int get _completedCount => _quests.where((q) => q.isCompleted || q.isXpClaimed).length;
+
+  String _toRoman(int number) {
+    const romanMap = {
+      1: 'I',
+      2: 'II',
+      3: 'III',
+      4: 'IV',
+      5: 'V',
+      6: 'VI',
+      7: 'VII',
+      8: 'VIII',
+      9: 'IX',
+      10: 'X',
+    };
+    return romanMap[number] ?? '$number';
+  }
+
+  String get _currentChapterText {
+    final realmIdx = _cultivationProfile?.realmIndex ?? 0;
+    final roman = _toRoman(realmIdx + 1);
+    final day = _activeCampaignTitle != null ? _campaignCurrentDay : _streakDays;
+    return 'CHƯƠNG $roman • NGÀY THỨ $day';
+  }
+
+  String get _currentStoryTitle {
+    if (_activeCampaignTitle != null && _activeCampaignTitle!.isNotEmpty) {
+      return _activeCampaignTitle!;
+    }
+    final realmName = _cultivationProfile?.realmName ?? 'Phàm Nhân';
+    return '$realmName Bắt Đầu\nTu Tiên';
+  }
 
   @override
   void initState() {
@@ -456,6 +487,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _currentExp = profile.currentExp;
           _maxExp = profile.maxExp;
           _spiritStones = profile.spiritStones;
+          _streakDays = profile.streakDays;
           if (loadedQuests.isNotEmpty) {
             _quests.clear();
             _quests.addAll(loadedQuests.take(3));
@@ -710,9 +742,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'CHƯƠNG I • NGÀY THỨ 12',
-                                  style: TextStyle(
+                                Text(
+                                  _currentChapterText,
+                                  style: const TextStyle(
                                     color: Color(0xFFE8B95E),
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
@@ -730,9 +762,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     begin: Alignment.topLeft,
                                     end: Alignment.bottomRight,
                                   ).createShader(bounds),
-                                  child: const Text(
-                                    'Phàm Nhân Bắt Đầu\nTu Tiên',
-                                    style: TextStyle(
+                                  child: Text(
+                                    _currentStoryTitle,
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 26,
                                       fontStyle: FontStyle.italic,

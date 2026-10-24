@@ -13,14 +13,14 @@ describe('CultivationService', () => {
     service = new CultivationService(mockSupabaseService);
   });
 
-  it('should initialize user at Phàm Nhân with 0 EXP and 50 Linh Thạch', async () => {
+  it('should initialize user at Phàm Nhân with 0 EXP and 0 Nguyên Thạch', async () => {
     const profile = await service.getProfile('test-user-1');
     expect(profile.realmIndex).toBe(0);
     expect(profile.realmName).toBe('Phàm Nhân');
     expect(profile.subRealm).toBe(1);
     expect(profile.currentExp).toBe(0);
     expect(profile.maxExp).toBe(1000);
-    expect(profile.spiritStones).toBe(50);
+    expect(profile.spiritStones).toBe(0);
     expect(profile.allRealms.length).toBe(10);
   });
 
@@ -49,11 +49,11 @@ describe('CultivationService', () => {
   });
 
   it('should correctly add and spend spirit stones', async () => {
-    await service.getProfile('test-user-stones'); // starts with 50
+    await service.getProfile('test-user-stones'); // starts with 0
     const afterEarn = await service.addSpiritStones('test-user-stones', 30, 'Thưởng nhiệm vụ');
-    expect(afterEarn.spiritStones).toBe(80);
+    expect(afterEarn.spiritStones).toBe(30);
 
     const afterSpend = await service.addSpiritStones('test-user-stones', -25, 'Mua đan dược');
-    expect(afterSpend.spiritStones).toBe(55);
+    expect(afterSpend.spiritStones).toBe(5);
   });
 });

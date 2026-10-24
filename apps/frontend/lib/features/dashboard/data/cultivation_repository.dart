@@ -125,7 +125,7 @@ class CultivationRepository {
       }
     } catch (_) {}
 
-    // Fallback mặc định: Phàm Nhân, 0 Linh Lực, 50 Linh Thạch
+    // Fallback mặc định: Phàm Nhân, 0 Linh Lực, 0 Nguyên Thạch
     return CultivationProfileModel(
       userId: 'local-user',
       realmIndex: 0,
@@ -134,7 +134,7 @@ class CultivationRepository {
       currentExp: 0,
       maxExp: 1000,
       totalExp: 0,
-      spiritStones: 50,
+      spiritStones: 0,
       streakDays: 1,
       title: 'Phàm Thai Chưa Tỉnh',
       allRealms: CultivationProfileModel._defaultRealms,
