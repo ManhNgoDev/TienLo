@@ -152,7 +152,7 @@ export class CultivationService {
           max_exp: maxExp,
           total_exp: totalExp,
           updated_at: new Date().toISOString(),
-        });
+        }, { onConflict: 'user_id' });
       } catch (_) {}
     }
 
