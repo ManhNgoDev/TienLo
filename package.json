@@ -1,0 +1,31 @@
+{
+  "name": "tienlo-be-fe",
+  "version": "1.0.0",
+  "description": "TienLo Monorepo - NestJS Backend & Flutter Frontend",
+  "private": true,
+  "workspaces": [
+    "apps/backend"
+  ],
+  "scripts": {
+    "dev:be": "npm --prefix apps/backend run start:dev",
+    "build:be": "npm --prefix apps/backend run build",
+    "start:be": "npm --prefix apps/backend run start:prod",
+    "test:be": "npm --prefix apps/backend run test",
+    "lint:be": "npm --prefix apps/backend run lint",
+    "dev:fe": "cd apps/frontend && flutter run",
+    "dev:fe:chrome": "cd apps/frontend && flutter run -d chrome",
+    "dev:fe:windows": "cd apps/frontend && flutter run -d windows",
+    "build:fe:apk": "cd apps/frontend && flutter build apk",
+    "build:fe:web": "cd apps/frontend && flutter build web",
+    "test:fe": "cd apps/frontend && flutter test",
+    "analyze:fe": "cd apps/frontend && flutter analyze"
+  },
+  "keywords": [
+    "monorepo",
+    "nestjs",
+    "flutter",
+    "tienlo"
+  ],
+  "author": "",
+  "license": "ISC"
+}
