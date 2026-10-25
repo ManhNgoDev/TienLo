@@ -26,6 +26,12 @@ apps/frontend/build/
 apps/frontend/**/.generated/
 apps/frontend/android/.kotlin/
 
+# Firebase & Secrets
+google-services.json
+GoogleService-Info.plist
+*.keystore
+*.jks
+
 # OS Files
 .DS_Store
 Thumbs.db

@@ -1,41 +1,41 @@
 {
   "project_info": {
-    "project_number": "827303035345",
-    "project_id": "tienlo-2616c",
-    "storage_bucket": "tienlo-2616c.firebasestorage.app"
+    "project_number": "YOUR_PROJECT_NUMBER",
+    "project_id": "tienlo-demo",
+    "storage_bucket": "tienlo-demo.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:827303035345:android:30fee33e83bd89953a60f0",
+        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
         "android_client_info": {
           "package_name": "com.tienlo.frontend"
         }
       },
       "oauth_client": [
         {
-          "client_id": "827303035345-ptkbqup3ek8lo48rimf5qjb6empui75c.apps.googleusercontent.com",
+          "client_id": "000000000000-xxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.tienlo.frontend",
-            "certificate_hash": "6eab596f51e1e69b78230c03b6c741149d834c0d"
+            "certificate_hash": "0000000000000000000000000000000000000000"
           }
         },
         {
-          "client_id": "827303035345-tdskj058ijr5qjk2iha54ov2jt9ps6vq.apps.googleusercontent.com",
+          "client_id": "000000000000-yyyyyyyyyyyyyyyyyyyyyyyy.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCgoVeVPO8pBWIxW-UMen1rSnsxv4bUGaQ"
+          "current_key": "AIzaSyYOUR_SAFE_API_KEY_PLACEHOLDER_HERE"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "827303035345-tdskj058ijr5qjk2iha54ov2jt9ps6vq.apps.googleusercontent.com",
+              "client_id": "000000000000-yyyyyyyyyyyyyyyyyyyyyyyy.apps.googleusercontent.com",
               "client_type": 3
             }
           ]

@@ -44,5 +44,11 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
+# Firebase & Secrets
+google-services.json
+GoogleService-Info.plist
+*.keystore
+*.jks
+
 # Widget Preview related
 .widget_preview/

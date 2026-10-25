@@ -35,6 +35,17 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Restore google-services.json
+        working-directory: apps/frontend/android/app
+        run: |
+          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" ]; then
+            echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > google-services.json
+          elif [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
+            echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > google-services.json
+          elif [ -f "google-services.json.example" ]; then
+            cp google-services.json.example google-services.json
+          fi
+
       - name: Install Dependencies
         working-directory: apps/frontend
         run: flutter pub get
