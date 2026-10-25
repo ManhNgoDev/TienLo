@@ -10,6 +10,7 @@ import 'cultivation_realms_modal.dart';
 import 'profile/account_settings_card.dart';
 import 'profile/cultivation_progress_card.dart';
 import 'profile/profile_header_card.dart';
+import 'shop/phu_luc_cac_modal.dart';
 
 class ProfileView extends StatefulWidget {
   final UserModel user;
@@ -31,6 +32,7 @@ class _ProfileViewState extends State<ProfileView> {
   final CultivationRepository _cultivationRepository = CultivationRepository();
 
   Map<String, dynamic>? _apiProfileData;
+  int? _overriddenSpiritStones;
   bool _isLoading = false;
   String _appVersionString = 'v1.0.0';
   bool _isCheckingUpdate = false;
@@ -365,9 +367,10 @@ class _ProfileViewState extends State<ProfileView> {
         widget.cultivationProfile?.currentExp ??
         0;
 
-    final spiritStones = (statsData?['spiritStones'] as num?)?.toInt() ??
-        widget.cultivationProfile?.spiritStones ??
-        0;
+    final spiritStones = _overriddenSpiritStones ??
+        ((statsData?['spiritStones'] as num?)?.toInt() ??
+            widget.cultivationProfile?.spiritStones ??
+            0);
 
     final nextTitle = progressData?['nextTitle']?.toString() ??
         (widget.cultivationProfile?.realmIndex == 0
@@ -495,6 +498,18 @@ class _ProfileViewState extends State<ProfileView> {
         // 4. Section: TÀI KHOẢN (Only Nguyên Thạch)
         AccountSettingsCard(
           spiritStones: spiritStones,
+          onRewardStoreTap: () {
+            PhuLucCacModal.show(
+              context,
+              spiritStones: spiritStones,
+              onBalanceUpdated: (newStones) {
+                setState(() {
+                  _overriddenSpiritStones = newStones;
+                });
+                _loadProfileData();
+              },
+            );
+          },
           onSignOut: widget.onSignOut,
         ),
         const SizedBox(height: 24),

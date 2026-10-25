@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/app_update_service.dart';
 import '../../../auth/data/auth_repository.dart';
@@ -15,6 +14,8 @@ import '../widgets/create_campaign_card.dart';
 import '../widgets/cultivation_realms_modal.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import '../widgets/daily_quests_section.dart';
+import '../widgets/home/home_story_header.dart';
+import '../widgets/leaderboard_view.dart';
 import '../widgets/penalty_dialog.dart';
 import '../widgets/profile_view.dart';
 import '../widgets/statistics_view.dart';
@@ -57,38 +58,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int get _completedCount => _quests.where((q) => q.isCompleted || q.isXpClaimed).length;
 
-  String _toRoman(int number) {
-    const romanMap = {
-      1: 'I',
-      2: 'II',
-      3: 'III',
-      4: 'IV',
-      5: 'V',
-      6: 'VI',
-      7: 'VII',
-      8: 'VIII',
-      9: 'IX',
-      10: 'X',
-    };
-    return romanMap[number] ?? '$number';
-  }
-
-  String get _currentChapterText {
-    final realmIdx = _cultivationProfile?.realmIndex ?? 0;
-    final roman = _toRoman(realmIdx + 1);
-    if (_streakDays == 0) {
-      return 'CHƯƠNG $roman • KHỞI ĐẦU TU TIÊN';
-    }
-    return 'CHƯƠNG $roman • CHUỖI NGÀY: $_streakDays';
-  }
-
-  String get _currentStoryTitle {
-    final realmName = _cultivationProfile?.realmName ?? 'Phàm Nhân';
-    if (realmName == 'Phàm Nhân') {
-      return 'Phàm Nhân Bắt Đầu\nTu Tiên';
-    }
-    return '$realmName Tầng ${_cultivationProfile?.subRealm ?? 1}\nTu Tiên Lộ';
-  }
 
   @override
   void initState() {
@@ -392,9 +361,41 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (_) {}
   }
 
+  bool get _isSessionOngoing {
+    return _activeCampaignTitle != null &&
+        _activeCampaignTitle!.isNotEmpty &&
+        _quests.isNotEmpty &&
+        _quests.any((q) => !q.isCompleted);
+  }
+
   void _addCampaign() async {
     final text = _campaignController.text.trim();
     if (text.isEmpty || _isGeneratingAi) return;
+
+    // Giới hạn phiên tu luyện: Không cho phép tạo phiên mới khi đang có session dở dang
+    if (_isSessionOngoing) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF7F1D1D),
+          content: const Row(
+            children: [
+              Icon(Icons.lock_rounded, color: Color(0xFFFCA5A5), size: 20),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Đạo hữu hiện đang trong phiên tu luyện! Hãy hoàn thành toàn bộ 3 nhiệm vụ hiện tại trước khi khai mở phiên mới.',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                ),
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
 
     final duration = GoalAnalyzerService.extractDurationDays(text);
     final todayStr = DateTime.now().toIso8601String().split('T')[0];
@@ -402,17 +403,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     setState(() {
       _isGeneratingAi = true;
-      _activeCampaignTitle = text;
-      _campaignTotalDays = duration;
-      _campaignCurrentDay = 1;
-      _campaignStartDate = todayStr;
     });
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('active_camp_title_$uid', text);
-    await prefs.setInt('active_camp_duration_$uid', duration);
-    await prefs.setString('active_camp_start_date_$uid', todayStr);
-    await prefs.setString('active_camp_last_date_$uid', todayStr);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -444,15 +435,56 @@ class _HomeScreenState extends State<HomeScreen> {
           newQuests.add(GoalAnalyzerService.mapToQuestItem(q));
         }
       }
-    } catch (_) {}
+    } catch (e) {
+      final cleanMsg = e.toString().replaceAll('Exception: ', '').trim();
+      // Nếu là lỗi máy chủ báo phiên tu luyện dở dang
+      if (cleanMsg.contains('dở dang') || cleanMsg.contains('chưa hoàn tất') || cleanMsg.contains('phiên tu luyện')) {
+        if (mounted) {
+          setState(() {
+            _isGeneratingAi = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: const Color(0xFF7F1D1D),
+              content: Row(
+                children: [
+                  const Icon(Icons.lock_rounded, color: Color(0xFFFCA5A5), size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      cleanMsg,
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+              duration: const Duration(seconds: 4),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        }
+        return;
+      }
+    }
 
     if (newQuests.isEmpty) {
       newQuests = GoalAnalyzerService.analyzeGoalAndCreateQuests(text);
     }
 
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('active_camp_title_$uid', text);
+    await prefs.setInt('active_camp_duration_$uid', duration);
+    await prefs.setString('active_camp_start_date_$uid', todayStr);
+    await prefs.setString('active_camp_last_date_$uid', todayStr);
+
     if (mounted) {
       setState(() {
         _isGeneratingAi = false;
+        _activeCampaignTitle = text;
+        _campaignTotalDays = duration;
+        _campaignCurrentDay = 1;
+        _campaignStartDate = todayStr;
         _campaignController.clear();
         _quests.clear();
         _quests.addAll(newQuests.take(3));
@@ -470,18 +502,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Widget _buildAvatarText() {
-    final name = widget.user.displayName.trim();
-    final letter = name.isNotEmpty ? name[0].toUpperCase() : 'M';
-    return Text(
-      letter,
-      style: const TextStyle(
-        color: Color(0xFFFDE68A),
-        fontWeight: FontWeight.bold,
-        fontSize: 16,
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -545,8 +565,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           isLoading: _isLoadingStats,
                           onRefresh: _loadStatistics,
                         ),
-                      ] else if (_currentNavIndex == 3) ...[
-                        // Tab 3: CÁ NHÂN (HỒ SƠ TU LUYỆN)
+                      ] else if (_currentNavIndex == 2) ...[
+                        // Tab 2: BẢNG XẾP HẠNG (THIÊN KIÊU BẢNG)
+                        LeaderboardView(
+                          currentUser: widget.user,
+                          cultivationProfile: _cultivationProfile,
+                          streakDays: _streakDays,
+                          completedCount: _completedCount,
+                          onRefreshParent: _loadCultivationProfile,
+                        ),
+                      ] else if (_currentNavIndex == 4) ...[
+                        // Tab 4: CÁ NHÂN (HỒ SƠ TU LUYỆN)
                         ProfileView(
                           user: widget.user,
                           cultivationProfile: _cultivationProfile,
@@ -569,85 +598,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ] else ...[
                         // Tab 0: HÔM NAY (DASHBOARD)
-                        // Top Header: Title & Avatar
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    _currentChapterText,
-                                    style: const TextStyle(
-                                      color: Color(0xFFE8B95E),
-                                      fontSize: 10.5,
-                                      fontWeight: FontWeight.w700,
-                                      letterSpacing: 1.8,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  ShaderMask(
-                                    shaderCallback: (bounds) => const LinearGradient(
-                                      colors: [
-                                        Color(0xFFFFFFFF),
-                                        Color(0xFFFFF2D1),
-                                        Color(0xFFF6CE70),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ).createShader(bounds),
-                                    child: Text(
-                                      _currentStoryTitle,
-                                      style: GoogleFonts.dancingScript(
-                                        color: Colors.white,
-                                        fontSize: 34,
-                                        fontWeight: FontWeight.bold,
-                                        height: 1.15,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Avatar Icon (Tap opens Profile Tab)
-                            GestureDetector(
-                              onTap: () => setState(() => _currentNavIndex = 3),
-                              child: Container(
-                                width: 44,
-                                height: 44,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: const Color(0xFF141F30),
-                                  border: Border.all(
-                                    color: const Color(0xFFE5B869),
-                                    width: 1.8,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFFE5B869).withValues(alpha: 0.35),
-                                      blurRadius: 10,
-                                    ),
-                                  ],
-                                ),
-                                child: Center(
-                                  child: (widget.user.photoUrl != null &&
-                                          widget.user.photoUrl!.isNotEmpty &&
-                                          !widget.user.photoUrl!.contains('unsplash'))
-                                      ? ClipOval(
-                                          child: Image.network(
-                                            widget.user.photoUrl!,
-                                            width: 40,
-                                            height: 40,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stackTrace) => _buildAvatarText(),
-                                          ),
-                                        )
-                                      : _buildAvatarText(),
-                                ),
-                              ),
-                            ),
-                          ],
+                        HomeStoryHeader(
+                          user: widget.user,
+                          cultivationProfile: _cultivationProfile,
+                          streakDays: _streakDays,
+                          onAvatarTap: () => setState(() => _currentNavIndex = 4),
                         ),
                         const SizedBox(height: 22),
 
@@ -681,7 +636,31 @@ class _HomeScreenState extends State<HomeScreen> {
                         CreateCampaignCard(
                           controller: _campaignController,
                           isGeneratingAi: _isGeneratingAi,
+                          isLocked: _isSessionOngoing,
+                          lockedMessage: 'Đạo hữu cần hoàn thành 3/3 nhiệm vụ hôm nay trước khi mở phiên mới.',
                           onSubmitted: _addCampaign,
+                          onLockedTap: () {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                backgroundColor: const Color(0xFF7F1D1D),
+                                content: const Row(
+                                  children: [
+                                    Icon(Icons.lock_rounded, color: Color(0xFFFCA5A5), size: 18),
+                                    SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        'Phiên tu luyện đang dở dang! Hãy hoàn thành toàn bộ 3 nhiệm vụ hiện tại trước.',
+                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                duration: const Duration(seconds: 3),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                            );
+                          },
                         ),
                         const SizedBox(height: 24),
 
@@ -707,7 +686,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: CustomBottomNavBar(
               currentIndex: _currentNavIndex,
               onIndexChanged: (index) {
-                if (index == 2) {
+                if (index == 3) {
                   if (_cultivationProfile != null) {
                     CultivationRealmsModal.show(context, _cultivationProfile!);
                   }
@@ -719,15 +698,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (index == 1) {
                   _loadStatistics();
                 }
-              },
-              onSparkleTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Khai mở Thần Thông • Tính năng đang phát triển!'),
-                    behavior: SnackBarBehavior.floating,
-                    duration: Duration(seconds: 1),
-                  ),
-                );
               },
             ),
           ),

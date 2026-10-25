@@ -38,6 +38,14 @@ class ApiConstants {
   static String campaignQuestComplete(String questId) =>
       '/campaigns/quests/$questId/complete';
 
+  // Leaderboard
+  static const String leaderboard = '/leaderboard';
+
+  // Shop / Phù Lục Các
+  static const String shopItems = '/shop/items';
+  static const String shopInventory = '/shop/inventory';
+  static const String shopPurchase = '/shop/purchase';
+
   // App Self-Update
   static const String appVersion = '/app/version';
   static const String githubLatestReleaseApi =

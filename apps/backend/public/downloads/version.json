@@ -1,9 +1,9 @@
 {
-  "latestVersion": "1.0.3",
-  "latestBuildNumber": 4,
+  "latestVersion": "1.0.4",
+  "latestBuildNumber": 5,
   "minSupportedVersion": "1.0.0",
-  "downloadUrl": "https://github.com/ManhNgoDev/TienLo/releases/download/v1.0.3/TienLo-release.apk",
-  "releaseNotes": "• Sửa lỗi font chữ tiếng Việt (chữ Đ và toàn bộ thanh điệu hiển thị sắc nét)\n• Sửa triệt để avatar Unsplash lạ và tài khoản @demouser\n• Cập nhật bản phát hành v1.0.3 mới nhất",
-  "publishedAt": "2026-10-25T12:00:00Z",
+  "downloadUrl": "https://github.com/ManhNgoDev/TienLo/releases/download/v1.0.4/TienLo-release.apk",
+  "releaseNotes": "• Khai mở Bảng Xếp Hạng Leo Top (Thiên Kiêu Bảng) hiển thị Chuỗi ngày, Nhiệm vụ và Cảnh giới\n• Nâng cấp hệ thống AI tạo nhiệm vụ bám sát mục tiêu, đa dạng và không rập khuôn\n• Khóa phiên tu luyện: Cần hoàn thành 3/3 nhiệm vụ hôm nay trước khi mở session mới\n• Khai mở Phù Lục Các: Cửa hàng đổi Phù Lục, Đan Dược, Pháp Bảo bằng Nguyên Thạch và Túi Càn Khôn\n• Tối ưu hóa hiệu năng và kiến trúc toàn diện",
+  "publishedAt": "2026-10-25T15:30:00Z",
   "forceUpdate": false
 }

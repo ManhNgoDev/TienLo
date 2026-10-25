@@ -116,14 +116,14 @@ class AccountSettingsCard extends StatelessWidget {
               child: Column(
                 children: [
                   _buildTile(
-                    icon: Icons.diamond_outlined,
-                    iconColor: const Color(0xFF38BDF8),
-                    title: 'Kho phần thưởng',
-                    subtitle: 'Số dư: ${_formatNumber(spiritStones)} Nguyên Thạch',
+                    icon: Icons.token_rounded,
+                    iconColor: const Color(0xFFF2C465),
+                    title: 'Phù Lục Các',
+                    subtitle: 'Bách bảo phường · ${_formatNumber(spiritStones)} Nguyên Thạch',
                     onTap: onRewardStoreTap ?? () {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text('Kho phần thưởng • Đang cập nhật thêm vật phẩm tu tiên!'),
+                          content: Text('Phù Lục Các • Đang cập nhật thêm vật phẩm tu tiên!'),
                           duration: Duration(seconds: 2),
                         ),
                       );

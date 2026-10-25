@@ -9,6 +9,8 @@ import { UsersModule } from './modules/users/users.module.js';
 import { CultivationModule } from './modules/cultivation/cultivation.module.js';
 import { CampaignsModule } from './modules/campaigns/campaigns.module.js';
 import { LandingModule } from './modules/landing/landing.module.js';
+import { LeaderboardModule } from './modules/leaderboard/leaderboard.module.js';
+import { ShopModule } from './modules/shop/shop.module.js';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { LandingModule } from './modules/landing/landing.module.js';
     CultivationModule,
     CampaignsModule,
     LandingModule,
+    LeaderboardModule,
+    ShopModule,
   ],
   controllers: [AppController],
   providers: [AppService],

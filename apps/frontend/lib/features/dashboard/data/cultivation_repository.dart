@@ -178,7 +178,7 @@ class CultivationRepository {
       return res as Map<String, dynamic>?;
     } catch (e) {
       debugPrint('Error generateAiCampaign: $e');
-      return null;
+      rethrow;
     }
   }
 
