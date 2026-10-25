@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class AppService {
@@ -16,6 +18,25 @@ export class AppService {
   }
 
   async getAppVersion() {
+    // 1. Kiểm tra nếu có version.json lưu trữ cục bộ từ tệp upload
+    const localCandidates = [
+      path.resolve(process.cwd(), 'apps/backend/public/downloads/version.json'),
+      path.resolve(process.cwd(), 'public/downloads/version.json'),
+      path.resolve(process.cwd(), 'dist/public/downloads/version.json'),
+      path.resolve(process.cwd(), 'apps/backend/dist/public/downloads/version.json'),
+    ];
+    for (const c of localCandidates) {
+      if (fs.existsSync(c)) {
+        try {
+          const raw = fs.readFileSync(c, 'utf-8');
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.latestVersion) {
+            return parsed;
+          }
+        } catch (_) {}
+      }
+    }
+
     const owner = process.env.GITHUB_OWNER || 'ManhNgoDev';
     const repo = process.env.GITHUB_REPO || 'TienLo';
     const defaultDownloadUrl = `https://github.com/${owner}/${repo}/releases/latest/download/TienLo-release.apk`;
