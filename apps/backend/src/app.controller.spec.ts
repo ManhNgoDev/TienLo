@@ -19,5 +19,12 @@ describe('AppController', () => {
     it('should return "Hello World!"', () => {
       expect(appController.getHello()).toBe('Hello World!');
     });
+
+    it('should return app version info', async () => {
+      const versionInfo = await appController.getAppVersion();
+      expect(versionInfo).toBeDefined();
+      expect(versionInfo.latestVersion).toBeDefined();
+      expect(versionInfo.downloadUrl).toContain('.apk');
+    });
   });
 });

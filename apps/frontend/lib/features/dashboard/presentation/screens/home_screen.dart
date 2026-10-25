@@ -2,12 +2,14 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/services/app_update_service.dart';
 import '../../../auth/data/auth_repository.dart';
 import '../../../auth/domain/user_model.dart';
 import '../../data/cultivation_repository.dart';
 import '../../data/goal_analyzer_service.dart';
 import '../../domain/quest_item.dart';
 import '../widgets/active_session_card.dart';
+import '../widgets/app_update_dialog.dart';
 import '../widgets/character_card.dart';
 import '../widgets/create_campaign_card.dart';
 import '../widgets/cultivation_realms_modal.dart';
@@ -261,6 +263,16 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
       _loadStatistics();
+      _checkAppUpdate();
+    } catch (_) {}
+  }
+
+  Future<void> _checkAppUpdate() async {
+    try {
+      final info = await AppUpdateService().checkForUpdate();
+      if (info != null && info.hasUpdate && mounted) {
+        AppUpdateDialog.show(context, info);
+      }
     } catch (_) {}
   }
 

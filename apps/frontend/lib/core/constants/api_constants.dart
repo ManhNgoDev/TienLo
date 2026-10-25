@@ -46,5 +46,10 @@ class ApiConstants {
   static const String campaignsStatistics = '/campaigns/statistics';
   static String campaignQuestComplete(String questId) =>
       '/campaigns/quests/$questId/complete';
+
+  // App Self-Update
+  static const String appVersion = '/app/version';
+  static const String githubLatestReleaseApi =
+      'https://api.github.com/repos/ManhNgoDev/TienLo/releases/latest';
 }
 

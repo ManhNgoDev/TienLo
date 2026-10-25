@@ -1,8 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import '../../../../core/services/app_update_service.dart';
 import '../../../auth/domain/user_model.dart';
 import '../../data/cultivation_repository.dart';
+import 'app_update_dialog.dart';
 import 'cultivation_realms_modal.dart';
 import 'profile/account_settings_card.dart';
 import 'profile/cultivation_progress_card.dart';
@@ -29,11 +32,20 @@ class _ProfileViewState extends State<ProfileView> {
 
   Map<String, dynamic>? _apiProfileData;
   bool _isLoading = false;
+  String _appVersionString = 'v1.0.0';
+  bool _isCheckingUpdate = false;
 
   @override
   void initState() {
     super.initState();
     _loadProfileData();
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) {
+        setState(() {
+          _appVersionString = 'v${info.version}+${info.buildNumber}';
+        });
+      }
+    });
   }
 
   Future<void> _loadProfileData() async {
@@ -135,6 +147,60 @@ class _ProfileViewState extends State<ProfileView> {
     );
   }
 
+  Future<void> _manualCheckUpdate() async {
+    if (_isCheckingUpdate) return;
+    setState(() {
+      _isCheckingUpdate = true;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Đang kết nối kiểm tra linh chương mới từ Thiên Đạo...'),
+        duration: Duration(seconds: 1),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    try {
+      final info = await AppUpdateService().checkForUpdate();
+      if (!mounted) return;
+
+      if (info != null && info.hasUpdate) {
+        AppUpdateDialog.show(context, info);
+      } else if (info != null && !info.hasUpdate) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Đạo hữu đang tu luyện ở phiên bản mới nhất (${info.currentVersion})!'),
+            backgroundColor: const Color(0xFF065F46),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Không thể kết nối máy chủ để kiểm tra bản cập nhật.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Lỗi kiểm tra cập nhật: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCheckingUpdate = false;
+        });
+      }
+    }
+  }
+
   void _showSettingsModal() {
     showModalBottomSheet(
       context: context,
@@ -172,53 +238,86 @@ class _ProfileViewState extends State<ProfileView> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 24),
-                Center(
+                const SizedBox(height: 18),
+
+                // Card: Phiên bản & Nâng cấp ứng dụng
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF132235),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFC59A44).withValues(alpha: 0.4)),
+                  ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF2C465).withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: const Color(0xFFF2C465).withValues(alpha: 0.4),
-                            width: 1.2,
+                      Row(
+                        children: [
+                          const Icon(Icons.system_update_alt, color: Color(0xFFFBBF24), size: 20),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Phiên Bản Ứng Dụng',
+                            style: TextStyle(
+                              color: Color(0xFFFFF6DF),
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        child: const Icon(
-                          Icons.construction_rounded,
-                          color: Color(0xFFF2C465),
-                          size: 26,
-                        ),
+                          const Spacer(),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF091726),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFF334E68)),
+                            ),
+                            child: Text(
+                              _appVersionString,
+                              style: const TextStyle(
+                                color: Color(0xFFFBBF24),
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 10),
                       const Text(
-                        'Tính năng đang được hoàn thiện',
-                        style: TextStyle(
-                          color: Color(0xFFFFF6DF),
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        'Tự động kiểm tra bản cập nhật mới nhất và nâng cấp ứng dụng ngay trong Tiên Lộ mà không cần tải thủ công.',
+                        style: TextStyle(color: Color(0xFF8BA5BA), fontSize: 11.5, height: 1.4),
                       ),
-                      const SizedBox(height: 6),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          'Các tùy chọn trong Cài Đặt Hệ Thống đang được tối ưu và sẽ sớm ra mắt đạo hữu!',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Color(0xFF8BA5BA),
-                            fontSize: 12,
-                            height: 1.4,
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(ctx);
+                            _manualCheckUpdate();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1E3A5F),
+                            foregroundColor: const Color(0xFFFBBF24),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(color: const Color(0xFFC59A44).withValues(alpha: 0.6)),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 11),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.refresh, size: 16),
+                              SizedBox(width: 6),
+                              Text('Kiểm tra bản cập nhật', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12.5)),
+                            ],
                           ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 18),
                 SizedBox(
                   width: double.infinity,
                   height: 44,
