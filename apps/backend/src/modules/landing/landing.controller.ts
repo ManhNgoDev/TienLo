@@ -1,10 +1,36 @@
 import { Controller, Get, Header, Res } from '@nestjs/common';
 import type { Response } from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
 import { AppService } from '../../app.service.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 @Controller()
 export class LandingController {
   constructor(private readonly appService: AppService) {}
+
+  @Get('logo.png')
+  getLogo(@Res() res: Response) {
+    const candidates = [
+      path.resolve(process.cwd(), 'apps/backend/src/modules/landing/logo_tienlo.png'),
+      path.resolve(process.cwd(), 'src/modules/landing/logo_tienlo.png'),
+      path.resolve(process.cwd(), 'dist/modules/landing/logo_tienlo.png'),
+      path.resolve(process.cwd(), 'apps/backend/dist/modules/landing/logo_tienlo.png'),
+      path.join(__dirname, 'logo_tienlo.png'),
+    ];
+
+    for (const p of candidates) {
+      if (fs.existsSync(p)) {
+        res.setHeader('Content-Type', 'image/png');
+        res.setHeader('Cache-Control', 'public, max-age=86400');
+        return fs.createReadStream(p).pipe(res);
+      }
+    }
+    return res.status(404).send('Logo not found');
+  }
 
   @Get('download')
   async downloadApk(@Res() res: Response) {
@@ -32,6 +58,8 @@ export class LandingController {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tiên Lộ (TienLo) • Thăng Cấp Bản Thân & Tu Chân Hiện Đại</title>
   <meta name="description" content="Ứng dụng phát triển bản thân, theo dõi thói quen game hóa theo phong cách Tu Tiên Huyền Huyễn kết hợp Hệ Thống Solo Leveling. Tải APK Android miễn phí.">
+  <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="apple-touch-icon" href="/logo.png">
   
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -464,7 +492,7 @@ export class LandingController {
   <nav>
     <div class="container nav-inner">
       <a href="/" class="logo">
-        <div class="logo-badge">⚔️</div>
+        <img src="/logo.png" alt="Tiên Lộ" style="width: 44px; height: 44px; border-radius: 12px; border: 1.5px solid var(--gold-secondary); object-fit: cover; box-shadow: 0 0 16px var(--gold-glow);">
         <div class="logo-text">TIÊN LỘ</div>
       </a>
       <div class="nav-actions">
@@ -478,6 +506,9 @@ export class LandingController {
   <!-- Hero Section -->
   <section class="hero">
     <div class="container">
+      <div style="margin-bottom: 24px;">
+        <img src="/logo.png" alt="Tiên Lộ Logo" style="width: 140px; height: 140px; border-radius: 34px; border: 2.5px solid var(--gold-secondary); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.7), 0 0 40px var(--gold-glow); object-fit: cover;">
+      </div>
       <div class="hero-tag">
         <span>✨ GAMIFIED HABIT &amp; SELF-IMPROVEMENT APP</span>
       </div>
