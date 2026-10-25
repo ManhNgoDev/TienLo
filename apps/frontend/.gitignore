@@ -49,6 +49,7 @@ google-services.json
 GoogleService-Info.plist
 *.keystore
 *.jks
+!**/debug.keystore
 
 # Widget Preview related
 .widget_preview/

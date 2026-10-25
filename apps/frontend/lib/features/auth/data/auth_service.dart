@@ -18,10 +18,14 @@ class AuthResult {
 }
 
 class AuthService {
+  static const String envServerClientId = String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
+    defaultValue: '',
+  );
+
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
-    serverClientId:
-        '827303035345-tdskj058ijr5qjk2iha54ov2jt9ps6vq.apps.googleusercontent.com',
+    serverClientId: envServerClientId.isNotEmpty ? envServerClientId : null,
   );
 
 

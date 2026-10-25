@@ -34,6 +34,7 @@ google-services.json
 GoogleService-Info.plist
 *.keystore
 *.jks
+!**/debug.keystore
 
 # OS Files
 .DS_Store
