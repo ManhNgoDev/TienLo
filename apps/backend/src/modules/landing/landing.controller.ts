@@ -9,11 +9,20 @@ import {
   UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import type { Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 import { AppService } from '../../app.service.js';
+
+interface ExpressResponse {
+  setHeader(name: string, value: string): this;
+  status(code: number): this;
+  send(body: any): any;
+  json(body: any): any;
+  redirect(url: string): any;
+  download(path: string, filename?: string): void;
+  [key: string]: any;
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -41,7 +50,7 @@ export class LandingController {
   }
 
   @Get('logo.png')
-  getLogo(@Res() res: Response) {
+  getLogo(@Res() res: any) {
     const candidates = [
       path.resolve(process.cwd(), 'apps/backend/src/modules/landing/logo_tienlo.png'),
       path.resolve(process.cwd(), 'src/modules/landing/logo_tienlo.png'),
@@ -61,7 +70,7 @@ export class LandingController {
   }
 
   @Get('download')
-  async downloadApk(@Res() res: Response) {
+  async downloadApk(@Res() res: ExpressResponse) {
     const localApk = this.getLocalApkPath();
     if (localApk) {
       res.setHeader('Content-Type', 'application/vnd.android.package-archive');
@@ -72,7 +81,7 @@ export class LandingController {
   }
 
   @Get('download/apk')
-  async downloadApkDirect(@Res() res: Response) {
+  async downloadApkDirect(@Res() res: ExpressResponse) {
     const localApk = this.getLocalApkPath();
     if (localApk) {
       res.setHeader('Content-Type', 'application/vnd.android.package-archive');
@@ -180,7 +189,7 @@ export class LandingController {
   async handleUpload(
     @UploadedFile() file: any,
     @Body() body: any,
-    @Res() res: Response,
+    @Res() res: ExpressResponse,
   ) {
     const expectedSecret = process.env.ADMIN_KEY || 'tienlo2026';
     if (body.secretKey !== expectedSecret) {

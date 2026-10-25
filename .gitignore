@@ -3,6 +3,7 @@ dist/
 tmp/
 out-tsc/
 build/
+*.tsbuildinfo
 
 # Node dependencies
 node_modules/
