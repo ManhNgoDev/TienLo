@@ -12,7 +12,19 @@ async function bootstrap() {
 
   app.enableCors();
   app.setGlobalPrefix('api', {
-    exclude: ['/', 'favicon.ico', 'download', 'download/apk', 'logo.png', 'admin/upload'],
+    exclude: [
+      '/',
+      'favicon.ico',
+      'download',
+      'download/apk',
+      'logo.png',
+      'admin/upload',
+      'screenshots/screen_home.jpg',
+      'screenshots/screen_stats.jpg',
+      'screenshots/screen_profile.jpg',
+      'screenshots/screen_realms.jpg',
+      'screenshots/(.*)',
+    ],
   });
   app.useGlobalPipes(
     new ValidationPipe({
