@@ -37,12 +37,18 @@ jobs:
 
       - name: Restore google-services.json
         working-directory: apps/frontend/android/app
+        env:
+          G_SERVICES_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+          G_SERVICES_RAW: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: |
-          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" ]; then
-            echo "${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}" | base64 --decode > google-services.json
-          elif [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
-            echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > google-services.json
+          if [ -n "$G_SERVICES_BASE64" ]; then
+            echo "$G_SERVICES_BASE64" | base64 --decode > google-services.json
+          elif [ -n "$G_SERVICES_RAW" ]; then
+            printf "%s" "$G_SERVICES_RAW" > google-services.json
           elif [ -f "google-services.json.example" ]; then
+            cp google-services.json.example google-services.json
+          fi
+          if [ ! -f "google-services.json" ]; then
             cp google-services.json.example google-services.json
           fi
 

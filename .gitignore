@@ -4,6 +4,8 @@ tmp/
 out-tsc/
 build/
 *.tsbuildinfo
+*.apk
+*.aab
 
 # Node dependencies
 node_modules/

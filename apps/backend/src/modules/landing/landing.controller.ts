@@ -69,6 +69,11 @@ export class LandingController {
     return res.status(404).send('Logo not found');
   }
 
+  @Get('favicon.ico')
+  getFavicon(@Res() res: any) {
+    return this.getLogo(res);
+  }
+
   @Get('download')
   async downloadApk(@Res() res: ExpressResponse) {
     const localApk = this.getLocalApkPath();
@@ -244,9 +249,10 @@ export class LandingController {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tiên Lộ (TienLo) • Thăng Cấp Bản Thân & Tu Chân Hiện Đại</title>
+  <title>Tiên Lộ • Hệ Thống Tu Chân & Thăng Cấp Bản Thân</title>
   <meta name="description" content="Ứng dụng phát triển bản thân, theo dõi thói quen game hóa theo phong cách Tu Tiên Huyền Huyễn kết hợp Hệ Thống Solo Leveling. Tải APK Android miễn phí.">
   <link rel="icon" type="image/png" href="/logo.png">
+  <link rel="shortcut icon" type="image/png" href="/logo.png">
   <link rel="apple-touch-icon" href="/logo.png">
   
   <!-- Google Fonts -->
