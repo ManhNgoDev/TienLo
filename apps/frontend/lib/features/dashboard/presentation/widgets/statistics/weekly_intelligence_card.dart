@@ -197,9 +197,9 @@ class WeeklyIntelligenceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tag = aiIntelligence?['tag']?.toString() ?? 'WEEKLY INTELLIGENCE • THIÊN ĐẠO AI';
-    final title = aiIntelligence?['title']?.toString() ?? 'Bạn làm quest tốt nhất lúc 6–8h sáng';
+    final title = aiIntelligence?['title']?.toString() ?? 'Thiên Đạo AI Đang Đánh Giá...';
     final advice = aiIntelligence?['advice']?.toString() ??
-        'Sự kiên trì rèn luyện đang phát huy tác dụng. EXP tích lũy đều đặn, hãy cân bằng thêm các hoạt động giao tiếp và tĩnh tâm!';
+        'Hệ thống đang đồng bộ căn cốt tu vi và phân tích dữ liệu rèn luyện của đạo hữu...';
     final bestTime = aiIntelligence?['bestTime']?.toString();
     final growthTrend = aiIntelligence?['growthTrend']?.toString();
 

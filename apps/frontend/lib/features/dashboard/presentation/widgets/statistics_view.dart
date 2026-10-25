@@ -59,10 +59,10 @@ class StatisticsView extends StatelessWidget {
 
     final int calculatedRate = totalQuestsCount > 0
         ? ((completedCount / totalQuestsCount) * 100).toInt()
-        : 85;
+        : 0;
     final int completionRate = (statisticsData?['completionRate'] as num?)?.toInt() ?? calculatedRate;
 
-    final int calculatedCompletedQuests = (completedCount + (campaignCurrentDay - 1) * 3).clamp(0, 999);
+    final int calculatedCompletedQuests = completedCount;
     final int completedQuests = (statisticsData?['completedQuests'] as num?)?.toInt() ?? calculatedCompletedQuests;
 
     final int totalPlannedQuests = (statisticsData?['totalPlannedQuests'] as num?)?.toInt() ?? (campaignTotalDays * 3);
@@ -72,6 +72,23 @@ class StatisticsView extends StatelessWidget {
     final weeklyActivity = (statisticsData?['weeklyActivity'] as List?)
         ?.map((e) => (e as num).toInt())
         .toList();
+
+    // Khởi tạo thuộc tính và nhịp độ từ dữ liệu thực tế nếu đang chờ API phản hồi
+    final realmBonus = (profile?.realmIndex ?? 0) * 5;
+    final streakBonus = streakDays * 3;
+    final resolvedAttributes = attributes ?? {
+      'physical': (10 + realmBonus + completedCount * 8).clamp(10, 99),
+      'intellect': (10 + realmBonus).clamp(10, 99),
+      'focus': (10 + realmBonus + streakBonus).clamp(10, 99),
+      'social': (10 + realmBonus + completedCount * 2).clamp(10, 99),
+    };
+
+    final resolvedWeeklyActivity = weeklyActivity ??
+        List.generate(7, (index) {
+          final todayIndex = (DateTime.now().weekday - 1); // 0 = T2, ..., 6 = CN
+          if (index == todayIndex) return completedCount.clamp(0, 3);
+          return 0;
+        });
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -130,13 +147,13 @@ class StatisticsView extends StatelessWidget {
 
         // 5. Real Life Skill Tree Attributes (Năng Lực Đời Thực AI)
         RealLifeSkillTreeCard(
-          attributes: attributes,
+          attributes: resolvedAttributes,
         ),
         const SizedBox(height: 22),
 
         // 6. 7-Day Activity Chart
         WeeklyActivityChartCard(
-          weeklyActivity: weeklyActivity,
+          weeklyActivity: resolvedWeeklyActivity,
         ),
         const SizedBox(height: 22),
 

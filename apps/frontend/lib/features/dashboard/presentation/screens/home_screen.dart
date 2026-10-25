@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentNavIndex = 0;
   int _currentExp = 0;
   int _maxExp = 1000;
-  int _streakDays = 1;
+  int _streakDays = 0;
   int _spiritStones = 0;
   CultivationProfileModel? _cultivationProfile;
   bool _isGeneratingAi = false;
@@ -74,7 +74,10 @@ class _HomeScreenState extends State<HomeScreen> {
   String get _currentChapterText {
     final realmIdx = _cultivationProfile?.realmIndex ?? 0;
     final roman = _toRoman(realmIdx + 1);
-    return 'CHƯƠNG $roman • NGÀY THỨ $_streakDays';
+    if (_streakDays == 0) {
+      return 'CHƯƠNG $roman • KHỞI ĐẦU TU TIÊN';
+    }
+    return 'CHƯƠNG $roman • CHUỖI NGÀY: $_streakDays';
   }
 
   String get _currentStoryTitle {
@@ -101,19 +104,29 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final listJson = _quests.map((q) => q.toJson()).toList();
-      await prefs.setString('daily_quests_cache', jsonEncode(listJson));
+      final uid = widget.user.id;
+      await prefs.setString('daily_quests_cache_$uid', jsonEncode(listJson));
     } catch (_) {}
   }
 
   Future<void> _loadCultivationProfile() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _activeCampaignTitle = prefs.getString('active_camp_title');
-      _campaignTotalDays = prefs.getInt('active_camp_duration') ?? 14;
-      _campaignStartDate = prefs.getString('active_camp_start_date');
+      final uid = widget.user.id;
+
+      // Dọn dẹp key cũ không có uid để tránh tài khoản mới nhận nhầm cache cũ
+      await prefs.remove('daily_quests_cache');
+      await prefs.remove('active_camp_title');
+      await prefs.remove('active_camp_duration');
+      await prefs.remove('active_camp_start_date');
+      await prefs.remove('active_camp_last_date');
+
+      _activeCampaignTitle = prefs.getString('active_camp_title_$uid');
+      _campaignTotalDays = prefs.getInt('active_camp_duration_$uid') ?? 14;
+      _campaignStartDate = prefs.getString('active_camp_start_date_$uid');
 
       final todayStr = DateTime.now().toIso8601String().split('T')[0];
-      final lastDate = prefs.getString('active_camp_last_date');
+      final lastDate = prefs.getString('active_camp_last_date_$uid');
 
       if (_campaignStartDate != null) {
         try {
@@ -126,8 +139,8 @@ class _HomeScreenState extends State<HomeScreen> {
         } catch (_) {}
       }
 
-      // 1. Tải danh sách nhiệm vụ đã lưu trong SharedPreferences (nếu có)
-      final cachedJsonStr = prefs.getString('daily_quests_cache');
+      // 1. Tải danh sách nhiệm vụ đã lưu trong SharedPreferences (theo uid của user hiện tại)
+      final cachedJsonStr = prefs.getString('daily_quests_cache_$uid');
       final List<QuestItem> loadedQuests = [];
       if (cachedJsonStr != null && cachedJsonStr.isNotEmpty) {
         try {
@@ -169,8 +182,6 @@ class _HomeScreenState extends State<HomeScreen> {
         final uncompletedYesterday = loadedQuests.where((q) => !q.isCompleted).toList();
         if (uncompletedYesterday.isNotEmpty) {
           // Tính điểm trừ theo số nhiệm vụ chưa làm và độ khó:
-          // Nhiệm vụ khó thì trừ ít điểm (50), nhiệm vụ vừa (80), nhiệm vụ dễ thì trừ nhiều điểm (120)
-          // Giới hạn tổng điểm bị trừ từ 300 đổ xuống:
           int calculatedPenalty = 0;
           for (final q in uncompletedYesterday) {
             final diffStr = q.difficulty.toString().toUpperCase();
@@ -201,9 +212,9 @@ class _HomeScreenState extends State<HomeScreen> {
           q.isCompleted = false;
           q.isXpClaimed = false;
         }
-        await prefs.setString('active_camp_last_date', todayStr);
+        await prefs.setString('active_camp_last_date_$uid', todayStr);
       } else if (lastDate == null) {
-        await prefs.setString('active_camp_last_date', todayStr);
+        await prefs.setString('active_camp_last_date_$uid', todayStr);
       }
 
       final profile = await _cultivationRepository.getProfile();
@@ -281,6 +292,8 @@ class _HomeScreenState extends State<HomeScreen> {
     // Nếu nhiệm vụ đã hoàn thành thì không cho ticks lần nữa
     if (quest.isCompleted) return;
 
+    final bool allDoneBefore = _quests.isNotEmpty && _quests.every((q) => q.isCompleted);
+
     setState(() {
       quest.isCompleted = true;
       quest.isXpClaimed = true;
@@ -288,6 +301,13 @@ class _HomeScreenState extends State<HomeScreen> {
       _spiritStones += quest.spiritStones;
     });
     _saveLocalQuests();
+
+    final bool allDoneAfter = _quests.isNotEmpty && _quests.every((q) => q.isCompleted);
+    if (!allDoneBefore && allDoneAfter) {
+      setState(() {
+        _streakDays += 1;
+      });
+    }
 
     try {
       final res = await _cultivationRepository.completeQuest(quest.id);
@@ -306,29 +326,56 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: const Color(0xFF1E293B),
-            content: Row(
-              children: [
-                const Icon(Icons.auto_awesome, color: Color(0xFFF3C766), size: 18),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Hoàn thành tu luyện! +${quest.xp} Linh Lực, +${quest.spiritStones} Nguyên Thạch',
-                    style: const TextStyle(
-                      color: Color(0xFFFDE68A),
-                      fontWeight: FontWeight.bold,
+        if (!allDoneBefore && allDoneAfter) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: const Color(0xFF064E3B),
+              content: Row(
+                children: [
+                  const Icon(Icons.local_fire_department, color: Color(0xFFF97316), size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '🎉 Đạo hữu đã hoàn thành xuất sắc 3/3 nhiệm vụ hôm nay! Chuỗi ngày tu luyện tăng lên $_streakDays ngày!',
+                      style: const TextStyle(
+                        color: Color(0xFFFDE68A),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              duration: const Duration(seconds: 4),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            duration: const Duration(seconds: 2),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-        );
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              backgroundColor: const Color(0xFF1E293B),
+              content: Row(
+                children: [
+                  const Icon(Icons.auto_awesome, color: Color(0xFFF3C766), size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Hoàn thành tu luyện! +${quest.xp} Linh Lực, +${quest.spiritStones} Nguyên Thạch',
+                      style: const TextStyle(
+                        color: Color(0xFFFDE68A),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              duration: const Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+          );
+        }
       }
     } catch (_) {}
   }
@@ -339,6 +386,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final duration = GoalAnalyzerService.extractDurationDays(text);
     final todayStr = DateTime.now().toIso8601String().split('T')[0];
+    final uid = widget.user.id;
 
     setState(() {
       _isGeneratingAi = true;
@@ -349,10 +397,10 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('active_camp_title', text);
-    await prefs.setInt('active_camp_duration', duration);
-    await prefs.setString('active_camp_start_date', todayStr);
-    await prefs.setString('active_camp_last_date', todayStr);
+    await prefs.setString('active_camp_title_$uid', text);
+    await prefs.setInt('active_camp_duration_$uid', duration);
+    await prefs.setString('active_camp_start_date_$uid', todayStr);
+    await prefs.setString('active_camp_last_date_$uid', todayStr);
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -491,6 +539,18 @@ class _HomeScreenState extends State<HomeScreen> {
                           user: widget.user,
                           cultivationProfile: _cultivationProfile,
                           onSignOut: () async {
+                            final prefs = await SharedPreferences.getInstance();
+                            final uid = widget.user.id;
+                            await prefs.remove('daily_quests_cache');
+                            await prefs.remove('daily_quests_cache_$uid');
+                            await prefs.remove('active_camp_title');
+                            await prefs.remove('active_camp_title_$uid');
+                            await prefs.remove('active_camp_duration');
+                            await prefs.remove('active_camp_duration_$uid');
+                            await prefs.remove('active_camp_start_date');
+                            await prefs.remove('active_camp_start_date_$uid');
+                            await prefs.remove('active_camp_last_date');
+                            await prefs.remove('active_camp_last_date_$uid');
                             await _authRepository.signOut();
                             widget.onLogout();
                           },

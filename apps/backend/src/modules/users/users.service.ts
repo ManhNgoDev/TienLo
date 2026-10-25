@@ -31,7 +31,7 @@ export class UsersService {
     for (const c of campaigns) {
       completedQuestsFromCamps += (c.quests || []).filter((q: any) => q.isCompleted || q.isXpClaimed).length;
     }
-    const completedQuests = Math.max(completedQuestsFromCamps, cultivation.streakDays * 3 + completedQuestsFromCamps);
+    const completedQuests = completedQuestsFromCamps;
 
     // Format joinedDate
     let joinedDate = 'Người chơi từ 06/2024';

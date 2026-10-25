@@ -77,7 +77,7 @@ class CultivationProfileModel {
       maxExp: json['maxExp'] ?? 1000,
       totalExp: json['totalExp'] ?? 0,
       spiritStones: json['spiritStones'] ?? 50,
-      streakDays: json['streakDays'] ?? 1,
+      streakDays: (json['streakDays'] as num?)?.toInt() ?? 0,
       title: json['title'] ?? 'Phàm Thai Chưa Tỉnh',
       allRealms: realmsList.isNotEmpty ? realmsList : _defaultRealms,
     );
@@ -141,7 +141,7 @@ class CultivationRepository {
       maxExp: 1000,
       totalExp: 0,
       spiritStones: 0,
-      streakDays: 1,
+      streakDays: 0,
       title: 'Phàm Thai Chưa Tỉnh',
       allRealms: CultivationProfileModel._defaultRealms,
     );

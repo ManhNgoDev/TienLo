@@ -14,7 +14,7 @@ class WeeklyActivityChartCard extends StatelessWidget {
     const days = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
     final List<int> questValues = (weeklyActivity != null && weeklyActivity!.length == 7)
         ? weeklyActivity!
-        : [3, 2, 3, 3, 2, 3, 1];
+        : [0, 0, 0, 0, 0, 0, 0];
 
     final totalCompleted = questValues.fold<int>(0, (a, b) => a + b);
 

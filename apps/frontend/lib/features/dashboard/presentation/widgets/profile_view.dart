@@ -256,16 +256,16 @@ class _ProfileViewState extends State<ProfileView> {
 
     final streakDays = (statsData?['streakDays'] as num?)?.toInt() ??
         widget.cultivationProfile?.streakDays ??
-        1;
-    final completedQuests = (statsData?['completedQuests'] as num?)?.toInt() ?? 3;
+        0;
+    final completedQuests = (statsData?['completedQuests'] as num?)?.toInt() ?? 0;
     final totalExp = (statsData?['totalExp'] as num?)?.toInt() ??
         widget.cultivationProfile?.totalExp ??
         widget.cultivationProfile?.currentExp ??
-        300;
+        0;
 
     final spiritStones = (statsData?['spiritStones'] as num?)?.toInt() ??
         widget.cultivationProfile?.spiritStones ??
-        90;
+        0;
 
     final nextTitle = progressData?['nextTitle']?.toString() ??
         (widget.cultivationProfile?.realmIndex == 0
@@ -275,7 +275,7 @@ class _ProfileViewState extends State<ProfileView> {
                 : '${widget.cultivationProfile?.realmName} Tầng ${(widget.cultivationProfile?.subRealm ?? 1) + 1}'));
     final currentExp = (progressData?['currentExp'] as num?)?.toInt() ??
         widget.cultivationProfile?.currentExp ??
-        300;
+        0;
     final maxExp = (progressData?['maxExp'] as num?)?.toInt() ??
         widget.cultivationProfile?.maxExp ??
         1000;

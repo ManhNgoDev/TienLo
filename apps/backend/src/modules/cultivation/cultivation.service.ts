@@ -50,6 +50,11 @@ export class CultivationService {
         } else if (data) {
           const realmConfig = this.getRealmConfig(data.realm_index);
           const maxExp = calculateSubRealmExp(data.realm_index, data.sub_realm);
+          let streakDays = data.streak_days != null ? Number(data.streak_days) : 0;
+          // Chuẩn hóa tài khoản mới chưa hoàn thành quest nào về streak 0
+          if (Number(data.total_exp || 0) === 0 && Number(data.current_exp || 0) === 0 && streakDays === 1) {
+            streakDays = 0;
+          }
           return {
             userId: data.user_id,
             realmIndex: data.realm_index,
@@ -59,7 +64,7 @@ export class CultivationService {
             maxExp,
             totalExp: Number(data.total_exp || 0),
             spiritStones: data.spirit_stones,
-            streakDays: data.streak_days,
+            streakDays,
             title: realmConfig.title,
             allRealms: CULTIVATION_REALMS,
           };
@@ -69,7 +74,7 @@ export class CultivationService {
       }
     }
 
-    // In-memory fallback (Khởi đầu: Phàm Nhân, 0 / 1.000 EXP, 0 Nguyên Thạch)
+    // In-memory fallback (Khởi đầu: Phàm Nhân, 0 / 1.000 EXP, 0 Nguyên Thạch, 0 Chuỗi ngày)
     if (!this.inMemoryState.has(userId)) {
       const defaultRealm = CULTIVATION_REALMS[0]; // Phàm Nhân
       this.inMemoryState.set(userId, {
@@ -81,13 +86,64 @@ export class CultivationService {
         maxExp: calculateSubRealmExp(0, 1),
         totalExp: 0,
         spiritStones: 0,
-        streakDays: 1,
+        streakDays: 0,
         title: defaultRealm.title,
         allRealms: CULTIVATION_REALMS,
       });
     }
 
     return this.inMemoryState.get(userId)!;
+  }
+
+  async incrementStreakIfEligible(
+    userId: string,
+    dateStr?: string,
+  ): Promise<{ profile: UserCultivationState; streakIncremented: boolean }> {
+    const profile = await this.getProfile(userId);
+    const todayStr = dateStr || new Date().toISOString().split('T')[0];
+
+    const client = this.supabaseService.getClient();
+    let shouldIncrement = true;
+
+    if (client) {
+      try {
+        const { data } = await client
+          .from('user_cultivations')
+          .select('last_active_date, streak_days')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+        if (data && data.last_active_date === todayStr && Number(data.streak_days || 0) > 0) {
+          shouldIncrement = false;
+        }
+      } catch (_) {}
+    }
+
+    if (!shouldIncrement) {
+      return { profile, streakIncremented: false };
+    }
+
+    const newStreakDays = (profile.streakDays || 0) + 1;
+    const updatedProfile: UserCultivationState = {
+      ...profile,
+      streakDays: newStreakDays,
+    };
+
+    if (client) {
+      try {
+        await client
+          .from('user_cultivations')
+          .update({
+            streak_days: newStreakDays,
+            last_active_date: todayStr,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', userId);
+      } catch (_) {}
+    }
+
+    this.inMemoryState.set(userId, updatedProfile);
+    return { profile: updatedProfile, streakIncremented: true };
   }
 
   async addExp(

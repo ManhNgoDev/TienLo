@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS public.user_cultivations (
     max_exp INT DEFAULT 1000,             -- Linh lực cần để lên bậc tiếp theo (1000 EXP để đột phá Luyện Khí)
     total_exp BIGINT DEFAULT 0,           -- Tổng linh lực trọn đời tu sĩ
     spirit_stones INT DEFAULT 50,         -- Linh thạch tích lũy (tiền tệ)
-    streak_days INT DEFAULT 1,            -- Chuỗi ngày tu luyện
+    streak_days INT DEFAULT 0,            -- Chuỗi ngày tu luyện (tăng lên 1 khi hoàn thành hết quest trong ngày)
     last_active_date DATE DEFAULT CURRENT_DATE,
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()

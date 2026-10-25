@@ -21,6 +21,7 @@ describe('CultivationService', () => {
     expect(profile.currentExp).toBe(0);
     expect(profile.maxExp).toBe(1000);
     expect(profile.spiritStones).toBe(0);
+    expect(profile.streakDays).toBe(0);
     expect(profile.allRealms.length).toBe(10);
   });
 

@@ -212,10 +212,10 @@ class RealLifeSkillTreeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final physical = (attributes?['physical'] as num?)?.toInt() ?? 82;
-    final intellect = (attributes?['intellect'] as num?)?.toInt() ?? 64;
-    final focus = (attributes?['focus'] as num?)?.toInt() ?? 71;
-    final social = (attributes?['social'] as num?)?.toInt() ?? 38;
+    final physical = (attributes?['physical'] as num?)?.toInt() ?? 10;
+    final intellect = (attributes?['intellect'] as num?)?.toInt() ?? 10;
+    final focus = (attributes?['focus'] as num?)?.toInt() ?? 10;
+    final social = (attributes?['social'] as num?)?.toInt() ?? 10;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
