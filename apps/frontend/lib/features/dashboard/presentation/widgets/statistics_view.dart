@@ -47,15 +47,16 @@ class StatisticsView extends StatelessWidget {
         ? statisticsData!['activeCampaignTitle'] as String
         : ((activeCampaignTitle != null && activeCampaignTitle!.isNotEmpty)
             ? activeCampaignTitle!
-            : 'Kiến Tạo Phiên Bản 2.0');
+            : '[HỆ THỐNG] Tôi Luyện Thể Chất & Đột Phá Giới Hạn');
 
-    final int calculatedWeek = ((campaignCurrentDay - 1) ~/ 7) + 1;
+    final int calculatedWeek = campaignCurrentDay > 0 ? (((campaignCurrentDay - 1) ~/ 7) + 1) : 1;
     final int currentWeek = (statisticsData?['currentWeek'] as num?)?.toInt() ?? calculatedWeek;
 
     final int calculatedTotalWeeks = (campaignTotalDays / 7).ceil().clamp(1, 52);
     final int totalWeeks = (statisticsData?['totalWeeks'] as num?)?.toInt() ?? calculatedTotalWeeks;
 
-    final double campaignProgress = (campaignCurrentDay / campaignTotalDays).clamp(0.0, 1.0);
+    final double campaignProgress = (statisticsData?['campaignProgress'] as num?)?.toDouble() ??
+        (campaignCurrentDay > 0 ? (campaignCurrentDay / campaignTotalDays).clamp(0.0, 1.0) : 0.0);
 
     final int calculatedRate = totalQuestsCount > 0
         ? ((completedCount / totalQuestsCount) * 100).toInt()

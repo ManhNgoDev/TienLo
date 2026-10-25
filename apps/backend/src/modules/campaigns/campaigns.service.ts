@@ -529,10 +529,11 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
     const userCamps = await this.getUserCampaigns(userId);
 
     const activeCamp = userCamps[0] || null;
-    const activeCampaignTitle = activeCamp?.title || 'Kiến Tạo Phiên Bản 2.0';
+    const hasActiveCamp = activeCamp != null;
+    const activeCampaignTitle = activeCamp?.title || '[HỆ THỐNG] Tôi Luyện Thể Chất & Đột Phá Giới Hạn';
     const campaignTotalDays = activeCamp?.durationDays || 14;
 
-    let campaignCurrentDay = 1;
+    let campaignCurrentDay = hasActiveCamp ? 1 : 0;
     if (activeCamp?.createdAt) {
       try {
         const start = new Date(activeCamp.createdAt);
@@ -542,7 +543,7 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
       } catch (_) {}
     }
 
-    const campaignProgress = Math.min(1.0, campaignCurrentDay / campaignTotalDays);
+    const campaignProgress = hasActiveCamp ? Math.min(1.0, campaignCurrentDay / campaignTotalDays) : 0.0;
     const stageIndex = Math.min(3, Math.floor(campaignProgress * 4));
     const stages = ['Khởi động', 'Nền tảng', 'Đột phá', 'Duy trì'];
     const stageName = stages[stageIndex];
