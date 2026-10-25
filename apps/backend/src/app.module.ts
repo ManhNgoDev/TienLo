@@ -8,6 +8,7 @@ import { AuthModule } from './modules/auth/auth.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { CultivationModule } from './modules/cultivation/cultivation.module.js';
 import { CampaignsModule } from './modules/campaigns/campaigns.module.js';
+import { LandingModule } from './modules/landing/landing.module.js';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { CampaignsModule } from './modules/campaigns/campaigns.module.js';
     UsersModule,
     CultivationModule,
     CampaignsModule,
+    LandingModule,
   ],
   controllers: [AppController],
   providers: [AppService],

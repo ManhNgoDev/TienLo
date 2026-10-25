@@ -11,7 +11,9 @@ async function bootstrap() {
   );
 
   app.enableCors();
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api', {
+    exclude: ['/', 'download', 'download/apk'],
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
