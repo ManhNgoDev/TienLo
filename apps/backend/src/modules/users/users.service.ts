@@ -13,14 +13,47 @@ export class UsersService {
   ) {}
 
   async getProfile(firebaseUid: string, email?: string, name?: string, photo?: string) {
+    let cleanAvatarUrl = photo || null;
+    if (cleanAvatarUrl && cleanAvatarUrl.includes('images.unsplash.com')) {
+      cleanAvatarUrl = null;
+    }
+
     let user = await this.supabaseService.getUserByFirebaseUid(firebaseUid);
     if (!user) {
       user = await this.supabaseService.upsertUser({
         firebase_uid: firebaseUid,
         email: email || `${firebaseUid}@tienlo.app`,
         display_name: name || 'Đạo Hữu Tiên Lộ',
-        avatar_url: photo,
+        avatar_url: cleanAvatarUrl,
       });
+    } else {
+      let needsUpdate = false;
+      let newEmail = user.email;
+      let newAvatar: string | null | undefined = user.avatar_url;
+
+      if (user.avatar_url && user.avatar_url.includes('images.unsplash.com')) {
+        newAvatar = cleanAvatarUrl;
+        needsUpdate = true;
+      }
+      if (email && (!user.email || user.email.includes('demo.user') || user.email.includes('placeholder'))) {
+        newEmail = email;
+        needsUpdate = true;
+      }
+
+      if (needsUpdate) {
+        user = await this.supabaseService.upsertUser({
+          firebase_uid: firebaseUid,
+          email: newEmail,
+          display_name: user.display_name || name || 'Đạo Hữu Tiên Lộ',
+          avatar_url: newAvatar,
+        });
+      }
+    }
+
+    if (user.avatar_url && user.avatar_url.includes('images.unsplash.com')) {
+      cleanAvatarUrl = null;
+    } else {
+      cleanAvatarUrl = user.avatar_url || cleanAvatarUrl;
     }
 
     const cultivation = await this.cultivationService.getProfile(firebaseUid);
@@ -44,7 +77,17 @@ export class UsersService {
       } catch (_) {}
     }
 
-    const username = (user.email ? user.email.split('@')[0] : 'daohuu').toLowerCase().replace(/[^a-z0-9_]/g, '');
+    let rawUsername = 'daohuu';
+    if (user.email && !user.email.includes('demo.user') && !user.email.includes('placeholder')) {
+      rawUsername = user.email.split('@')[0];
+    } else if (user.display_name && user.display_name !== 'TienLo Demo User' && user.display_name !== 'Đạo Hữu Tiên Lộ') {
+      rawUsername = user.display_name
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd')
+        .replace(/Đ/g, 'D');
+    }
+    const username = rawUsername.toLowerCase().replace(/[^a-z0-9_]/g, '');
 
     // Next title & progress
     let nextTitle = 'Phàm Nhân • Đột phá Tiên Lộ';
@@ -140,7 +183,7 @@ export class UsersService {
         email: user.email,
         displayName: user.display_name || name || 'Đạo Hữu Tiên Lộ',
         username: `@${username}`,
-        avatarUrl: user.avatar_url || photo,
+        avatarUrl: cleanAvatarUrl,
         joinedDate,
         rankBadge,
       },
@@ -169,12 +212,17 @@ export class UsersService {
 
   async updateProfile(firebaseUid: string, dto: UpdateProfileDto) {
     const existing = await this.supabaseService.getUserByFirebaseUid(firebaseUid);
+    let avatarUrl = dto.avatarUrl ?? existing?.avatar_url ?? null;
+    if (avatarUrl && avatarUrl.includes('images.unsplash.com')) {
+      avatarUrl = null;
+    }
+
     if (!existing) {
       return this.supabaseService.upsertUser({
         firebase_uid: firebaseUid,
         email: `${firebaseUid}@tienlo.app`,
         display_name: dto.displayName,
-        avatar_url: dto.avatarUrl,
+        avatar_url: avatarUrl,
       });
     }
 
@@ -182,7 +230,7 @@ export class UsersService {
       firebase_uid: firebaseUid,
       email: existing.email,
       display_name: dto.displayName ?? existing.display_name,
-      avatar_url: dto.avatarUrl ?? existing.avatar_url,
+      avatar_url: avatarUrl,
     });
   }
 }

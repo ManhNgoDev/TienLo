@@ -631,7 +631,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ],
                                 ),
                                 child: Center(
-                                  child: widget.user.photoUrl != null
+                                  child: (widget.user.photoUrl != null &&
+                                          widget.user.photoUrl!.isNotEmpty &&
+                                          !widget.user.photoUrl!.contains('unsplash'))
                                       ? ClipOval(
                                           child: Image.network(
                                             widget.user.photoUrl!,

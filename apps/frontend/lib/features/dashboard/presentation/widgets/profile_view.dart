@@ -349,8 +349,11 @@ class _ProfileViewState extends State<ProfileView> {
         (widget.user.displayName.isNotEmpty ? widget.user.displayName : 'Đạo Hữu Tiên Lộ');
     final emailPrefix = widget.user.email.isNotEmpty && widget.user.email.contains('@')
         ? widget.user.email.split('@')[0]
-        : 'daohuu';
-    final username = userData?['username']?.toString() ?? '@${emailPrefix.toLowerCase()}';
+        : (displayName.isNotEmpty ? displayName.toLowerCase().replaceAll(' ', '') : 'daohuu');
+    final apiUser = userData?['username']?.toString();
+    final username = (apiUser != null && apiUser.isNotEmpty && apiUser != '@demouser')
+        ? apiUser
+        : '@${emailPrefix.toLowerCase()}';
     final joinedDate = userData?['joinedDate']?.toString() ?? 'Người chơi từ 10/2026';
 
     final streakDays = (statsData?['streakDays'] as num?)?.toInt() ??
@@ -457,7 +460,15 @@ class _ProfileViewState extends State<ProfileView> {
         ProfileHeaderCard(
           displayName: displayName,
           username: username,
-          avatarUrl: widget.user.photoUrl,
+          avatarUrl: (userData != null &&
+                  userData['avatarUrl'] != null &&
+                  userData['avatarUrl'].toString().isNotEmpty &&
+                  !userData['avatarUrl'].toString().contains('unsplash'))
+              ? userData['avatarUrl'].toString()
+              : ((widget.user.photoUrl != null &&
+                      !widget.user.photoUrl!.contains('unsplash'))
+                  ? widget.user.photoUrl
+                  : null),
           joinedDate: joinedDate,
           streakDays: streakDays,
           completedQuests: completedQuests,

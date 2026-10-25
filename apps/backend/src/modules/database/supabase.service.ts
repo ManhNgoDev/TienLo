@@ -6,7 +6,7 @@ export interface UserRecord {
   firebase_uid: string;
   email: string;
   display_name?: string;
-  avatar_url?: string;
+  avatar_url?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -51,7 +51,7 @@ export class SupabaseService implements OnModuleInit {
     firebase_uid: string;
     email: string;
     display_name?: string;
-    avatar_url?: string;
+    avatar_url?: string | null;
   }): Promise<UserRecord> {
     const now = new Date().toISOString();
 

@@ -10,9 +10,12 @@ export class AuthService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
   async syncUser(authUser: IAuthUser, dto?: SyncUserDto) {
-    const email = authUser.email || dto?.email || `${authUser.uid}@placeholder.tienlo.app`;
-    const displayName = dto?.displayName || authUser.displayName || 'Thành viên TienLo';
-    const avatarUrl = dto?.photoUrl || authUser.photoUrl;
+    const email = dto?.email || authUser.email || `${authUser.uid}@tienlo.app`;
+    const displayName = dto?.displayName || authUser.displayName || 'Đạo Hữu Tiên Lộ';
+    let avatarUrl = dto?.photoUrl || authUser.photoUrl || null;
+    if (avatarUrl && avatarUrl.includes('images.unsplash.com')) {
+      avatarUrl = null;
+    }
 
     this.logger.log(`Đang đồng bộ người dùng: UID=${authUser.uid}, Email=${email}`);
 

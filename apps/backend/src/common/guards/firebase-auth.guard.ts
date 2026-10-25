@@ -27,13 +27,21 @@ export class FirebaseAuthGuard implements CanActivate {
       throw new UnauthorizedException('Token không hợp lệ');
     }
 
-    // 1. Kiểm tra nếu là Demo/Mock Token trong môi trường Dev
+    // 1. Kiểm tra nếu là Demo/Mock Token trong môi trường Dev hoặc fallback khi chưa có ID token
     if (token.startsWith('demo-') || token.startsWith('mock-')) {
+      const extractedUid = token
+        .replace(/^(demo-token-|mock-token-|demo-|mock-)/, '')
+        .trim();
+      const finalUid =
+        extractedUid.length > 0 && !extractedUid.startsWith('dev-fallback')
+          ? extractedUid
+          : 'demo-google-uid-123456';
+
       request.user = {
-        uid: 'demo-google-uid-123456',
-        email: 'demo.user@tienlo.app',
-        displayName: 'TienLo Demo User',
-        photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100',
+        uid: finalUid,
+        email: undefined,
+        displayName: undefined,
+        photoUrl: undefined,
         emailVerified: true,
       } as IAuthUser;
       return true;

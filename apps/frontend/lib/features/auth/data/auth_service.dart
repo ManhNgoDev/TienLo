@@ -64,7 +64,7 @@ class AuthService {
       uid: 'demo-google-uid-123456',
       email: 'manh.ngo@tienlo.app',
       displayName: 'Mạnh Ngô (Dev)',
-      photoUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+      photoUrl: null,
     );
   }
 
