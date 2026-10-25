@@ -19,15 +19,8 @@ class ApiConstants {
     if (envBackendUrl.isNotEmpty) {
       return envBackendUrl.trim();
     }
-    // Nếu là bản build phát hành (APK Release) -> dùng link Render deploy
-    if (kReleaseMode) {
-      return productionRenderUrl;
-    }
-    // Môi trường dev cục bộ trên máy
-    if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:3000/api';
-    }
-    return 'http://localhost:3000/api';
+    // Mặc định ưu tiên trỏ thẳng đến máy chủ Render (hoạt động cho cả Debug và Release)
+    return productionRenderUrl;
   }
 
   static const String authSync = '/auth/sync';
