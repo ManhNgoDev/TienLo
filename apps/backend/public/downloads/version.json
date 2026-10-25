@@ -1,0 +1,9 @@
+{
+  "latestVersion": "1.0.3",
+  "latestBuildNumber": 4,
+  "minSupportedVersion": "1.0.0",
+  "downloadUrl": "https://github.com/ManhNgoDev/TienLo/releases/download/v1.0.3/TienLo-release.apk",
+  "releaseNotes": "• Sửa lỗi font chữ tiếng Việt (chữ Đ và toàn bộ thanh điệu hiển thị sắc nét)\n• Sửa triệt để avatar Unsplash lạ và tài khoản @demouser\n• Cập nhật bản phát hành v1.0.3 mới nhất",
+  "publishedAt": "2026-10-25T12:00:00Z",
+  "forceUpdate": false
+}

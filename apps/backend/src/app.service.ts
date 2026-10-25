@@ -41,11 +41,11 @@ export class AppService {
     const repo = process.env.GITHUB_REPO || 'TienLo';
     const defaultDownloadUrl = `https://github.com/${owner}/${repo}/releases/latest/download/TienLo-release.apk`;
 
-    let latestVersion = '1.0.1';
+    let latestVersion = '1.0.3';
     let releaseNotes =
-      '• Cập nhật nhiệm vụ rèn luyện thể chất chuẩn Solo Leveling\n• Chuẩn hóa dữ liệu thống kê Thể chất & nhịp độ 7 ngày\n• Tích hợp tự động kiểm tra và nâng cấp phiên bản trong ứng dụng';
+      '• Sửa lỗi font chữ tiếng Việt (chữ Đ và toàn bộ thanh điệu hiển thị sắc nét)\n• Sửa triệt để avatar Unsplash lạ và tài khoản @demouser\n• Cập nhật bản phát hành v1.0.3 mới nhất';
     let publishedAt = new Date().toISOString();
-    let downloadUrl = defaultDownloadUrl;
+    let downloadUrl = `https://github.com/${owner}/${repo}/releases/download/v1.0.3/TienLo-release.apk`;
 
     try {
       const res = await fetch(
@@ -80,7 +80,7 @@ export class AppService {
 
     return {
       latestVersion,
-      latestBuildNumber: 2,
+      latestBuildNumber: 4,
       minSupportedVersion: '1.0.0',
       downloadUrl,
       releaseNotes,

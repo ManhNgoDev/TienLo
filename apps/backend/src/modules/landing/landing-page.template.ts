@@ -10,10 +10,10 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
   <link rel="shortcut icon" type="image/png" href="/logo.png">
   <link rel="apple-touch-icon" href="/logo.png">
   
-  <!-- Google Fonts -->
+  <!-- Google Fonts (Playfair Display & Plus Jakarta Sans with full Vietnamese glyph support) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
     :root {
@@ -95,10 +95,10 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
       box-shadow: 0 0 16px var(--gold-glow);
     }
     .logo-text {
-      font-family: 'Cinzel', serif;
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: 2px;
+      font-family: 'Playfair Display', serif;
+      font-size: 23px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
       background: linear-gradient(135deg, #FFFFFF 0%, #FFF6DF 40%, #FBBF24 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -165,11 +165,11 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
       margin-bottom: 22px;
     }
     .hero-title {
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: clamp(34px, 4.4vw, 56px);
       font-weight: 900;
-      line-height: 1.15;
-      letter-spacing: 0.5px;
+      line-height: 1.2;
+      letter-spacing: 0.3px;
       margin-bottom: 20px;
       background: linear-gradient(135deg, #FFFFFF 0%, #FFF6DF 40%, #FBBF24 100%);
       -webkit-background-clip: text;
@@ -372,9 +372,9 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
       display: inline-block;
     }
     .section-title {
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: clamp(28px, 3.6vw, 42px);
-      font-weight: 800;
+      font-weight: 900;
       color: #FFF;
       line-height: 1.25;
       margin-bottom: 14px;
@@ -443,9 +443,9 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
       margin-bottom: 6px;
     }
     .card-title {
-      font-family: 'Cinzel', serif;
-      font-size: 17px;
-      font-weight: 700;
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      font-weight: 800;
       color: #FFF;
       margin-bottom: 8px;
       line-height: 1.3;
@@ -525,8 +525,9 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
     .comparison-table th.highlight {
       background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(180, 83, 9, 0.15));
       color: var(--gold-primary);
-      font-family: 'Cinzel', serif;
-      font-size: 16px;
+      font-family: 'Playfair Display', serif;
+      font-size: 17px;
+      font-weight: 800;
       border-left: 1.5px solid var(--gold-border);
       border-right: 1.5px solid var(--gold-border);
     }
@@ -561,9 +562,9 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
       margin-top: 20px;
     }
     .download-hub-title {
-      font-family: 'Cinzel', serif;
+      font-family: 'Playfair Display', serif;
       font-size: clamp(26px, 3.2vw, 36px);
-      font-weight: 800;
+      font-weight: 900;
       color: #FFF;
       margin-bottom: 14px;
     }
@@ -1086,7 +1087,7 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
     <div class="container">
       <div style="margin-bottom: 14px;">
         <img src="/logo.png" alt="Tiên Lộ Logo" style="width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--gold-secondary); vertical-align: middle; margin-right: 8px;">
-        <span style="font-family: 'Cinzel', serif; font-size: 18px; font-weight: 800; color: #FFF; vertical-align: middle;">TIÊN LỘ</span>
+        <span style="font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 900; color: #FFF; vertical-align: middle;">TIÊN LỘ</span>
       </div>
       <p style="margin-bottom: 8px;">
         Hệ thống phát triển bản thân &amp; Thói quen kỷ luật theo phong cách Tu Tiên Huyền Huyễn &amp; Solo Leveling.

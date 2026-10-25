@@ -129,11 +129,11 @@ export class LandingController {
   <title>Tiên Lộ • Quản Trị Tải Lên APK</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="icon" type="image/png" href="/logo.png">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body { background: #060D17; color: #FFF6DF; font-family: 'Plus Jakarta Sans', sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; margin: 0; }
     .card { background: #0C1929; border: 1.5px solid #C59A44; border-radius: 24px; padding: 32px; max-width: 480px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.8); }
-    h1 { font-family: 'Cinzel', serif; font-size: 20px; color: #FBBF24; text-align: center; margin-bottom: 20px; }
+    h1 { font-family: 'Playfair Display', serif; font-size: 20px; color: #FBBF24; text-align: center; margin-bottom: 20px; }
     label { display: block; font-size: 13px; color: #8BA5BA; margin-bottom: 6px; font-weight: 600; }
     input, textarea { width: 100%; box-sizing: border-box; padding: 12px 14px; background: #08121E; border: 1px solid #334E68; border-radius: 12px; color: #FFF; font-size: 14px; margin-bottom: 16px; outline: none; }
     input:focus, textarea:focus { border-color: #FBBF24; }
@@ -264,7 +264,7 @@ export class LandingController {
   @Header('Content-Type', 'text/html; charset=utf-8')
   async getLandingPage(): Promise<string> {
     const versionInfo = await this.appService.getAppVersion();
-    const latestVersion = versionInfo.latestVersion || '1.0.2';
+    const latestVersion = versionInfo.latestVersion || '1.0.3';
     const downloadUrl = versionInfo.downloadUrl || '/download';
 
     return getLandingHtml(latestVersion, downloadUrl);
