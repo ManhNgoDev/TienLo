@@ -1,9 +1,9 @@
 {
-  "latestVersion": "1.1.1",
-  "latestBuildNumber": 12,
+  "latestVersion": "1.1.2",
+  "latestBuildNumber": 13,
   "minSupportedVersion": "1.0.0",
-  "downloadUrl": "https://github.com/ManhNgoDev/TienLo/releases/download/v1.1.1/TienLo-release.apk",
-  "releaseNotes": "• Bảo Toàn Session Đăng Xuất / Đăng Nhập: Khắc phục triệt để lỗi mất chiến dịch và nhiệm vụ hàng ngày khi đăng xuất rồi đăng nhập lại (đồng bộ hai chiều Supabase + bộ nhớ theo UID)\n• Tổng Nhiệm Vụ Hồ Sơ Cá Nhân: Sửa lỗi hiển thị 0 nhiệm vụ ở màn hình Cá nhân, ghi nhận chính xác tổng số nhiệm vụ tích lũy đã hoàn thành của đạo hữu\n• Chuỗi Ngày & Khóa Chiến Dịch: Giữ chuẩn mỗi ngày cộng tối đa +1 chuỗi ngày và khóa tạo chiến dịch mới cho đến khi hết số ngày mục tiêu",
-  "publishedAt": "2026-10-28T12:08:00Z",
+  "downloadUrl": "https://github.com/ManhNgoDev/TienLo/releases/download/v1.1.2/TienLo-release.apk",
+  "releaseNotes": "🌐 Link tải thủ công qua Web (nếu máy bản cũ lỗi tự cập nhật):\n👉 https://tienlo.onrender.com\n📥 Tải thẳng APK: https://tienlo.onrender.com/download\n────────────────────\n• Bảo Toàn Session Đăng Xuất / Đăng Nhập: Khắc phục triệt để lỗi mất chiến dịch và nhiệm vụ hàng ngày khi đăng xuất rồi đăng nhập lại\n• Tổng Nhiệm Vụ Hồ Sơ Cá Nhân: Ghi nhận chính xác tổng số nhiệm vụ tích lũy đã hoàn thành\n• Chuỗi Ngày & Khóa Chiến Dịch: Mỗi ngày chỉ cộng tối đa +1 chuỗi ngày và khóa tạo chiến dịch mới cho đến khi hết số ngày mục tiêu",
+  "publishedAt": "2026-10-28T12:20:00Z",
   "forceUpdate": false
 }

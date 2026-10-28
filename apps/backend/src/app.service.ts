@@ -41,11 +41,11 @@ export class AppService {
     const repo = process.env.GITHUB_REPO || 'TienLo';
     const defaultDownloadUrl = `https://github.com/${owner}/${repo}/releases/latest/download/TienLo-release.apk`;
 
-    let latestVersion = '1.1.1';
+    let latestVersion = '1.1.2';
     let releaseNotes =
-      '• Bảo Toàn Session Đăng Xuất / Đăng Nhập: Khắc phục triệt để lỗi mất chiến dịch và nhiệm vụ hàng ngày khi đăng xuất rồi đăng nhập lại (đồng bộ hai chiều Supabase + bộ nhớ theo UID)\n• Tổng Nhiệm Vụ Hồ Sơ Cá Nhân: Sửa lỗi hiển thị 0 nhiệm vụ ở màn hình Cá nhân, ghi nhận chính xác tổng số nhiệm vụ tích lũy đã hoàn thành của đạo hữu\n• Chuỗi Ngày & Khóa Chiến Dịch: Giữ chuẩn mỗi ngày cộng tối đa +1 chuỗi ngày và khóa tạo chiến dịch mới cho đến khi hết số ngày mục tiêu';
+      '🌐 Link tải thủ công qua Web (nếu máy bản cũ lỗi tự cập nhật):\n👉 https://tienlo.onrender.com\n📥 Tải thẳng APK: https://tienlo.onrender.com/download\n────────────────────\n• Bảo Toàn Session Đăng Xuất / Đăng Nhập: Khắc phục triệt để lỗi mất chiến dịch và nhiệm vụ hàng ngày khi đăng xuất rồi đăng nhập lại\n• Tổng Nhiệm Vụ Hồ Sơ Cá Nhân: Ghi nhận chính xác tổng số nhiệm vụ tích lũy đã hoàn thành\n• Chuỗi Ngày & Khóa Chiến Dịch: Mỗi ngày chỉ cộng tối đa +1 chuỗi ngày và khóa tạo chiến dịch mới cho đến khi hết số ngày mục tiêu';
     let publishedAt = new Date().toISOString();
-    let downloadUrl = `https://github.com/${owner}/${repo}/releases/download/v1.1.1/TienLo-release.apk`;
+    let downloadUrl = `https://github.com/${owner}/${repo}/releases/download/v1.1.2/TienLo-release.apk`;
 
     try {
       const res = await fetch(
@@ -80,7 +80,7 @@ export class AppService {
 
     return {
       latestVersion,
-      latestBuildNumber: 12,
+      latestBuildNumber: 13,
       minSupportedVersion: '1.0.0',
       downloadUrl,
       releaseNotes,

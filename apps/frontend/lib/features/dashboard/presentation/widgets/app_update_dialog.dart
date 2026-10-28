@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:ota_update/ota_update.dart';
 import '../../../../core/services/app_update_service.dart';
@@ -254,7 +255,7 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
                           ),
                         ),
                         child: SingleChildScrollView(
-                          child: Text(
+                          child: SelectableText(
                             info.releaseNotes.isNotEmpty
                                 ? info.releaseNotes
                                 : '• Tối ưu hóa tính năng và sửa các lỗi tu vi đã biết.\n• Nâng cấp độ mượt và ổn định toàn hệ thống.',
@@ -266,7 +267,93 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 12),
+
+                      // Manual Web Download Link Box
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF132235).withValues(alpha: 0.85),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFF38BDF8).withValues(alpha: 0.45),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.language_rounded, color: Color(0xFF38BDF8), size: 18),
+                            const SizedBox(width: 8),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Tải thủ công qua trình duyệt Web:',
+                                    style: TextStyle(
+                                      color: Color(0xFF94A3B8),
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  SelectableText(
+                                    'https://tienlo.onrender.com',
+                                    style: TextStyle(
+                                      color: Color(0xFF38BDF8),
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            InkWell(
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: () async {
+                                await Clipboard.setData(
+                                  const ClipboardData(text: 'https://tienlo.onrender.com'),
+                                );
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    backgroundColor: Color(0xFF065F46),
+                                    content: Text(
+                                      'Đã sao chép link https://tienlo.onrender.com! Hãy dán vào trình duyệt để tải APK.',
+                                      style: TextStyle(color: Colors.white, fontSize: 12.5),
+                                    ),
+                                    behavior: SnackBarBehavior.floating,
+                                    duration: Duration(seconds: 3),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF0C1929),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.6)),
+                                ),
+                                child: const Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(Icons.copy_rounded, color: Color(0xFF38BDF8), size: 13),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'Copy link',
+                                      style: TextStyle(
+                                        color: Color(0xFF38BDF8),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
 
                       // Progress or error state
                       if (_errorMessage != null) ...[
