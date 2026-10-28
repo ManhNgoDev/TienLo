@@ -165,7 +165,7 @@ class CreateCampaignCard extends StatelessWidget {
                           ),
                           decoration: InputDecoration(
                             hintText: isLocked
-                                ? 'Hoàn thành nhiệm vụ hiện tại để mở phiên mới...'
+                                ? 'Phải hết ngày mục tiêu của chiến dịch hiện tại mới được tạo mới...'
                                 : 'Ví dụ: Học lập trình Flutter sau 4 tuần...',
                             hintStyle: TextStyle(
                               color: isLocked

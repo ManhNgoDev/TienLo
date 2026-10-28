@@ -93,17 +93,35 @@ export class CampaignsService {
     }
 
     if (existingActiveCamp) {
-      const questsList = existingActiveCamp.quests || [];
-      const hasUnfinished = questsList.some(
-        (q: any) => !q.is_completed && !q.isCompleted,
+      const durationTarget = Number(
+        existingActiveCamp.duration_days ?? existingActiveCamp.durationDays ?? 14,
       );
+      const createdAtRaw = existingActiveCamp.created_at ?? existingActiveCamp.createdAt;
+      const createdDate = createdAtRaw ? new Date(createdAtRaw) : new Date();
+      const now = new Date();
+      const startDayUtc = Date.UTC(
+        createdDate.getUTCFullYear(),
+        createdDate.getUTCMonth(),
+        createdDate.getUTCDate(),
+      );
+      const nowDayUtc = Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+      );
+      const diffDays = Math.max(
+        0,
+        Math.floor((nowDayUtc - startDayUtc) / (1000 * 60 * 60 * 24)),
+      );
+      const currentDay = diffDays + 1;
 
-      if (hasUnfinished) {
+      if (diffDays < durationTarget) {
+        const remainingDays = Math.max(1, durationTarget - diffDays);
         throw new BadRequestException(
-          'Đạo hữu hiện đang có phiên tu luyện dở dang chưa hoàn tất! Cần hoàn thành toàn bộ nhiệm vụ hiện tại trước khi khai mở phiên tu luyện mới.',
+          `Đạo hữu đang trong chiến dịch hiện tại (Ngày ${currentDay}/${durationTarget} • còn ${remainingDays} ngày mục tiêu). Kể cả khi đã hoàn thành xong nhiệm vụ trong ngày, bắt buộc phải hết ${durationTarget} ngày mục tiêu của chiến dịch mới được tạo chiến dịch mới!`,
         );
       } else {
-        // Toàn bộ nhiệm vụ của session trước đã hoàn thành -> đóng session cũ
+        // Đã hết toàn bộ số ngày mục tiêu của chiến dịch trước -> đóng chiến dịch cũ
         if (client) {
           try {
             await client

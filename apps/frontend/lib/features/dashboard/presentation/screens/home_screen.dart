@@ -107,7 +107,18 @@ class _HomeScreenState extends State<HomeScreen> {
           final diff = DateTime(now.year, now.month, now.day)
               .difference(DateTime(start.year, start.month, start.day))
               .inDays;
-          _campaignCurrentDay = (diff + 1).clamp(1, _campaignTotalDays);
+          if (diff >= _campaignTotalDays) {
+            _activeCampaignTitle = null;
+            _campaignStartDate = null;
+            _campaignCurrentDay = 1;
+            await prefs.remove('active_camp_title_$uid');
+            await prefs.remove('active_camp_duration_$uid');
+            await prefs.remove('active_camp_start_date_$uid');
+            await prefs.remove('active_camp_last_date_$uid');
+            await prefs.remove('daily_quests_cache_$uid');
+          } else {
+            _campaignCurrentDay = (diff + 1).clamp(1, _campaignTotalDays);
+          }
         } catch (_) {}
       }
 
@@ -131,8 +142,27 @@ class _HomeScreenState extends State<HomeScreen> {
           if (_activeCampaignTitle == null) {
             _activeCampaignTitle = activeCamp['title'];
             _campaignTotalDays = activeCamp['durationDays'] ?? 14;
+            final createdRaw = activeCamp['createdAt']?.toString();
+            if (createdRaw != null && createdRaw.isNotEmpty) {
+              try {
+                final cDate = DateTime.parse(createdRaw).toLocal();
+                final now = DateTime.now();
+                final diff = DateTime(now.year, now.month, now.day)
+                    .difference(DateTime(cDate.year, cDate.month, cDate.day))
+                    .inDays;
+                if (diff >= _campaignTotalDays) {
+                  _activeCampaignTitle = null;
+                } else {
+                  _campaignCurrentDay = (diff + 1).clamp(1, _campaignTotalDays);
+                  _campaignStartDate = cDate.toIso8601String().split('T')[0];
+                  await prefs.setString('active_camp_title_$uid', _activeCampaignTitle!);
+                  await prefs.setInt('active_camp_duration_$uid', _campaignTotalDays);
+                  await prefs.setString('active_camp_start_date_$uid', _campaignStartDate!);
+                }
+              } catch (_) {}
+            }
           }
-          final rawQuests = activeCamp['quests'];
+          final rawQuests = _activeCampaignTitle != null ? activeCamp['quests'] : null;
           if (rawQuests is List) {
             for (final q in rawQuests) {
               loadedQuests.add(GoalAnalyzerService.mapToQuestItem(q));
@@ -380,9 +410,21 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool get _isSessionOngoing {
     return _activeCampaignTitle != null &&
-        _activeCampaignTitle!.isNotEmpty &&
-        _quests.isNotEmpty &&
-        _quests.any((q) => !q.isCompleted);
+        _activeCampaignTitle!.trim().isNotEmpty && _campaignCurrentDay <= _campaignTotalDays;
+  }
+
+  String get _sessionLockedMessage {
+    final remainingDays = (_campaignTotalDays - _campaignCurrentDay + 1).clamp(1, _campaignTotalDays);
+    final allTodayDone = _quests.isNotEmpty && _quests.every((q) => q.isCompleted);
+    if (allTodayDone) {
+      return 'Đã hoàn thành nhiệm vụ hôm nay! Chiến dịch đang ở Ngày $_campaignCurrentDay/$_campaignTotalDays (còn $remainingDays ngày mục tiêu). Bắt buộc phải hết $_campaignTotalDays ngày mục tiêu mới được tạo chiến dịch mới!';
+    }
+    return 'Đang trong chiến dịch (Ngày $_campaignCurrentDay/$_campaignTotalDays • còn $remainingDays ngày). Bắt buộc phải hết $_campaignTotalDays ngày mục tiêu của chiến dịch hiện tại mới được tạo chiến dịch mới!';
+
+  // Đã chuẩn hóa khóa chiến dịch theo toàn bộ số ngày mục tiêu
+
+
+
   }
 
   void _addCampaign() async {
@@ -400,7 +442,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Đạo hữu hiện đang trong phiên tu luyện! Hãy hoàn thành toàn bộ ${_quests.length} nhiệm vụ hiện tại trước khi khai mở phiên mới.',
+                  _sessionLockedMessage,
                   style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
                 ),
               ),
@@ -729,7 +771,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           controller: _campaignController,
                           isGeneratingAi: _isGeneratingAi,
                           isLocked: _isSessionOngoing,
-                          lockedMessage: 'Đạo hữu cần hoàn thành toàn bộ ${_quests.length} nhiệm vụ hôm nay trước khi mở phiên mới.',
+                          lockedMessage: _sessionLockedMessage,
                           onSubmitted: _addCampaign,
                           onLockedTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -741,7 +783,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        'Phiên tu luyện đang dở dang! Hãy hoàn thành toàn bộ ${_quests.length} nhiệm vụ hiện tại trước.',
+                                        _sessionLockedMessage,
                                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
                                       ),
                                     ),

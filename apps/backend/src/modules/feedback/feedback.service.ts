@@ -72,7 +72,7 @@ export class FeedbackService {
       userId: dto.userId?.trim() || 'anonymous',
       deviceInfo: dto.deviceInfo?.trim() || 'Chưa xác định',
       stackTrace: dto.stackTrace?.trim(),
-      appVersion: dto.appVersion?.trim() || '1.0.8',
+      appVersion: dto.appVersion?.trim() || '1.0.9',
       createdAt: nowIso,
       sentEmail: dto.sentByClient === true,
     };
