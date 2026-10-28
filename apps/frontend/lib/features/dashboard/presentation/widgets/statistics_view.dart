@@ -87,8 +87,9 @@ class StatisticsView extends StatelessWidget {
         : 0;
 
     final int calculatedCompletedQuests = hasActiveCamp ? completedCount : 0;
+    final int apiStatsCompleted = (statisticsData?['completedQuests'] as num?)?.toInt() ?? 0;
     final int completedQuests = hasActiveCamp
-        ? ((statisticsData?['completedQuests'] as num?)?.toInt() ?? calculatedCompletedQuests)
+        ? (apiStatsCompleted > calculatedCompletedQuests ? apiStatsCompleted : calculatedCompletedQuests)
         : 0;
 
     final int totalPlannedQuests = hasActiveCamp

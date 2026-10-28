@@ -59,12 +59,44 @@ export class UsersService {
     const cultivation = await this.cultivationService.getProfile(firebaseUid);
     const campaigns = await this.campaignsService.getUserCampaigns(firebaseUid);
 
-    // Calculate completed quests
+    // Calculate total lifetime completed quests from campaigns + quests table + reward transactions
     let completedQuestsFromCamps = 0;
     for (const c of campaigns) {
       completedQuestsFromCamps += (c.quests || []).filter((q: any) => q.isCompleted || q.isXpClaimed).length;
     }
-    const completedQuests = completedQuestsFromCamps;
+
+    let completedFromQuestsTable = 0;
+    let completedFromRewardTx = 0;
+    const client = this.supabaseService.getClient();
+    if (client) {
+      try {
+        const [qRes, txRes] = await Promise.all([
+          client
+            .from('quests')
+            .select('id, is_completed, is_xp_claimed')
+            .eq('user_id', firebaseUid),
+          client
+            .from('spirit_stone_transactions')
+            .select('id, amount, type')
+            .eq('user_id', firebaseUid)
+            .gt('amount', 0),
+        ]);
+        if (qRes.data) {
+          completedFromQuestsTable = qRes.data.filter(
+            (q: any) => q.is_completed || q.is_xp_claimed,
+          ).length;
+        }
+        if (txRes.data) {
+          completedFromRewardTx = txRes.data.length;
+        }
+      } catch (_) {}
+    }
+
+    const completedQuests = Math.max(
+      completedQuestsFromCamps,
+      completedFromQuestsTable,
+      completedFromRewardTx,
+    );
 
     // Format joinedDate
     let joinedDate = 'Người chơi từ 06/2024';

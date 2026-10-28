@@ -69,27 +69,6 @@ export async function computeCampaignStatistics({
     }
   }
 
-  const activeQuests = activeCamp?.quests || [];
-  const completedQuestsCount = activeQuests.filter((q) => q.isCompleted || q.isXpClaimed).length;
-  const totalQuestsCount = activeQuests.length;
-  const completionRate =
-    totalQuestsCount > 0 ? Math.round((completedQuestsCount / totalQuestsCount) * 100) : 0;
-  const currentWeek = hasActiveCamp ? Math.floor((campaignCurrentDay - 1) / 7) + 1 : 0;
-  const totalWeeks = hasActiveCamp ? Math.max(1, Math.ceil(campaignTotalDays / 7)) : 0;
-  const completedQuestsTotal = completedQuestsCount;
-  const totalPlannedQuests = hasActiveCamp
-    ? campaignTotalDays * (totalQuestsCount > 0 ? totalQuestsCount : 5)
-    : 0;
-
-  // Tiến độ dựa trên nhiệm vụ thực tế đã hoàn thành, không bao giờ mặc định là 7% khi chưa làm gì
-  const campaignProgress =
-    hasActiveCamp && totalPlannedQuests > 0 && completedQuestsTotal > 0
-      ? Math.min(1.0, completedQuestsTotal / totalPlannedQuests)
-      : 0.0;
-  const stageIndex = hasActiveCamp ? Math.min(3, Math.floor(campaignProgress * 4)) : 0;
-  const stages = ['Khởi động', 'Nền tảng', 'Đột phá', 'Duy trì'];
-  const stageName = hasActiveCamp ? stages[stageIndex] : 'Chưa bắt đầu';
-
   // 1. Tổng hợp tất cả nhiệm vụ của người dùng
   const allUserQuests: any[] = [...(dbQuests || [])];
   for (const camp of userCamps) {
@@ -105,6 +84,30 @@ export async function computeCampaignStatistics({
   const completedQuestsList = allUserQuests.filter(
     (q) => q.is_completed || q.isCompleted || q.is_xp_claimed || q.isXpClaimed,
   );
+
+  const activeQuests = activeCamp?.quests || [];
+  const completedQuestsCount = Math.max(
+    activeQuests.filter((q) => q.isCompleted || q.isXpClaimed).length,
+    completedQuestsList.length,
+  );
+  const totalQuestsCount = Math.max(activeQuests.length, allUserQuests.length);
+  const completionRate =
+    totalQuestsCount > 0 ? Math.min(100, Math.round((completedQuestsCount / totalQuestsCount) * 100)) : 0;
+  const currentWeek = hasActiveCamp ? Math.floor((campaignCurrentDay - 1) / 7) + 1 : 0;
+  const totalWeeks = hasActiveCamp ? Math.max(1, Math.ceil(campaignTotalDays / 7)) : 0;
+  const completedQuestsTotal = completedQuestsCount;
+  const totalPlannedQuests = hasActiveCamp
+    ? Math.max(completedQuestsTotal, campaignTotalDays * 3)
+    : 0;
+
+  // Tiến độ dựa trên nhiệm vụ thực tế đã hoàn thành, không bao giờ mặc định là 7% khi chưa làm gì
+  const campaignProgress =
+    hasActiveCamp && totalPlannedQuests > 0 && completedQuestsTotal > 0
+      ? Math.min(1.0, completedQuestsTotal / totalPlannedQuests)
+      : 0.0;
+  const stageIndex = hasActiveCamp ? Math.min(3, Math.floor(campaignProgress * 4)) : 0;
+  const stages = ['Khởi động', 'Nền tảng', 'Đột phá', 'Duy trì'];
+  const stageName = hasActiveCamp ? stages[stageIndex] : 'Chưa bắt đầu';
 
   // 2. Tính điểm căn cốt từ nhiệm vụ
   let physicalPoints = 0;

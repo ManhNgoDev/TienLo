@@ -89,7 +89,7 @@ class FeedbackService {
         'userEmail': effectiveUserAccount,
         'userId': effectiveUserId,
         'deviceInfo': deviceInfo,
-        'appVersion': '1.1.0',
+        'appVersion': '1.1.1',
         'sentByClient': sentDirectOk,
       };
       if (cleanTrace != null) {
@@ -394,7 +394,7 @@ class FeedbackService {
         <div class="label">Vị Trí &amp; Thiết Bị</div>
         <div class="value">
           <strong>Màn hình:</strong> ${_escapeHtml(screen)}<br/>
-          <strong>Phiên bản App:</strong> 1.1.0<br/>
+          <strong>Phiên bản App:</strong> 1.1.1<br/>
           <strong>Thiết bị:</strong> ${_escapeHtml(deviceInfo)}
         </div>
       </div>

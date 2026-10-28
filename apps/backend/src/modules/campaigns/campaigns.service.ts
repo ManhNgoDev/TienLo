@@ -74,7 +74,7 @@ export class CampaignsService {
       try {
         const { data: dbCamps } = await client
           .from('campaigns')
-          .select('*, quests(*)')
+          .select('*')
           .eq('user_id', userId)
           .eq('status', 'ACTIVE')
           .order('created_at', { ascending: false })
@@ -332,7 +332,7 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm:
           user_id: userId,
           title: campaign.title,
           goal_prompt: goalPrompt,
-          duration_days: durationDays,
+          duration_days: finalDuration,
           status: 'ACTIVE',
         });
 
@@ -367,37 +367,58 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm:
     const client = this.supabaseService.getClient();
     if (client) {
       try {
-        const { data: camps } = await client
-          .from('campaigns')
-          .select('*, quests(*)')
-          .eq('user_id', userId)
-          .order('created_at', { ascending: false });
+        const [campsRes, questsRes] = await Promise.all([
+          client
+            .from('campaigns')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false }),
+          client
+            .from('quests')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: true }),
+        ]);
+
+        const camps = campsRes.data;
+        const allQuests = questsRes.data || [];
 
         if (camps && camps.length > 0) {
-          return camps.map((c: any) => ({
-            id: c.id,
-            userId: c.user_id,
-            title: c.title,
-            goalPrompt: c.goal_prompt,
-            durationDays: c.duration_days,
-            status: c.status,
-            createdAt: c.created_at,
-            quests: (c.quests || []).map((q: any) => ({
-              id: q.id,
-              campaignId: q.campaign_id,
-              title: q.title,
-              subtitle: q.subtitle,
-              difficulty: q.difficulty as QuestDifficulty,
-              expReward: q.exp_reward,
-              stoneReward: q.stone_reward,
-              iconType: q.icon_type,
-              isDaily: q.is_daily,
-              isCompleted: q.is_completed,
-              isXpClaimed: q.is_xp_claimed,
-            })),
-          }));
+          return camps.map((c: any, campIdx: number) => {
+            const campQuests = allQuests.filter(
+              (q: any) =>
+                q.campaign_id === c.id ||
+                (!q.campaign_id && campIdx === 0),
+            );
+            return {
+              id: c.id,
+              userId: c.user_id,
+              title: c.title,
+              goalPrompt: c.goal_prompt,
+              durationDays: c.duration_days,
+              status: c.status,
+              createdAt: c.created_at,
+              quests: campQuests.map((q: any) => ({
+                id: q.id,
+                campaignId: q.campaign_id || c.id,
+                title: q.title,
+                subtitle: q.subtitle,
+                difficulty: q.difficulty as QuestDifficulty,
+                expReward: q.exp_reward,
+                stoneReward: q.stone_reward,
+                iconType: q.icon_type,
+                isDaily: q.is_daily,
+                isCompleted: Boolean(q.is_completed),
+                isXpClaimed: Boolean(q.is_xp_claimed),
+                completedAt: q.completed_at,
+                createdAt: q.created_at,
+              })),
+            };
+          });
         }
-      } catch (_) {}
+      } catch (err: any) {
+        this.logger.warn(`Lỗi truy vấn getUserCampaigns: ${err.message}`);
+      }
     }
 
     return this.inMemoryCampaigns.get(userId) || [];
@@ -447,18 +468,48 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm:
       `Thưởng hoàn thành nhiệm vụ: ${body?.questTitle || targetQuest?.title || questId}`,
     );
 
-    // Cập nhật Supabase
+    // Cập nhật Supabase (nếu nhiệm vụ sinh ra ở ngày mới trên client chưa có trong bảng quests thì insert bổ sung)
     const client = this.supabaseService.getClient();
     if (client) {
       try {
-        await client
+        const { data: updatedRows } = await client
           .from('quests')
           .update({
             is_completed: true,
             is_xp_claimed: true,
             completed_at: new Date().toISOString(),
           })
-          .eq('id', questId);
+          .eq('id', questId)
+          .select('id');
+
+        if (!updatedRows || updatedRows.length === 0) {
+          let activeCampId: string | null = null;
+          const { data: activeCamps } = await client
+            .from('campaigns')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('status', 'ACTIVE')
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (activeCamps && activeCamps.length > 0) {
+            activeCampId = activeCamps[0].id;
+          }
+          await client.from('quests').upsert({
+            id: questId,
+            campaign_id: activeCampId,
+            user_id: userId,
+            title: body?.questTitle || targetQuest?.title || 'Nhiệm vụ tu luyện hàng ngày',
+            subtitle: targetQuest?.subtitle || 'Hoàn thành nhiệm vụ tu luyện',
+            difficulty: targetQuest?.difficulty || 'MEDIUM',
+            exp_reward: expAwarded,
+            stone_reward: stonesAwarded,
+            icon_type: targetQuest?.iconType || 'fitness',
+            is_daily: true,
+            is_completed: true,
+            is_xp_claimed: true,
+            completed_at: new Date().toISOString(),
+          });
+        }
       } catch (_) {}
     }
 

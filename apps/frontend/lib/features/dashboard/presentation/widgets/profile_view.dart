@@ -15,12 +15,14 @@ import 'shop/phu_luc_cac_modal.dart';
 class ProfileView extends StatefulWidget {
   final UserModel user;
   final CultivationProfileModel? cultivationProfile;
+  final int fallbackCompletedQuests;
   final VoidCallback onSignOut;
 
   const ProfileView({
     super.key,
     required this.user,
     required this.cultivationProfile,
+    this.fallbackCompletedQuests = 0,
     required this.onSignOut,
   });
 
@@ -358,10 +360,13 @@ class _ProfileViewState extends State<ProfileView> {
         : '@${emailPrefix.toLowerCase()}';
     final joinedDate = userData?['joinedDate']?.toString() ?? 'Người chơi từ 10/2026';
 
-    final streakDays = (statsData?['streakDays'] as num?)?.toInt() ??
-        widget.cultivationProfile?.streakDays ??
-        0;
-    final completedQuests = (statsData?['completedQuests'] as num?)?.toInt() ?? 0;
+    final apiStreak = (statsData?['streakDays'] as num?)?.toInt() ?? 0;
+    final profileStreak = widget.cultivationProfile?.streakDays ?? 0;
+    final streakDays = apiStreak > profileStreak ? apiStreak : profileStreak;
+    final apiCompleted = (statsData?['completedQuests'] as num?)?.toInt() ?? 0;
+    final completedQuests = apiCompleted > widget.fallbackCompletedQuests
+        ? apiCompleted
+        : widget.fallbackCompletedQuests;
     final totalExp = (statsData?['totalExp'] as num?)?.toInt() ??
         widget.cultivationProfile?.totalExp ??
         widget.cultivationProfile?.currentExp ??

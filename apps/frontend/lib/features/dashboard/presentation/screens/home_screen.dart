@@ -53,11 +53,13 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _campaignStartDate;
 
   final List<QuestItem> _quests = [];
+  int _totalCompletedQuests = 0;
   Map<String, dynamic>? _statisticsData;
   bool _isLoadingStats = false;
   bool _isGeneratingExtraQuest = false;
 
   int get _completedCount => _quests.where((q) => q.isCompleted || q.isXpClaimed).length;
+  int get _lifetimeCompletedCount => _totalCompletedQuests > _completedCount ? _totalCompletedQuests : _completedCount;
 
 
   @override
@@ -96,6 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _activeCampaignTitle = prefs.getString('active_camp_title_$uid');
       _campaignTotalDays = prefs.getInt('active_camp_duration_$uid') ?? 14;
       _campaignStartDate = prefs.getString('active_camp_start_date_$uid');
+      int savedTotalCompleted = prefs.getInt('total_completed_quests_$uid') ?? 0;
 
       final todayStr = DateTime.now().toIso8601String().split('T')[0];
       final lastDate = prefs.getString('active_camp_last_date_$uid');
@@ -134,14 +137,35 @@ class _HomeScreenState extends State<HomeScreen> {
         } catch (_) {}
       }
 
-      // 2. Nếu chưa có local cache, thử lấy từ backend campaigns
-      if (loadedQuests.isEmpty) {
+      // 2. Nếu chưa có local cache hoặc chưa có tên chiến dịch, đồng bộ từ backend campaigns
+      bool restoredFromBackend = false;
+      if (loadedQuests.isEmpty || _activeCampaignTitle == null) {
         final campaigns = await _cultivationRepository.getUserCampaigns();
         if (campaigns.isNotEmpty) {
+          int backendCompletedTotal = 0;
+          for (final c in campaigns) {
+            final qs = c['quests'];
+            if (qs is List) {
+              backendCompletedTotal += qs
+                  .where((q) => q['isCompleted'] == true || q['isXpClaimed'] == true)
+                  .length;
+            }
+          }
+          if (backendCompletedTotal > savedTotalCompleted) {
+            savedTotalCompleted = backendCompletedTotal;
+          }
+
           final activeCamp = campaigns.first;
           if (_activeCampaignTitle == null) {
-            _activeCampaignTitle = activeCamp['title'];
-            _campaignTotalDays = activeCamp['durationDays'] ?? 14;
+            final rawTitle = (activeCamp['title'] ?? '').toString();
+            final cleanTitle = rawTitle
+                .replaceFirst(
+                  RegExp(r'^\[HỆ THỐNG\]\s*Nhiệm Vụ Hàng Ngày:\s*', caseSensitive: false),
+                  '',
+                )
+                .trim();
+            _activeCampaignTitle = cleanTitle.isNotEmpty ? cleanTitle : rawTitle;
+            _campaignTotalDays = (activeCamp['durationDays'] as num?)?.toInt() ?? 14;
             final createdRaw = activeCamp['createdAt']?.toString();
             if (createdRaw != null && createdRaw.isNotEmpty) {
               try {
@@ -160,13 +184,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   await prefs.setString('active_camp_start_date_$uid', _campaignStartDate!);
                 }
               } catch (_) {}
+            } else if (_activeCampaignTitle != null && _activeCampaignTitle!.isNotEmpty) {
+              _campaignCurrentDay = 1;
+              _campaignStartDate = todayStr;
+              await prefs.setString('active_camp_title_$uid', _activeCampaignTitle!);
+              await prefs.setInt('active_camp_duration_$uid', _campaignTotalDays);
+              await prefs.setString('active_camp_start_date_$uid', _campaignStartDate!);
             }
           }
-          final rawQuests = _activeCampaignTitle != null ? activeCamp['quests'] : null;
-          if (rawQuests is List) {
+          final rawQuests = (loadedQuests.isEmpty && _activeCampaignTitle != null)
+              ? activeCamp['quests']
+              : null;
+          if (rawQuests is List && rawQuests.isNotEmpty) {
             for (final q in rawQuests) {
               loadedQuests.add(GoalAnalyzerService.mapToQuestItem(q));
             }
+            restoredFromBackend = true;
           }
         }
       }
@@ -219,6 +252,14 @@ class _HomeScreenState extends State<HomeScreen> {
         await prefs.setString('active_camp_last_date_$uid', todayStr);
       }
 
+      final todayDoneCount = loadedQuests.where((q) => q.isCompleted || q.isXpClaimed).length;
+      if (todayDoneCount > savedTotalCompleted) {
+        savedTotalCompleted = todayDoneCount;
+      }
+      if (savedTotalCompleted > 0) {
+        await prefs.setInt('total_completed_quests_$uid', savedTotalCompleted);
+      }
+
       final profile = await _cultivationRepository.getProfile();
 
       if (mounted) {
@@ -237,12 +278,15 @@ class _HomeScreenState extends State<HomeScreen> {
           _maxExp = profile.maxExp;
           _spiritStones = profile.spiritStones;
           _streakDays = resolvedStreak;
+          if (savedTotalCompleted > _totalCompletedQuests) {
+            _totalCompletedQuests = savedTotalCompleted;
+          }
           if (loadedQuests.isNotEmpty) {
             _quests.clear();
             _quests.addAll(loadedQuests);
           }
         });
-        if (isNewDay && _quests.isNotEmpty) {
+        if ((isNewDay || restoredFromBackend) && _quests.isNotEmpty) {
           _saveLocalQuests();
         }
 
@@ -295,9 +339,20 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final stats = await _cultivationRepository.getStatistics();
       if (mounted && stats != null) {
+        final statsCompleted = (stats['completedQuests'] as num?)?.toInt() ?? 0;
         setState(() {
           _statisticsData = stats;
+          if (statsCompleted > _totalCompletedQuests) {
+            _totalCompletedQuests = statsCompleted;
+          }
         });
+        if (statsCompleted > 0) {
+          final prefs = await SharedPreferences.getInstance();
+          final currentSaved = prefs.getInt('total_completed_quests_${widget.user.id}') ?? 0;
+          if (statsCompleted > currentSaved) {
+            await prefs.setInt('total_completed_quests_${widget.user.id}', statsCompleted);
+          }
+        }
       }
     } catch (_) {
     } finally {
@@ -320,12 +375,15 @@ class _HomeScreenState extends State<HomeScreen> {
       quest.isXpClaimed = true;
       _currentExp += quest.xp;
       _spiritStones += quest.spiritStones;
+      final nextTotal = _totalCompletedQuests + 1;
+      _totalCompletedQuests = nextTotal > _completedCount ? nextTotal : _completedCount;
     });
     _saveLocalQuests();
 
     final bool allDoneAfter = _quests.isNotEmpty && _quests.every((q) => q.isCompleted);
     final prefs = await SharedPreferences.getInstance();
     final uid = widget.user.id;
+    await prefs.setInt('total_completed_quests_$uid', _totalCompletedQuests);
     final todayStr = DateTime.now().toIso8601String().split('T')[0];
     final bool alreadyCountedToday = prefs.getString('last_streak_date_$uid') == todayStr;
     final bool shouldIncrementStreak = !allDoneBefore && allDoneAfter && !alreadyCountedToday;
@@ -711,7 +769,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           currentUser: widget.user,
                           cultivationProfile: _cultivationProfile,
                           streakDays: _streakDays,
-                          completedCount: _completedCount,
+                          completedCount: _lifetimeCompletedCount,
                           onRefreshParent: _loadCultivationProfile,
                         ),
                       ] else if (_currentNavIndex == 4) ...[
@@ -719,19 +777,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         ProfileView(
                           user: widget.user,
                           cultivationProfile: _cultivationProfile,
+                          fallbackCompletedQuests: _lifetimeCompletedCount,
                           onSignOut: () async {
                             final prefs = await SharedPreferences.getInstance();
-                            final uid = widget.user.id;
                             await prefs.remove('daily_quests_cache');
-                            await prefs.remove('daily_quests_cache_$uid');
                             await prefs.remove('active_camp_title');
-                            await prefs.remove('active_camp_title_$uid');
                             await prefs.remove('active_camp_duration');
-                            await prefs.remove('active_camp_duration_$uid');
                             await prefs.remove('active_camp_start_date');
-                            await prefs.remove('active_camp_start_date_$uid');
                             await prefs.remove('active_camp_last_date');
-                            await prefs.remove('active_camp_last_date_$uid');
                             await _authRepository.signOut();
                             widget.onLogout();
                           },
