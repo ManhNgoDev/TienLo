@@ -74,44 +74,166 @@ class LeaderboardPodium extends StatelessWidget {
                 child: top2 != null
                     ? _buildPodiumPillar(
                         item: top2,
-                        height: 120,
+                        height: 92,
                         rankColor: const Color(0xFFCBD5E1),
                         badgeIcon: Icons.military_tech_rounded,
                         crownEmoji: '🥈',
                       )
-                    : const SizedBox.shrink(),
+                    : _buildEmptyPodiumPillar(
+                        rank: 2,
+                        height: 92,
+                        rankColor: const Color(0xFFCBD5E1),
+                        crownEmoji: '🥈',
+                      ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
 
               // Hạng 1 (Vàng - Trung tâm cao nhất)
               Expanded(
                 child: _buildPodiumPillar(
                   item: top1,
-                  height: 148,
+                  height: 114,
                   rankColor: const Color(0xFFFFD700),
                   badgeIcon: Icons.emoji_events_rounded,
                   crownEmoji: '👑',
                   isFirst: true,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
 
               // Hạng 3 (Đồng - Phải)
               Expanded(
                 child: top3 != null
                     ? _buildPodiumPillar(
                         item: top3,
-                        height: 104,
+                        height: 80,
                         rankColor: const Color(0xFFCD7F32),
                         badgeIcon: Icons.military_tech_rounded,
                         crownEmoji: '🥉',
                       )
-                    : const SizedBox.shrink(),
+                    : _buildEmptyPodiumPillar(
+                        rank: 3,
+                        height: 80,
+                        rankColor: const Color(0xFFCD7F32),
+                        crownEmoji: '🥉',
+                      ),
               ),
             ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildEmptyPodiumPillar({
+    required int rank,
+    required double height,
+    required Color rankColor,
+    required String crownEmoji,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Opacity(
+          opacity: 0.4,
+          child: Text(
+            crownEmoji,
+            style: const TextStyle(fontSize: 16),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFF1E293B).withValues(alpha: 0.5),
+            border: Border.all(
+              color: rankColor.withValues(alpha: 0.25),
+              width: 1.2,
+            ),
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            Icons.person_outline_rounded,
+            color: rankColor.withValues(alpha: 0.35),
+            size: 20,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'Chưa có',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: Colors.white.withValues(alpha: 0.35),
+          ),
+        ),
+        const SizedBox(height: 2),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.1),
+              width: 0.8,
+            ),
+          ),
+          child: Text(
+            'Đang chờ',
+            style: TextStyle(
+              fontSize: 9,
+              color: Colors.white.withValues(alpha: 0.3),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: height,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                rankColor.withValues(alpha: 0.10),
+                rankColor.withValues(alpha: 0.03),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            border: Border.all(
+              color: rankColor.withValues(alpha: 0.2),
+              width: 1.0,
+            ),
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                '#$rank',
+                style: GoogleFonts.cinzel(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: rankColor.withValues(alpha: 0.4),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Trống',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: Colors.white.withValues(alpha: 0.25),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 

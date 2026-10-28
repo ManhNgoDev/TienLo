@@ -1,6 +1,6 @@
 {
   "name": "tienlo-be-fe",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "TienLo Monorepo - NestJS Backend & Flutter Frontend",
   "private": true,
   "workspaces": [

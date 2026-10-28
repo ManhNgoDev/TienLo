@@ -32,7 +32,6 @@ class LeaderboardView extends StatefulWidget {
 
 class _LeaderboardViewState extends State<LeaderboardView> {
   final LeaderboardRepository _repository = LeaderboardRepository();
-  final ScrollController _scrollController = ScrollController();
 
   String _selectedSort = 'default';
   bool _isLoading = true;
@@ -43,12 +42,6 @@ class _LeaderboardViewState extends State<LeaderboardView> {
   void initState() {
     super.initState();
     _fetchLeaderboard();
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
   }
 
   Future<void> _fetchLeaderboard() async {
@@ -272,129 +265,110 @@ class _LeaderboardViewState extends State<LeaderboardView> {
           isNpc: false,
         );
 
-    return RefreshIndicator(
-      onRefresh: () async {
-        widget.onRefreshParent?.call();
-        await _fetchLeaderboard();
-      },
-      color: const Color(0xFFF3C766),
-      backgroundColor: const Color(0xFF0F1B2C),
-      child: SingleChildScrollView(
-        controller: _scrollController,
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildHeader(),
-            const SizedBox(height: 14),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildHeader(),
+        const SizedBox(height: 14),
 
-            LeaderboardSortBar(
-              selectedSort: _selectedSort,
-              onSortChanged: _onSortChanged,
-            ),
-            const SizedBox(height: 16),
+        LeaderboardSortBar(
+          selectedSort: _selectedSort,
+          onSortChanged: _onSortChanged,
+        ),
+        const SizedBox(height: 16),
 
-            UserStandingCard(currentUser: resolvedCurrentUser),
+        UserStandingCard(currentUser: resolvedCurrentUser),
 
-            if (_isLoading) ...[
-              const SizedBox(height: 60),
-              const Center(
-                child: Column(
-                  children: [
-                    CircularProgressIndicator(
-                      color: Color(0xFFF3C766),
-                      strokeWidth: 2.5,
-                    ),
-                    SizedBox(height: 14),
-                    Text(
-                      'Đang thấu thị Tiên Bảng...',
-                      style: TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 13,
-                        fontStyle: FontStyle.italic,
-                      ),
-                    ),
-                  ],
+        if (_isLoading) ...[
+          const SizedBox(height: 60),
+          const Center(
+            child: Column(
+              children: [
+                CircularProgressIndicator(
+                  color: Color(0xFFF3C766),
+                  strokeWidth: 2.5,
                 ),
-              ),
-              const SizedBox(height: 60),
-            ] else if (_errorMessage != null) ...[
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
+                SizedBox(height: 14),
+                Text(
+                  'Đang thấu thị Tiên Bảng...',
+                  style: TextStyle(
+                    color: Color(0xFF94A3B8),
+                    fontSize: 13,
+                    fontStyle: FontStyle.italic,
+                  ),
                 ),
-                child: Column(
-                  children: [
-                    Text(
-                      _errorMessage!,
-                      style: const TextStyle(color: Colors.white70, fontSize: 13),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 10),
-                    ElevatedButton(
-                      onPressed: _fetchLeaderboard,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF3C766),
-                        foregroundColor: Colors.black,
-                      ),
-                      child: const Text('Thử Lại'),
-                    ),
-                  ],
-                ),
-              ),
-            ] else if (items.isEmpty) ...[
-              Container(
-                padding: const EdgeInsets.all(32),
-                alignment: Alignment.center,
-                child: const Text(
-                  'Chưa có dữ liệu bảng phong thần.',
-                  style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-                ),
-              ),
-            ] else ...[
-              if (items.isNotEmpty) ...[
-                LeaderboardPodium(items: items),
               ],
+            ),
+          ),
+          const SizedBox(height: 60),
+        ] else if (_errorMessage != null) ...[
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.red.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.red.withValues(alpha: 0.4)),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: _fetchLeaderboard,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFF3C766),
+                    foregroundColor: Colors.black,
+                  ),
+                  child: const Text('Thử Lại'),
+                ),
+              ],
+            ),
+          ),
+        ] else if (items.isEmpty) ...[
+          Container(
+            padding: const EdgeInsets.all(32),
+            alignment: Alignment.center,
+            child: const Text(
+              'Chưa có dữ liệu bảng phong thần.',
+              style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
+            ),
+          ),
+        ] else ...[
+          if (items.isNotEmpty) ...[
+            LeaderboardPodium(items: items),
+          ],
 
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'DANH SÁCH THIÊN KIÊU (${items.length})',
-                    style: GoogleFonts.cinzel(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFFF3C766),
-                      letterSpacing: 1.4,
-                    ),
-                  ),
-                  const Text(
-                    'Đồng bộ tức thời',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      color: Color(0xFF64748B),
-                    ),
-                  ),
-                ],
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'DANH SÁCH THIÊN KIÊU (${items.length})',
+                style: GoogleFonts.cinzel(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFFF3C766),
+                  letterSpacing: 1.4,
+                ),
               ),
-              const SizedBox(height: 10),
-
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  return LeaderboardCard(item: items[index]);
-                },
+              const Text(
+                'Đồng bộ tức thời',
+                style: TextStyle(
+                  fontSize: 10.5,
+                  color: Color(0xFF64748B),
+                ),
               ),
             ],
-          ],
-        ),
-      ),
+          ),
+          const SizedBox(height: 10),
+
+          ...items.map((item) => LeaderboardCard(item: item)),
+        ],
+        const SizedBox(height: 24),
+      ],
     );
   }
 }

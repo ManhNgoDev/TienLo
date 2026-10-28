@@ -627,7 +627,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 20,
                 12,
                 20,
-                100 + MediaQuery.of(context).padding.bottom,
+                125 + MediaQuery.of(context).padding.bottom,
               ),
               child: Center(
                 child: ConstrainedBox(
