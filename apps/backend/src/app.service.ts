@@ -41,11 +41,11 @@ export class AppService {
     const repo = process.env.GITHUB_REPO || 'TienLo';
     const defaultDownloadUrl = `https://github.com/${owner}/${repo}/releases/latest/download/TienLo-release.apk`;
 
-    let latestVersion = '1.0.3';
+    let latestVersion = '1.0.5';
     let releaseNotes =
-      '• Sửa lỗi font chữ tiếng Việt (chữ Đ và toàn bộ thanh điệu hiển thị sắc nét)\n• Sửa triệt để avatar Unsplash lạ và tài khoản @demouser\n• Cập nhật bản phát hành v1.0.3 mới nhất';
+      '• Nâng số nhiệm vụ hàng ngày mặc định lên 5 nhiệm vụ có con số đo đếm/rep cụ thể\n• Khai mở tính năng Khai Mở Thêm Nhiệm Vụ (AI Gen Thêm) khi muốn rèn luyện bứt phá\n• Tích hợp hệ thống báo lỗi tự động gửi thông báo trực tiếp đến Gmail nhà phát triển\n• Sửa lỗi cập nhật ứng dụng tự động mở trình cài đặt APK không bị văng/crash\n• Đồng bộ chuỗi ngày tu luyện chuẩn xác khi hoàn thành toàn bộ nhiệm vụ\n• Bảng Xếp Hạng kết nối API trực tiếp từ máy chủ';
     let publishedAt = new Date().toISOString();
-    let downloadUrl = `https://github.com/${owner}/${repo}/releases/download/v1.0.3/TienLo-release.apk`;
+    let downloadUrl = `https://github.com/${owner}/${repo}/releases/download/v1.0.5/TienLo-release.apk`;
 
     try {
       const res = await fetch(

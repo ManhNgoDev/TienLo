@@ -1,4 +1,8 @@
-export function getLandingHtml(latestVersion: string, downloadUrl: string): string {
+export function getLandingHtml(
+  latestVersion: string,
+  downloadUrl: string = '/download',
+  githubReleaseUrl: string = 'https://github.com/ManhNgoDev/TienLo/releases/latest',
+): string {
   return `<!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -548,52 +552,156 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
       color: #FFF;
     }
 
-    /* Download Box & QR */
+    /* In-App Browser Alert Banner */
+    .inapp-banner {
+      display: none;
+      background: linear-gradient(135deg, rgba(180, 83, 9, 0.95), rgba(146, 64, 14, 0.95));
+      color: #FFF6DF;
+      padding: 12px 20px;
+      font-size: 13.5px;
+      font-weight: 600;
+      text-align: center;
+      border-bottom: 1.5px solid var(--gold-primary);
+      position: sticky;
+      top: 0;
+      z-index: 1002;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+      line-height: 1.5;
+    }
+    .inapp-banner.active {
+      display: block;
+    }
+
+    /* Download Box Hub (No QR, No Admin Upload) */
     .download-hub {
       background: linear-gradient(135deg, rgba(14, 28, 48, 0.95), rgba(7, 15, 28, 0.98));
       border: 1.5px solid var(--gold-primary);
       border-radius: 32px;
-      padding: 50px 40px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 30px var(--gold-glow);
-      display: grid;
-      grid-template-columns: 1.3fr 0.7fr;
-      align-items: center;
-      gap: 40px;
-      margin-top: 20px;
+      padding: 56px 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 35px var(--gold-glow);
+      text-align: center;
+      max-width: 860px;
+      margin: 20px auto 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .download-hub::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at center, rgba(251, 191, 36, 0.08) 0%, transparent 60%);
+      pointer-events: none;
     }
     .download-hub-title {
       font-family: 'Playfair Display', serif;
-      font-size: clamp(26px, 3.2vw, 36px);
+      font-size: clamp(26px, 3.4vw, 38px);
       font-weight: 900;
       color: #FFF;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
+      position: relative;
     }
     .download-hub-desc {
-      font-size: 15px;
+      font-size: 15.5px;
       color: var(--text-muted);
-      line-height: 1.65;
-      margin-bottom: 28px;
+      line-height: 1.7;
+      margin-bottom: 32px;
+      max-width: 680px;
+      margin-left: auto;
+      margin-right: auto;
+      position: relative;
     }
-    .qr-container {
-      background: #FFF;
-      border-radius: 20px;
-      padding: 18px;
+    .hub-actions {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
+      justify-content: center;
       align-items: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-      text-align: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      position: relative;
     }
-    .qr-container svg {
-      width: 160px;
-      height: 160px;
+    .hub-meta {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      font-size: 12.5px;
+      color: var(--text-dim);
+      position: relative;
     }
-    .qr-caption {
-      font-size: 11.5px;
+    .hub-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Download Feedback Toast */
+    .download-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(10, 22, 38, 0.96);
+      border: 1.5px solid var(--gold-primary);
+      border-radius: 20px;
+      padding: 18px 22px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 35px var(--gold-glow);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 999;
+      max-width: 440px;
+      width: calc(100% - 48px);
+      transform: translateY(140px);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .download-toast.show {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .toast-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .toast-title {
+      font-weight: 800;
+      font-size: 15px;
+      color: var(--gold-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toast-close {
+      cursor: pointer;
+      color: var(--text-muted);
+      font-size: 16px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      transition: color 0.2s;
+    }
+    .toast-close:hover {
+      color: #FFF;
+    }
+    .toast-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .toast-link {
+      color: var(--gold-secondary);
+      font-size: 12.5px;
       font-weight: 700;
-      color: #0F172A;
-      margin-top: 10px;
-      letter-spacing: 0.5px;
+      text-decoration: underline;
+      transition: color 0.2s;
+    }
+    .toast-link:hover {
+      color: var(--gold-primary);
     }
 
     /* 3 Step Installation */
@@ -719,13 +827,6 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
       }
       .chip-left { left: 5%; }
       .chip-right { right: 5%; }
-      .download-hub {
-        grid-template-columns: 1fr;
-        text-align: center;
-      }
-      .download-hub .btn-primary-hero {
-        margin: 0 auto;
-      }
     }
     @media (max-width: 640px) {
       .showcase-grid {
@@ -757,6 +858,11 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
 </head>
 <body>
 
+  <!-- In-App Browser Warning Banner (Zalo, Facebook Messenger, etc.) -->
+  <div class="inapp-banner" id="inappBanner">
+    ⚠️ Bạn đang mở trang web trong ứng dụng (Zalo / Facebook). Vui lòng nhấn biểu tượng dấu 3 chấm <strong>⋮</strong> ở góc trên và chọn <strong>"Mở bằng trình duyệt ngoài"</strong> (Chrome / Cốc Cốc) để tải tệp APK!
+  </div>
+
   <!-- Navigation -->
   <nav>
     <div class="container nav-inner">
@@ -771,7 +877,7 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
         <li><a href="#guide">Hướng Dẫn Cài Đặt</a></li>
       </ul>
       <div class="nav-actions">
-        <a href="${downloadUrl}" class="btn-nav-download" id="nav-download-btn">
+        <a href="${downloadUrl}" class="btn-nav-download" id="nav-download-btn" download="TienLo-release.apk" onclick="handleDownload(event, '${downloadUrl}', '${githubReleaseUrl}')">
           <span>⬇ Tải APK (v${latestVersion})</span>
         </a>
       </div>
@@ -794,7 +900,7 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
         </p>
 
         <div class="hero-ctas">
-          <a href="${downloadUrl}" class="btn-primary-hero" id="hero-download-btn">
+          <a href="${downloadUrl}" class="btn-primary-hero" id="hero-download-btn" download="TienLo-release.apk" onclick="handleDownload(event, '${downloadUrl}', '${githubReleaseUrl}')">
             <span style="font-size: 20px;">⚡</span>
             <span>TẢI BẢN APK NGAY (v${latestVersion})</span>
           </a>
@@ -1003,45 +1109,37 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
     </div>
   </section>
 
-  <!-- Download Hub & QR Code -->
+  <!-- Download Hub (No QR & No Admin Upload) -->
   <section class="section-wrap" id="guide">
     <div class="container">
       <div class="download-hub">
-        <div>
-          <div class="hero-tag" style="margin-bottom: 14px;">
-            <span>🚀 BẢN PHÁT HÀNH CHÍNH THỨC</span>
-          </div>
-          <h2 class="download-hub-title">Sẵn Sàng Bước Vào Con Đường Kỷ Luật?</h2>
-          <p class="download-hub-desc">
-            Tải ngay tệp cài đặt <strong>TienLo-release.apk (v${latestVersion})</strong> hoàn toàn miễn phí. Bắt đầu hành trình tôi luyện thể phách và thức tỉnh sức mạnh từ hôm nay.
-          </p>
-          <div style="display: flex; flex-wrap: wrap; gap: 16px;">
-            <a href="${downloadUrl}" class="btn-primary-hero" id="hub-download-btn">
-              <span>⬇ TẢI TIÊN LỘ APK (v${latestVersion})</span>
-            </a>
-            <a href="/admin/upload" class="btn-secondary-hero" style="font-size: 13.5px;">
-              <span>⚙ Quản Trị Tải Lên</span>
-            </a>
-          </div>
+        <div class="hero-tag" style="margin-bottom: 16px;">
+          <span>🚀 BẢN PHÁT HÀNH CHÍNH THỨC • V${latestVersion}</span>
+        </div>
+        <h2 class="download-hub-title">Sẵn Sàng Bước Vào Con Đường Kỷ Luật?</h2>
+        <p class="download-hub-desc">
+          Tải ngay tệp cài đặt <strong>TienLo-release.apk (v${latestVersion})</strong> hoàn toàn miễn phí. Bắt đầu hành trình tôi luyện thể phách và thức tỉnh sức mạnh từ hôm nay.
+        </p>
+        
+        <div class="hub-actions">
+          <a href="${downloadUrl}" class="btn-primary-hero" id="hub-download-btn" download="TienLo-release.apk" onclick="handleDownload(event, '${downloadUrl}', '${githubReleaseUrl}')">
+            <span style="font-size: 20px;">⬇</span>
+            <span>TẢI TIÊN LỘ APK (v${latestVersion})</span>
+          </a>
+          <a href="${githubReleaseUrl}" target="_blank" rel="noopener noreferrer" class="btn-secondary-hero" id="hub-github-btn">
+            <span>🐙 Tải Từ GitHub Release (Dự phòng)</span>
+            <span>↗</span>
+          </a>
         </div>
 
-        <div class="qr-container">
-          <!-- Clean SVG QR Code linking to download -->
-          <svg viewBox="0 0 256 256">
-            <rect width="256" height="256" fill="#FFFFFF"/>
-            <!-- Outer Markers -->
-            <path d="M16,16 h64 v64 h-64 z M32,32 v32 h32 v-32 z M40,40 h16 v16 h-16 z" fill="#0F172A"/>
-            <path d="M176,16 h64 v64 h-64 z M192,32 v32 h32 v-32 z M200,40 h16 v16 h-16 z" fill="#0F172A"/>
-            <path d="M16,176 h64 v64 h-64 z M32,192 v32 h32 v-32 z M40,200 h16 v16 h-16 z" fill="#0F172A"/>
-            <!-- Data pattern representation -->
-            <path d="M96,24 h16 v16 h-16 z M128,16 h16 v24 h-16 z M96,56 h24 v16 h-24 z M144,48 h16 v32 h-16 z" fill="#0F172A"/>
-            <path d="M24,96 h24 v24 h-24 z M64,112 h16 v32 h-16 z M32,144 h24 v16 h-24 z" fill="#0F172A"/>
-            <path d="M96,96 h64 v64 h-64 z M112,112 v32 h32 v-32 z" fill="#D97706"/>
-            <path d="M176,96 h24 v16 h-24 z M216,112 h24 v32 h-24 z M176,144 h32 v16 h-32 z" fill="#0F172A"/>
-            <path d="M96,176 h32 v16 h-32 z M144,192 h24 v48 h-24 z M112,208 h16 v32 h-16 z" fill="#0F172A"/>
-            <path d="M184,176 h48 v16 h-48 z M176,208 h24 v32 h-24 z M216,216 h24 v24 h-24 z" fill="#0F172A"/>
-          </svg>
-          <div class="qr-caption">QUÉT MÃ ĐỂ TẢI TRÊN ĐIỆN THOẠI</div>
+        <div class="hub-meta">
+          <span>📦 Dung lượng: ~58 MB</span>
+          <span>•</span>
+          <span>📱 Android 7.0+</span>
+          <span>•</span>
+          <span>⚡ Tự động cập nhật OTA</span>
+          <span>•</span>
+          <span>🛡️ An toàn &amp; Không quảng cáo</span>
         </div>
       </div>
 
@@ -1082,6 +1180,25 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
     </div>
   </div>
 
+  <!-- Download Feedback Toast -->
+  <div class="download-toast" id="downloadToast">
+    <div class="toast-header">
+      <div class="toast-title">
+        <span>⚡ Đang Bắt Đầu Tải Xuống...</span>
+      </div>
+      <div class="toast-close" onclick="closeToast()">✕</div>
+    </div>
+    <div class="toast-desc">
+      Trình duyệt đang tải tệp <strong>TienLo-release.apk (v${latestVersion})</strong>. Nếu thấy cảnh báo <em>"Tệp có thể gây hại"</em>, hãy chọn <strong>"Vẫn tải xuống"</strong>.
+    </div>
+    <div style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+      <a href="${githubReleaseUrl}" target="_blank" rel="noopener noreferrer" class="toast-link">
+        👉 Bấm vào đây nếu chưa tải được (Link Dự Phòng GitHub)
+      </a>
+      <span style="font-size: 11.5px; color: var(--gold-secondary);">~58 MB</span>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer>
     <div class="container">
@@ -1116,6 +1233,42 @@ export function getLandingHtml(latestVersion: string, downloadUrl: string): stri
         closeLightbox();
       }
     });
+
+    function handleDownload(event, primaryUrl, fallbackUrl) {
+      const toast = document.getElementById('downloadToast');
+      if (toast) {
+        toast.classList.add('show');
+      }
+
+      // Explicitly trigger download link
+      setTimeout(function() {
+        const link = document.createElement('a');
+        link.href = primaryUrl;
+        link.setAttribute('download', 'TienLo-release.apk');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }, 100);
+    }
+
+    function closeToast() {
+      const toast = document.getElementById('downloadToast');
+      if (toast) {
+        toast.classList.remove('show');
+      }
+    }
+
+    // In-app browser detection (Zalo, Facebook, Messenger)
+    (function detectInAppBrowser() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera || '';
+      const isInApp = /FBAN|FBAV|Zalo|Line|Instagram|MicroMessenger/i.test(ua);
+      if (isInApp) {
+        const banner = document.getElementById('inappBanner');
+        if (banner) {
+          banner.classList.add('active');
+        }
+      }
+    })();
   </script>
 
 </body>

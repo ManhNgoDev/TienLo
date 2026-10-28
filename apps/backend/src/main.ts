@@ -18,7 +18,6 @@ async function bootstrap() {
       'download',
       'download/apk',
       'logo.png',
-      'admin/upload',
       'screenshots/screen_home.jpg',
       'screenshots/screen_stats.jpg',
       'screenshots/screen_profile.jpg',
