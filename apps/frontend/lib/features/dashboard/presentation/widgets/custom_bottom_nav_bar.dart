@@ -50,9 +50,15 @@ class CustomBottomNavBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isLeaderboardSelected = currentIndex == 2;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+      margin: EdgeInsets.fromLTRB(
+        14,
+        0,
+        14,
+        bottomInset > 0 ? (bottomInset + 8) : 14,
+      ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(26),
         child: BackdropFilter(

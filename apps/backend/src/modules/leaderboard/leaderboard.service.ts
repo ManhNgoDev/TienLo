@@ -26,114 +26,6 @@ export interface LeaderboardResponse {
   leaderboard: LeaderboardEntry[];
 }
 
-// Danh sách các bậc tiền bối / đạo hữu tiên giới làm mốc leo tháp cạnh tranh
-const CULTIVATOR_BENCHMARKS = [
-  {
-    userId: 'npc-han-lap',
-    displayName: 'Hàn Lập (Hàn Thỏ Đế)',
-    avatarUrl: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?w=120',
-    streakDays: 15,
-    completedQuestsCount: 42,
-    realmIndex: 2,
-    realmName: 'Kết Đan',
-    subRealm: 2,
-    realmText: 'Kết Đan Tầng 2',
-    totalExp: 18500,
-    isNpc: true,
-  },
-  {
-    userId: 'npc-tieu-viem',
-    displayName: 'Tiêu Viêm (Viêm Đế)',
-    avatarUrl: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=120',
-    streakDays: 12,
-    completedQuestsCount: 36,
-    realmIndex: 1,
-    realmName: 'Luyện Khí',
-    subRealm: 9,
-    realmText: 'Luyện Khí Tầng 9',
-    totalExp: 12400,
-    isNpc: true,
-  },
-  {
-    userId: 'npc-bach-tieu-thuan',
-    displayName: 'Bạch Tiểu Thuần',
-    avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120',
-    streakDays: 10,
-    completedQuestsCount: 29,
-    realmIndex: 1,
-    realmName: 'Luyện Khí',
-    subRealm: 7,
-    realmText: 'Luyện Khí Tầng 7',
-    totalExp: 8900,
-    isNpc: true,
-  },
-  {
-    userId: 'npc-lam-dong',
-    displayName: 'Lâm Động (Vũ Tổ)',
-    avatarUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=120',
-    streakDays: 7,
-    completedQuestsCount: 21,
-    realmIndex: 1,
-    realmName: 'Luyện Khí',
-    subRealm: 5,
-    realmText: 'Luyện Khí Tầng 5',
-    totalExp: 5400,
-    isNpc: true,
-  },
-  {
-    userId: 'npc-diep-pham',
-    displayName: 'Diệp Phàm (Diệp Thiên Đế)',
-    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120',
-    streakDays: 5,
-    completedQuestsCount: 16,
-    realmIndex: 1,
-    realmName: 'Luyện Khí',
-    subRealm: 4,
-    realmText: 'Luyện Khí Tầng 4',
-    totalExp: 3800,
-    isNpc: true,
-  },
-  {
-    userId: 'npc-thach-hao',
-    displayName: 'Thạch Hạo (Hoang Thiên Đế)',
-    avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120',
-    streakDays: 4,
-    completedQuestsCount: 12,
-    realmIndex: 1,
-    realmName: 'Luyện Khí',
-    subRealm: 3,
-    realmText: 'Luyện Khí Tầng 3',
-    totalExp: 2600,
-    isNpc: true,
-  },
-  {
-    userId: 'npc-muc-tran',
-    displayName: 'Mục Trần (Mục Chủ)',
-    avatarUrl: 'https://images.unsplash.com/photo-1628157582853-a796fa650a6a?w=120',
-    streakDays: 2,
-    completedQuestsCount: 7,
-    realmIndex: 1,
-    realmName: 'Luyện Khí',
-    subRealm: 2,
-    realmText: 'Luyện Khí Tầng 2',
-    totalExp: 1500,
-    isNpc: true,
-  },
-  {
-    userId: 'npc-vuong-lam',
-    displayName: 'Vương Lâm (Nghịch Tu)',
-    avatarUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=120',
-    streakDays: 1,
-    completedQuestsCount: 4,
-    realmIndex: 0,
-    realmName: 'Phàm Nhân',
-    subRealm: 1,
-    realmText: 'Phàm Nhân Tầng 1',
-    totalExp: 450,
-    isNpc: true,
-  },
-];
-
 @Injectable()
 export class LeaderboardService {
   private readonly logger = new Logger(LeaderboardService.name);
@@ -141,8 +33,8 @@ export class LeaderboardService {
   constructor(private readonly supabaseService: SupabaseService) {}
 
   /**
-   * Lấy danh sách Bảng Xếp Hạng Tiên Lộ
-   * Logic xếp hạng theo đúng yêu cầu:
+   * Lấy danh sách Bảng Xếp Hạng Tiên Lộ từ người chơi thật trong database
+   * Logic xếp hạng:
    * 1. Chuỗi ngày tu luyện (streakDays) giảm dần
    * 2. Số nhiệm vụ hoàn thành (completedQuestsCount) giảm dần
    * 3. Cảnh giới tầng X (realmIndex * 100 + subRealm) giảm dần
@@ -175,6 +67,11 @@ export class LeaderboardService {
       }
     }
 
+    // Dự phòng khi client rỗng hoặc chạy in-memory
+    if (dbUsers.length === 0) {
+      dbUsers = this.supabaseService.getInMemoryUsers();
+    }
+
     // Đếm số nhiệm vụ hoàn thành theo user_id
     const completedQuestsMap = new Map<string, number>();
     for (const q of dbQuests) {
@@ -193,13 +90,13 @@ export class LeaderboardService {
     const mergedList: Omit<LeaderboardEntry, 'rank' | 'isCurrentUser'>[] = [];
     const seenUids = new Set<string>();
 
-    // 1. Thêm toàn bộ người dùng thực từ DB
+    // 1. Thêm toàn bộ người dùng thực từ Database
     for (const u of dbUsers) {
-      const uid = u.firebase_uid;
+      const uid = u.firebase_uid || u.id;
       if (!uid || seenUids.has(uid)) continue;
       seenUids.add(uid);
 
-      const cult = cultMap.get(uid);
+      const cult = cultMap.get(uid) || cultMap.get(u.id);
       const streakDays = cult?.streak_days != null ? Number(cult.streak_days) : 0;
       const realmIndex = cult?.realm_index != null ? Number(cult.realm_index) : 0;
       const subRealm = cult?.sub_realm != null ? Number(cult.sub_realm) : 1;
@@ -221,7 +118,9 @@ export class LeaderboardService {
         displayName = u.email ? u.email.split('@')[0] : 'Đạo Hữu Tiên Lộ';
       }
 
-      const completedCount = completedQuestsMap.get(uid) || 0;
+      const completedCount =
+        completedQuestsMap.get(uid) ||
+        (u.id ? completedQuestsMap.get(u.id) || 0 : 0);
 
       mergedList.push({
         userId: uid,
@@ -238,7 +137,7 @@ export class LeaderboardService {
       });
     }
 
-    // 2. Đảm bảo người dùng hiện tại (currentUserId) luôn có mặt trong bảng xếp hạng
+    // 2. Đảm bảo người dùng hiện tại (currentUserId) luôn có mặt trong bảng xếp hạng nếu chưa có trong DB
     if (currentUserId && !seenUids.has(currentUserId)) {
       seenUids.add(currentUserId);
       const cult = cultMap.get(currentUserId);
@@ -261,13 +160,6 @@ export class LeaderboardService {
         totalExp,
         isNpc: false,
       });
-    }
-
-    // 3. Thêm các tiền bối NPC nếu danh sách dưới 15 người để bảng luôn sinh động
-    for (const npc of CULTIVATOR_BENCHMARKS) {
-      if (!seenUids.has(npc.userId)) {
-        mergedList.push(npc);
-      }
     }
 
     // 3. Sắp xếp thứ hạng theo logic

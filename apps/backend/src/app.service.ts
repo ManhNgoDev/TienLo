@@ -41,11 +41,11 @@ export class AppService {
     const repo = process.env.GITHUB_REPO || 'TienLo';
     const defaultDownloadUrl = `https://github.com/${owner}/${repo}/releases/latest/download/TienLo-release.apk`;
 
-    let latestVersion = '1.0.5';
+    let latestVersion = '1.0.6';
     let releaseNotes =
-      '• Nâng số nhiệm vụ hàng ngày mặc định lên 5 nhiệm vụ có con số đo đếm/rep cụ thể\n• Khai mở tính năng Khai Mở Thêm Nhiệm Vụ (AI Gen Thêm) khi muốn rèn luyện bứt phá\n• Tích hợp hệ thống báo lỗi tự động gửi thông báo trực tiếp đến Gmail nhà phát triển\n• Sửa lỗi cập nhật ứng dụng tự động mở trình cài đặt APK không bị văng/crash\n• Đồng bộ chuỗi ngày tu luyện chuẩn xác khi hoàn thành toàn bộ nhiệm vụ\n• Bảng Xếp Hạng kết nối API trực tiếp từ máy chủ';
+      '• Bảng Xếp Hạng & Bục Vinh Danh: Lấy 100% người chơi thật từ Supabase database, loại bỏ hoàn toàn NPC cố định Hàn Lập\n• Báo Cáo Sự Cố: Tối ưu phản hồi tức thì dưới 10ms, xử lý gửi email ngầm và khắc phục triệt để lỗi treo loading\n• Màn hình Thống Kê: Khi chưa có session/chiến dịch hiển thị chuẩn xác 0% thay vì 7% mặc định\n• Giao diện tràn viền Edge-to-Edge: Xóa dải đen dư thừa dưới thanh điều hướng hệ thống';
     let publishedAt = new Date().toISOString();
-    let downloadUrl = `https://github.com/${owner}/${repo}/releases/download/v1.0.5/TienLo-release.apk`;
+    let downloadUrl = `https://github.com/${owner}/${repo}/releases/download/v1.0.6/TienLo-release.apk`;
 
     try {
       const res = await fetch(

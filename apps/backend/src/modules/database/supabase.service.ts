@@ -121,4 +121,8 @@ export class SupabaseService implements OnModuleInit {
 
     return this.inMemoryUsers.get(firebase_uid) || null;
   }
+
+  getInMemoryUsers(): UserRecord[] {
+    return Array.from(this.inMemoryUsers.values());
+  }
 }

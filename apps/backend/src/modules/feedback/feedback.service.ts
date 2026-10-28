@@ -37,6 +37,9 @@ export class FeedbackService {
         this.transporter = nodemailer.createTransport({
           service: 'gmail',
           auth: { user, pass },
+          connectionTimeout: 5000,
+          greetingTimeout: 5000,
+          socketTimeout: 8000,
         });
         this.logger.log(`Nodemailer Gmail Transporter đã sẵn sàng (Gửi từ: ${user})!`);
       } catch (err: any) {
@@ -65,16 +68,33 @@ export class FeedbackService {
       userId: dto.userId?.trim() || 'anonymous',
       deviceInfo: dto.deviceInfo?.trim() || 'Chưa xác định',
       stackTrace: dto.stackTrace?.trim(),
-      appVersion: dto.appVersion?.trim() || '1.0.5',
+      appVersion: dto.appVersion?.trim() || '1.0.6',
       createdAt: nowIso,
       sentEmail: false,
     };
 
-    // 1. Lưu vào danh sách gần đây
+    // 1. Lưu vào danh sách gần đây trong bộ nhớ
     this.recentReports.unshift(record);
     if (this.recentReports.length > 100) this.recentReports.pop();
+    this.logger.log(`[BugReport] Đã tiếp nhận báo cáo [${reportId}]: "${record.title}" từ ${record.userEmail}`);
 
-    // 2. Thử lưu vào Supabase nếu có bảng
+    // 2. Lưu vào Supabase ngầm (không chặn client)
+    this.saveToDatabaseAsync(record).catch(() => {});
+
+    // 3. Gửi email ngầm trong background (không chặn HTTP response để client phản hồi tức thì)
+    this.sendEmailAsync(record, adminEmail).catch((err) => {
+      this.logger.warn(`Lỗi gửi email báo cáo lỗi trong background: ${err.message}`);
+    });
+
+    // 4. Trả về ngay lập tức cho client tránh tình trạng loading vô tận
+    return {
+      success: true,
+      message: 'Báo cáo sự cố đã được tiếp nhận thành công và gửi tới Quản Trị Viên!',
+      reportId,
+    };
+  }
+
+  private async saveToDatabaseAsync(record: BugReportRecord): Promise<void> {
     try {
       const client = this.supabaseService.getClient();
       if (client) {
@@ -95,13 +115,19 @@ export class FeedbackService {
     } catch {
       // Bỏ qua nếu bảng chưa được tạo trên Supabase
     }
+  }
 
-    // 3. Gửi email thông báo tới Gmail của Admin
-    let emailSent = false;
-    if (this.transporter) {
-      try {
-        const fromUser = process.env.GMAIL_USER || process.env.SMTP_USER || adminEmail;
-        const htmlContent = `
+  private async sendEmailAsync(record: BugReportRecord, adminEmail: string): Promise<void> {
+    if (!this.transporter) {
+      this.logger.warn(
+        `[Feedback] Đã ghi nhận báo cáo [${record.id}]: "${record.title}". Email chưa gửi vì GMAIL_APP_PASSWORD chưa được cấu hình.`,
+      );
+      return;
+    }
+
+    try {
+      const fromUser = process.env.GMAIL_USER || process.env.SMTP_USER || adminEmail;
+      const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -172,32 +198,24 @@ export class FeedbackService {
 </html>
 `;
 
-        await this.transporter.sendMail({
+      // Giới hạn thời gian gửi mail trong 7 giây bằng Promise.race để không bao giờ bị nghẽn
+      await Promise.race([
+        this.transporter.sendMail({
           from: `"Tiên Lộ Bug Reporter" <${fromUser}>`,
           to: adminEmail,
           subject: `🚨 [TIÊN LỘ LỖI] [${record.category}] ${record.title}`,
           html: htmlContent,
-        });
+        }),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Nodemailer sendMail timeout sau 7s')), 7000),
+        ),
+      ]);
 
-        emailSent = true;
-        record.sentEmail = true;
-        this.logger.log(`Đã gửi email báo cáo lỗi [${reportId}] thành công tới ${adminEmail}!`);
-      } catch (mailErr: any) {
-        this.logger.error(`Lỗi khi gửi email qua Gmail: ${mailErr.message}`);
-      }
-    } else {
-      this.logger.warn(
-        `[Feedback] Đã ghi nhận báo cáo [${reportId}]: "${record.title}". Email chưa gửi vì GMAIL_APP_PASSWORD chưa được cấu hình trong .env.`,
-      );
+      record.sentEmail = true;
+      this.logger.log(`Đã gửi email báo cáo lỗi [${record.id}] thành công tới ${adminEmail}!`);
+    } catch (mailErr: any) {
+      this.logger.warn(`Không thể gửi email báo cáo lỗi qua Gmail: ${mailErr.message}`);
     }
-
-    return {
-      success: true,
-      message: emailSent
-        ? 'Báo cáo sự cố đã được gửi trực tiếp tới hòm thư Quản Trị Viên qua Gmail!'
-        : 'Báo cáo sự cố đã được tiếp nhận và lưu vào hệ thống!',
-      reportId,
-    };
   }
 
   getRecentReports(): BugReportRecord[] {

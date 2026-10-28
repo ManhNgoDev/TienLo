@@ -4,9 +4,11 @@ import { UserCultivationState } from '../cultivation/cultivation.service.js';
 import { GeneratedCampaign } from './campaigns.service.js';
 
 export interface CampaignStatisticsResult {
+  hasActiveCampaign: boolean;
   activeCampaignTitle: string;
   campaignCurrentDay: number;
   campaignTotalDays: number;
+  campaignProgress: number;
   completedQuests: number;
   totalPlannedQuests: number;
   completionRate: number;
@@ -50,37 +52,43 @@ export async function computeCampaignStatistics({
   logger: Logger;
 }): Promise<CampaignStatisticsResult> {
   const activeCamp = userCamps[0] || null;
-  const hasActiveCamp = activeCamp != null;
-  const activeCampaignTitle =
-    activeCamp?.title || '[HỆ THỐNG] Tôi Luyện Thể Chất & Đột Phá Giới Hạn';
-  const campaignTotalDays = activeCamp?.durationDays || 14;
+  const hasActiveCamp = activeCamp != null && typeof activeCamp.title === 'string' && activeCamp.title.trim().length > 0;
+  const activeCampaignTitle = hasActiveCamp ? activeCamp.title.trim() : '';
+  const campaignTotalDays = hasActiveCamp ? (activeCamp.durationDays || 14) : 0;
 
-  let campaignCurrentDay = hasActiveCamp ? 1 : 0;
-  if (activeCamp?.createdAt) {
-    try {
-      const start = new Date(activeCamp.createdAt);
-      const now = new Date();
-      const diffDays = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-      campaignCurrentDay = Math.min(Math.max(1, diffDays + 1), campaignTotalDays);
-    } catch (_) {}
+  let campaignCurrentDay = 0;
+  if (hasActiveCamp) {
+    campaignCurrentDay = 1;
+    if (activeCamp.createdAt) {
+      try {
+        const start = new Date(activeCamp.createdAt);
+        const now = new Date();
+        const diffDays = Math.floor((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+        campaignCurrentDay = Math.min(Math.max(1, diffDays + 1), campaignTotalDays);
+      } catch (_) {}
+    }
   }
-
-  const campaignProgress = hasActiveCamp
-    ? Math.min(1.0, campaignCurrentDay / campaignTotalDays)
-    : 0.0;
-  const stageIndex = Math.min(3, Math.floor(campaignProgress * 4));
-  const stages = ['Khởi động', 'Nền tảng', 'Đột phá', 'Duy trì'];
-  const stageName = stages[stageIndex];
 
   const activeQuests = activeCamp?.quests || [];
   const completedQuestsCount = activeQuests.filter((q) => q.isCompleted || q.isXpClaimed).length;
   const totalQuestsCount = activeQuests.length;
   const completionRate =
     totalQuestsCount > 0 ? Math.round((completedQuestsCount / totalQuestsCount) * 100) : 0;
-  const currentWeek = Math.floor((campaignCurrentDay - 1) / 7) + 1;
-  const totalWeeks = Math.max(1, Math.ceil(campaignTotalDays / 7));
+  const currentWeek = hasActiveCamp ? Math.floor((campaignCurrentDay - 1) / 7) + 1 : 0;
+  const totalWeeks = hasActiveCamp ? Math.max(1, Math.ceil(campaignTotalDays / 7)) : 0;
   const completedQuestsTotal = completedQuestsCount;
-  const totalPlannedQuests = campaignTotalDays * 3;
+  const totalPlannedQuests = hasActiveCamp
+    ? campaignTotalDays * (totalQuestsCount > 0 ? totalQuestsCount : 5)
+    : 0;
+
+  // Tiến độ dựa trên nhiệm vụ thực tế đã hoàn thành, không bao giờ mặc định là 7% khi chưa làm gì
+  const campaignProgress =
+    hasActiveCamp && totalPlannedQuests > 0 && completedQuestsTotal > 0
+      ? Math.min(1.0, completedQuestsTotal / totalPlannedQuests)
+      : 0.0;
+  const stageIndex = hasActiveCamp ? Math.min(3, Math.floor(campaignProgress * 4)) : 0;
+  const stages = ['Khởi động', 'Nền tảng', 'Đột phá', 'Duy trì'];
+  const stageName = hasActiveCamp ? stages[stageIndex] : 'Chưa bắt đầu';
 
   // 1. Tổng hợp tất cả nhiệm vụ của người dùng
   const allUserQuests: any[] = [...(dbQuests || [])];
@@ -376,9 +384,11 @@ Hãy trả về JSON theo đúng định dạng sau (chỉ JSON thuần túy, kh
   }
 
   return {
+    hasActiveCampaign: hasActiveCamp,
     activeCampaignTitle,
     campaignCurrentDay,
     campaignTotalDays,
+    campaignProgress,
     completedQuests: completedQuestsTotal,
     totalPlannedQuests,
     completionRate,

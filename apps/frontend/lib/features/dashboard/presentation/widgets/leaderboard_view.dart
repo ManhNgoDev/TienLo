@@ -356,7 +356,7 @@ class _LeaderboardViewState extends State<LeaderboardView> {
                 ),
               ),
             ] else ...[
-              if (items.length >= 3) ...[
+              if (items.isNotEmpty) ...[
                 LeaderboardPodium(items: items),
               ],
 

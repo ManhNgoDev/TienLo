@@ -518,13 +518,18 @@ class _LoginScreenState extends State<LoginScreen> {
 
           // 3. Foreground Content with Scroll support
           SafeArea(
+            bottom: false,
             child: LayoutBuilder(
               builder: (context, constraints) {
+                final bottomPadding = MediaQuery.of(context).padding.bottom;
                 final minH = constraints.hasBoundedHeight
-                    ? (constraints.maxHeight - 32).clamp(0.0, double.infinity)
+                    ? (constraints.maxHeight - 32 - bottomPadding).clamp(0.0, double.infinity)
                     : 0.0;
                 return SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  padding: EdgeInsets.fromLTRB(24, 16, 24, 16 + bottomPadding),
                   child: Center(
                     child: ConstrainedBox(
                       constraints: BoxConstraints(

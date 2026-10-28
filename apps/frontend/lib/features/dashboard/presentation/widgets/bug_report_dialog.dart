@@ -125,28 +125,37 @@ class _BugReportBottomSheetState extends State<_BugReportBottomSheet> {
       _statusMessage = null;
     });
 
-    final res = await _feedbackService.sendBugReport(
-      title: title,
-      description: desc,
-      category: _selectedCategory,
-      screen: widget.screenName,
-      userEmail: _emailController.text.trim(),
-      stackTrace: _includeStackTrace ? widget.initialError : null,
-    );
+    try {
+      final res = await _feedbackService.sendBugReport(
+        title: title,
+        description: desc,
+        category: _selectedCategory,
+        screen: widget.screenName,
+        userEmail: _emailController.text.trim(),
+        stackTrace: _includeStackTrace ? widget.initialError : null,
+      );
 
-    if (!mounted) return;
+      if (!mounted) return;
 
-    final isOk = res['success'] == true;
-    setState(() {
-      _isSubmitting = false;
-      _isSuccess = isOk;
-      _statusMessage = res['message']?.toString() ??
-          (isOk ? 'Báo cáo sự cố đã được gửi tới Gmail Admin!' : 'Gửi báo cáo thất bại');
-    });
+      final isOk = res['success'] == true;
+      setState(() {
+        _isSubmitting = false;
+        _isSuccess = isOk;
+        _statusMessage = res['message']?.toString() ??
+            (isOk ? 'Báo cáo sự cố đã được gửi tới Gmail Admin!' : 'Gửi báo cáo thất bại');
+      });
 
-    if (isOk) {
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted) Navigator.of(context).pop();
+      if (isOk) {
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) Navigator.of(context).pop();
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+        _isSuccess = false;
+        _statusMessage = 'Đã xảy ra sự cố khi gửi: $e';
       });
     }
   }

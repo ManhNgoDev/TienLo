@@ -237,9 +237,18 @@ class _ServerWaitingScreenState extends State<ServerWaitingScreen>
 
           // 3. Main Center Content
           SafeArea(
+            bottom: false,
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                physics: const AlwaysScrollableScrollPhysics(
+                  parent: BouncingScrollPhysics(),
+                ),
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  32,
+                  24,
+                  32 + MediaQuery.of(context).padding.bottom,
+                ),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 480),
                   child: Column(

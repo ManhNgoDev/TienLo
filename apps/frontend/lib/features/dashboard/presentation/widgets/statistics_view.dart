@@ -42,31 +42,72 @@ class StatisticsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = (statisticsData?['activeCampaignTitle'] != null &&
-            (statisticsData!['activeCampaignTitle'] as String).isNotEmpty)
-        ? statisticsData!['activeCampaignTitle'] as String
-        : ((activeCampaignTitle != null && activeCampaignTitle!.isNotEmpty)
-            ? activeCampaignTitle!
-            : '[HỆ THỐNG] Tôi Luyện Thể Chất & Đột Phá Giới Hạn');
+    // Kiểm tra xem người dùng có chiến dịch / session nào đang hoạt động không
+    final rawStatsTitle = statisticsData?['activeCampaignTitle'] as String?;
+    final bool isStatsTitleValid = rawStatsTitle != null &&
+        rawStatsTitle.trim().isNotEmpty &&
+        rawStatsTitle.trim() != '[HỆ THỐNG] Tôi Luyện Thể Chất & Đột Phá Giới Hạn';
 
-    final int calculatedWeek = campaignCurrentDay > 0 ? (((campaignCurrentDay - 1) ~/ 7) + 1) : 1;
-    final int currentWeek = (statisticsData?['currentWeek'] as num?)?.toInt() ?? calculatedWeek;
+    final bool isPropTitleValid = activeCampaignTitle != null &&
+        activeCampaignTitle!.trim().isNotEmpty &&
+        activeCampaignTitle!.trim() != '[HỆ THỐNG] Tôi Luyện Thể Chất & Đột Phá Giới Hạn';
 
-    final int calculatedTotalWeeks = (campaignTotalDays / 7).ceil().clamp(1, 52);
-    final int totalWeeks = (statisticsData?['totalWeeks'] as num?)?.toInt() ?? calculatedTotalWeeks;
+    final bool hasActiveCamp = (statisticsData?['hasActiveCampaign'] == true) ||
+        isPropTitleValid ||
+        isStatsTitleValid;
 
-    final double campaignProgress = (statisticsData?['campaignProgress'] as num?)?.toDouble() ??
-        (campaignCurrentDay > 0 ? (campaignCurrentDay / campaignTotalDays).clamp(0.0, 1.0) : 0.0);
+    final String title = hasActiveCamp
+        ? (isPropTitleValid
+            ? activeCampaignTitle!.trim()
+            : (isStatsTitleValid ? rawStatsTitle.trim() : 'Chiến Dịch Tu Luyện'))
+        : 'Chưa có chiến dịch nào';
+
+    final int resolvedCurrentDay = hasActiveCamp
+        ? ((statisticsData?['campaignCurrentDay'] as num?)?.toInt() ??
+            (campaignCurrentDay > 0 ? campaignCurrentDay : 1))
+        : 0;
+
+    final int resolvedTotalDays = hasActiveCamp
+        ? ((statisticsData?['campaignTotalDays'] as num?)?.toInt() ??
+            (campaignTotalDays > 0 ? campaignTotalDays : 14))
+        : 0;
+
+    final int calculatedWeek = hasActiveCamp
+        ? (resolvedCurrentDay > 0 ? (((resolvedCurrentDay - 1) ~/ 7) + 1) : 1)
+        : 0;
+    final int currentWeek = hasActiveCamp
+        ? ((statisticsData?['currentWeek'] as num?)?.toInt() ?? calculatedWeek)
+        : 0;
+
+    final int calculatedTotalWeeks = hasActiveCamp
+        ? (resolvedTotalDays / 7).ceil().clamp(1, 52)
+        : 0;
+    final int totalWeeks = hasActiveCamp
+        ? ((statisticsData?['totalWeeks'] as num?)?.toInt() ?? calculatedTotalWeeks)
+        : 0;
+
+    final int calculatedCompletedQuests = hasActiveCamp ? completedCount : 0;
+    final int completedQuests = hasActiveCamp
+        ? ((statisticsData?['completedQuests'] as num?)?.toInt() ?? calculatedCompletedQuests)
+        : 0;
+
+    final int totalPlannedQuests = hasActiveCamp
+        ? ((statisticsData?['totalPlannedQuests'] as num?)?.toInt() ??
+            (resolvedTotalDays * (totalQuestsCount > 0 ? totalQuestsCount : 5)))
+        : 0;
+
+    // Tiến độ được tính dựa trên số nhiệm vụ thực tế đã hoàn thành, tuyệt đối không mặc định 7% khi chưa làm gì
+    final double calculatedProgress = (hasActiveCamp && totalPlannedQuests > 0 && completedQuests > 0)
+        ? (completedQuests / totalPlannedQuests).clamp(0.0, 1.0)
+        : 0.0;
+    final double campaignProgress = hasActiveCamp
+        ? ((statisticsData?['campaignProgress'] as num?)?.toDouble() ?? calculatedProgress)
+        : 0.0;
 
     final int calculatedRate = totalQuestsCount > 0
         ? ((completedCount / totalQuestsCount) * 100).toInt()
         : 0;
     final int completionRate = (statisticsData?['completionRate'] as num?)?.toInt() ?? calculatedRate;
-
-    final int calculatedCompletedQuests = completedCount;
-    final int completedQuests = (statisticsData?['completedQuests'] as num?)?.toInt() ?? calculatedCompletedQuests;
-
-    final int totalPlannedQuests = (statisticsData?['totalPlannedQuests'] as num?)?.toInt() ?? (campaignTotalDays * 3);
 
     final attributes = statisticsData?['attributes'] as Map<String, dynamic>?;
     final aiIntelligence = statisticsData?['aiIntelligence'] as Map<String, dynamic>?;
@@ -128,6 +169,7 @@ class StatisticsView extends StatelessWidget {
           progress: campaignProgress,
           completedQuests: completedQuests,
           totalPlannedQuests: totalPlannedQuests,
+          hasActiveCampaign: hasActiveCamp,
         ),
         const SizedBox(height: 14),
 
@@ -143,6 +185,7 @@ class StatisticsView extends StatelessWidget {
         CampaignStageCard(
           title: title,
           progress: campaignProgress,
+          hasActiveCampaign: hasActiveCamp,
         ),
         const SizedBox(height: 22),
 

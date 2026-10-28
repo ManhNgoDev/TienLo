@@ -9,6 +9,7 @@ class MainQuestProgressCard extends StatelessWidget {
   final double progress;
   final int completedQuests;
   final int totalPlannedQuests;
+  final bool hasActiveCampaign;
 
   const MainQuestProgressCard({
     super.key,
@@ -18,6 +19,7 @@ class MainQuestProgressCard extends StatelessWidget {
     required this.progress,
     required this.completedQuests,
     required this.totalPlannedQuests,
+    this.hasActiveCampaign = true,
   });
 
   @override
@@ -47,7 +49,9 @@ class MainQuestProgressCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'MAIN QUEST • TUẦN $currentWeek/$totalWeeks',
+                hasActiveCampaign
+                    ? 'MAIN QUEST • TUẦN $currentWeek/$totalWeeks'
+                    : 'MAIN QUEST • CHƯA MỞ PHIÊN',
                 style: const TextStyle(
                   color: Color(0xFFE8B95E),
                   fontSize: 10.5,
@@ -57,7 +61,7 @@ class MainQuestProgressCard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                title,
+                hasActiveCampaign ? title : 'Chưa Có Chiến Dịch Tu Luyện',
                 style: GoogleFonts.playfairDisplay(
                   color: const Color(0xFFFFF6DF),
                   fontSize: 20,
@@ -67,7 +71,9 @@ class MainQuestProgressCard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                '$completedQuests/$totalPlannedQuests nhiệm vụ chiến dịch đã hoàn thành',
+                hasActiveCampaign
+                    ? '$completedQuests/$totalPlannedQuests nhiệm vụ chiến dịch đã hoàn thành'
+                    : 'Chưa có phiên tu luyện nào đang diễn ra. Hãy thiết lập mục tiêu ở trang Hôm Nay.',
                 style: const TextStyle(
                   color: Color(0xFF8BA5BA),
                   fontSize: 12,

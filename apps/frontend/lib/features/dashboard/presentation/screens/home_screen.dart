@@ -620,7 +620,15 @@ class _HomeScreenState extends State<HomeScreen> {
           SafeArea(
             bottom: false,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              padding: EdgeInsets.fromLTRB(
+                20,
+                12,
+                20,
+                100 + MediaQuery.of(context).padding.bottom,
+              ),
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 520),
@@ -636,8 +644,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           streakDays: _streakDays,
                           spiritStones: _spiritStones,
                           activeCampaignTitle: _activeCampaignTitle,
-                          campaignCurrentDay: _campaignCurrentDay,
-                          campaignTotalDays: _campaignTotalDays,
+                          campaignCurrentDay: (_activeCampaignTitle != null && _activeCampaignTitle!.isNotEmpty)
+                              ? _campaignCurrentDay
+                              : 0,
+                          campaignTotalDays: (_activeCampaignTitle != null && _activeCampaignTitle!.isNotEmpty)
+                              ? _campaignTotalDays
+                              : 0,
                           completedCount: _completedCount,
                           totalQuestsCount: _quests.length,
                           statisticsData: _statisticsData,

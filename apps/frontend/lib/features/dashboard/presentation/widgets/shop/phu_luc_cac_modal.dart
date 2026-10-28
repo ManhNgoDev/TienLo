@@ -409,7 +409,11 @@ class _PhuLucCacModalState extends State<PhuLucCacModal> with SingleTickerProvid
                 )
               : GridView.builder(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.only(left: 16, right: 16, bottom: 24),
+                  padding: EdgeInsets.only(
+                    left: 16,
+                    right: 16,
+                    bottom: 24 + MediaQuery.of(context).padding.bottom,
+                  ),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     mainAxisSpacing: 12,

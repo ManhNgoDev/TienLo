@@ -14,11 +14,11 @@ class LeaderboardPodium extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (items.length < 3) return const SizedBox.shrink();
+    if (items.isEmpty) return const SizedBox.shrink();
 
     final top1 = items[0];
-    final top2 = items[1];
-    final top3 = items[2];
+    final top2 = items.length > 1 ? items[1] : null;
+    final top3 = items.length > 2 ? items[2] : null;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 22),
@@ -71,13 +71,15 @@ class LeaderboardPodium extends StatelessWidget {
             children: [
               // Hạng 2 (Bạc - Trái)
               Expanded(
-                child: _buildPodiumPillar(
-                  item: top2,
-                  height: 120,
-                  rankColor: const Color(0xFFCBD5E1),
-                  badgeIcon: Icons.military_tech_rounded,
-                  crownEmoji: '🥈',
-                ),
+                child: top2 != null
+                    ? _buildPodiumPillar(
+                        item: top2,
+                        height: 120,
+                        rankColor: const Color(0xFFCBD5E1),
+                        badgeIcon: Icons.military_tech_rounded,
+                        crownEmoji: '🥈',
+                      )
+                    : const SizedBox.shrink(),
               ),
               const SizedBox(width: 8),
 
@@ -96,13 +98,15 @@ class LeaderboardPodium extends StatelessWidget {
 
               // Hạng 3 (Đồng - Phải)
               Expanded(
-                child: _buildPodiumPillar(
-                  item: top3,
-                  height: 104,
-                  rankColor: const Color(0xFFCD7F32),
-                  badgeIcon: Icons.military_tech_rounded,
-                  crownEmoji: '🥉',
-                ),
+                child: top3 != null
+                    ? _buildPodiumPillar(
+                        item: top3,
+                        height: 104,
+                        rankColor: const Color(0xFFCD7F32),
+                        badgeIcon: Icons.military_tech_rounded,
+                        crownEmoji: '🥉',
+                      )
+                    : const SizedBox.shrink(),
               ),
             ],
           ),

@@ -52,7 +52,7 @@ class FeedbackService {
         'userEmail': effectiveEmail,
         'userId': savedUser?.id ?? 'anonymous',
         'deviceInfo': deviceInfo,
-        'appVersion': '1.0.5',
+        'appVersion': '1.0.6',
         if (stackTrace != null && stackTrace.trim().isNotEmpty)
           'stackTrace': stackTrace.trim(),
       };
@@ -61,6 +61,7 @@ class FeedbackService {
         ApiConstants.feedbackReport,
         token: token,
         body: payload,
+        timeout: const Duration(seconds: 15),
       );
 
       if (response is Map<String, dynamic>) {
@@ -73,9 +74,12 @@ class FeedbackService {
       };
     } catch (e) {
       debugPrint('Lỗi gửi feedback report: $e');
+      final isTimeout = e.toString().contains('TimeoutException');
       return {
         'success': false,
-        'message': 'Không thể kết nối máy chủ để gửi báo cáo: $e',
+        'message': isTimeout
+            ? 'Kết nối máy chủ quá thời gian chờ. Vui lòng kiểm tra mạng hoặc thử lại sau.'
+            : 'Không thể kết nối máy chủ để gửi báo cáo: $e',
       };
     }
   }

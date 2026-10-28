@@ -5,16 +5,18 @@ import 'package:google_fonts/google_fonts.dart';
 class CampaignStageCard extends StatelessWidget {
   final String title;
   final double progress;
+  final bool hasActiveCampaign;
 
   const CampaignStageCard({
     super.key,
     required this.title,
     required this.progress,
+    this.hasActiveCampaign = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    final int stageIndex = (progress * 4).floor().clamp(0, 3);
+    final int stageIndex = hasActiveCampaign ? (progress * 4).floor().clamp(0, 3) : 0;
     const stages = ['Khởi động', 'Nền tảng', 'Đột phá', 'Duy trì'];
 
     return Column(
@@ -56,9 +58,9 @@ class CampaignStageCard extends StatelessWidget {
                   width: 1,
                 ),
               ),
-              child: const Text(
-                'Giai đoạn hiện tại',
-                style: TextStyle(
+              child: Text(
+                hasActiveCampaign ? 'Giai đoạn hiện tại' : 'Chưa mở phiên',
+                style: const TextStyle(
                   color: Color(0xFFF2C465),
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
@@ -116,7 +118,7 @@ class CampaignStageCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              title,
+                              hasActiveCampaign ? title : 'Chưa có chiến dịch nào',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -127,7 +129,9 @@ class CampaignStageCard extends StatelessWidget {
                             ),
                             const SizedBox(height: 3),
                             Text(
-                              'Stage ${stageIndex + 1}/4 • ${stages[stageIndex]}',
+                              hasActiveCampaign
+                                  ? 'Stage ${stageIndex + 1}/4 • ${stages[stageIndex]}'
+                                  : 'Stage 0/4 • Chưa bắt đầu',
                               style: const TextStyle(
                                 color: Color(0xFF8BA5BA),
                                 fontSize: 12,
@@ -137,7 +141,7 @@ class CampaignStageCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '${(progress * 100).toInt()}%',
+                        '${(hasActiveCampaign ? (progress * 100).toInt() : 0)}%',
                         style: const TextStyle(
                           color: Color(0xFFF2C465),
                           fontSize: 16,
@@ -160,7 +164,8 @@ class CampaignStageCard extends StatelessWidget {
                         return Stack(
                           children: [
                             Container(
-                              width: constraints.maxWidth * progress,
+                              width: constraints.maxWidth *
+                                  (hasActiveCampaign ? progress.clamp(0.0, 1.0) : 0.0),
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
                                   colors: [Color(0xFFE5B869), Color(0xFFF6CE70)],
@@ -179,8 +184,8 @@ class CampaignStageCard extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: List.generate(stages.length, (idx) {
-                      final isCurrent = idx == stageIndex;
-                      final isPassed = idx < stageIndex;
+                      final isCurrent = hasActiveCampaign && idx == stageIndex;
+                      final isPassed = hasActiveCampaign && idx < stageIndex;
                       return Text(
                         stages[idx],
                         style: TextStyle(

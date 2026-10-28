@@ -197,7 +197,12 @@ class CultivationRealmsModal extends StatelessWidget {
               // Realms List
               Expanded(
                 child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                  padding: EdgeInsets.fromLTRB(
+                    20,
+                    8,
+                    20,
+                    16 + MediaQuery.of(context).padding.bottom,
+                  ),
                   itemCount: profile.allRealms.length,
                   separatorBuilder: (context, index) => const SizedBox(height: 10),
                   itemBuilder: (context, index) {

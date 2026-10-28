@@ -21,11 +21,15 @@ class ApiClient {
     return headers;
   }
 
-  Future<dynamic> get(String endpoint, {String? token}) async {
+  Future<dynamic> get(
+    String endpoint, {
+    String? token,
+    Duration timeout = const Duration(seconds: 45),
+  }) async {
     final uri = Uri.parse('$baseUrl$endpoint');
     final response = await http
         .get(uri, headers: _buildHeaders(token))
-        .timeout(const Duration(seconds: 90));
+        .timeout(timeout);
 
     return _handleResponse(response);
   }
@@ -34,6 +38,7 @@ class ApiClient {
     String endpoint, {
     Map<String, dynamic>? body,
     String? token,
+    Duration timeout = const Duration(seconds: 45),
   }) async {
     final uri = Uri.parse('$baseUrl$endpoint');
     final response = await http
@@ -42,7 +47,7 @@ class ApiClient {
           headers: _buildHeaders(token),
           body: body != null ? jsonEncode(body) : null,
         )
-        .timeout(const Duration(seconds: 90));
+        .timeout(timeout);
 
     return _handleResponse(response);
   }
@@ -51,6 +56,7 @@ class ApiClient {
     String endpoint, {
     Map<String, dynamic>? body,
     String? token,
+    Duration timeout = const Duration(seconds: 45),
   }) async {
     final uri = Uri.parse('$baseUrl$endpoint');
     final response = await http
@@ -59,7 +65,7 @@ class ApiClient {
           headers: _buildHeaders(token),
           body: body != null ? jsonEncode(body) : null,
         )
-        .timeout(const Duration(seconds: 90));
+        .timeout(timeout);
 
     return _handleResponse(response);
   }
