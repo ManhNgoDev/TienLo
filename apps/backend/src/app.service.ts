@@ -41,11 +41,11 @@ export class AppService {
     const repo = process.env.GITHUB_REPO || 'TienLo';
     const defaultDownloadUrl = `https://github.com/${owner}/${repo}/releases/latest/download/TienLo-release.apk`;
 
-    let latestVersion = '1.0.9';
+    let latestVersion = '1.1.0';
     let releaseNotes =
-      '• Khóa Chiến Dịch: Đang trong chiến dịch cũ bắt buộc phải hết đủ số ngày mục tiêu mới được tạo chiến dịch mới (kể cả khi đã hoàn thành nhiệm vụ trong ngày)\n• Bảng Xếp Hạng: Sửa lỗi bị co hẹp lề ngang và mở khóa cuộn dọc xuống danh sách bên dưới\n• Báo Cáo Sự Cố: Gửi trực tiếp từ Gmail Hệ Thống tới Gmail Admin, bỏ ô bắt nhập email';
+      '• Chuỗi Ngày Tu Luyện: Khắc phục triệt để lỗi cộng thêm chuỗi ngày khi tạo và làm thêm nhiệm vụ bổ sung trong cùng một ngày (mỗi ngày chỉ tăng tối đa +1 chuỗi ngày)\n• Khóa Chiến Dịch: Đang trong chiến dịch cũ bắt buộc phải hết đủ số ngày mục tiêu mới được tạo chiến dịch mới\n• Bảng Xếp Hạng & Báo Cáo Sự Cố: Đồng bộ chiều rộng, mở khóa cuộn dọc và gửi báo cáo trực tiếp từ Gmail hệ thống';
     let publishedAt = new Date().toISOString();
-    let downloadUrl = `https://github.com/${owner}/${repo}/releases/download/v1.0.9/TienLo-release.apk`;
+    let downloadUrl = `https://github.com/${owner}/${repo}/releases/download/v1.1.0/TienLo-release.apk`;
 
     try {
       const res = await fetch(
@@ -80,7 +80,7 @@ export class AppService {
 
     return {
       latestVersion,
-      latestBuildNumber: 10,
+      latestBuildNumber: 11,
       minSupportedVersion: '1.0.0',
       downloadUrl,
       releaseNotes,

@@ -223,7 +223,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (mounted) {
         final savedStreak = prefs.getInt('user_streak_days_$uid') ?? 0;
-        final resolvedStreak = [profile.streakDays, savedStreak, _streakDays].reduce((a, b) => a > b ? a : b);
+        final resolvedStreak = profile.streakDays > 0 ? profile.streakDays : (savedStreak > _streakDays ? savedStreak : _streakDays);
+        if (loadedQuests.isNotEmpty && loadedQuests.every((q) => q.isCompleted) && resolvedStreak > 0) {
+          await prefs.setString('last_streak_date_$uid', todayStr);
+        }
         if (resolvedStreak > 0) {
           await prefs.setInt('user_streak_days_$uid', resolvedStreak);
         }
@@ -321,19 +324,23 @@ class _HomeScreenState extends State<HomeScreen> {
     _saveLocalQuests();
 
     final bool allDoneAfter = _quests.isNotEmpty && _quests.every((q) => q.isCompleted);
-    if (!allDoneBefore && allDoneAfter) {
+    final prefs = await SharedPreferences.getInstance();
+    final uid = widget.user.id;
+    final todayStr = DateTime.now().toIso8601String().split('T')[0];
+    final bool alreadyCountedToday = prefs.getString('last_streak_date_$uid') == todayStr;
+    final bool shouldIncrementStreak = !allDoneBefore && allDoneAfter && !alreadyCountedToday;
+    if (shouldIncrementStreak) {
       setState(() {
         _streakDays += 1;
       });
-      final prefs = await SharedPreferences.getInstance();
-      final uid = widget.user.id;
       await prefs.setInt('user_streak_days_$uid', _streakDays);
+      await prefs.setString('last_streak_date_$uid', todayStr);
     }
 
     try {
       final res = await _cultivationRepository.completeQuest(
         quest.id,
-        allCompleted: allDoneAfter,
+        allCompleted: shouldIncrementStreak,
         streakDays: _streakDays,
         questTitle: quest.title,
         exp: quest.xp,
@@ -354,7 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       if (mounted) {
-        if (!allDoneBefore && allDoneAfter) {
+        if (shouldIncrementStreak) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               backgroundColor: const Color(0xFF064E3B),

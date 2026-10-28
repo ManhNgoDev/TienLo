@@ -126,5 +126,21 @@ describe('CultivationService', () => {
       expect(penalty.profile.spiritStones).toBe(100);
       expect(penalty.profile.streakDays).toBe(5);
     });
+
+    it('should only increment streak once per day even when extra quests are completed on the same day', async () => {
+      const first = await service.incrementStreakIfEligible('test-user-streak-once', '2026-10-28', 1);
+      expect(first.streakIncremented).toBe(true);
+      expect(first.profile.streakDays).toBe(1);
+
+      // Tạo thêm nhiệm vụ và hoàn thành trong cùng ngày 2026-10-28 -> không được cộng thêm chuỗi ngày
+      const second = await service.incrementStreakIfEligible('test-user-streak-once', '2026-10-28', 2);
+      expect(second.streakIncremented).toBe(false);
+      expect(second.profile.streakDays).toBe(1);
+
+      // Qua ngày hôm sau (2026-10-29) hoàn thành hết nhiệm vụ -> mới được cộng lên 2
+      const nextDay = await service.incrementStreakIfEligible('test-user-streak-once', '2026-10-29', 2);
+      expect(nextDay.streakIncremented).toBe(true);
+      expect(nextDay.profile.streakDays).toBe(2);
+    });
   });
 });

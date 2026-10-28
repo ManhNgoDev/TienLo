@@ -16,6 +16,7 @@ export interface UserCultivationState {
   totalExp: number;
   spiritStones: number;
   streakDays: number;
+  lastActiveDate?: string;
   title: string;
   allRealms: CultivationRealmConfig[];
 }
@@ -65,6 +66,7 @@ export class CultivationService {
             totalExp: Number(data.total_exp || 0),
             spiritStones: data.spirit_stones,
             streakDays,
+            lastActiveDate: data.last_active_date || undefined,
             title: realmConfig.title,
             allRealms: CULTIVATION_REALMS,
           };
@@ -98,13 +100,17 @@ export class CultivationService {
   async incrementStreakIfEligible(
     userId: string,
     dateStr?: string,
-    targetStreak?: number,
+    _targetStreak?: number,
   ): Promise<{ profile: UserCultivationState; streakIncremented: boolean }> {
     const profile = await this.getProfile(userId);
     const todayStr = dateStr || new Date().toISOString().split('T')[0];
 
     const client = this.supabaseService.getClient();
     let shouldIncrement = true;
+
+    if (profile.lastActiveDate === todayStr && (profile.streakDays || 0) > 0) {
+      shouldIncrement = false;
+    }
 
     if (client) {
       try {
@@ -120,19 +126,17 @@ export class CultivationService {
       } catch (_) {}
     }
 
-    if (!shouldIncrement && targetStreak && targetStreak > (profile.streakDays || 0)) {
-      shouldIncrement = true;
+    // Tuyệt đối mỗi ngày chỉ được tăng tối đa +1 chuỗi ngày, kể cả khi tạo và làm thêm nhiệm vụ
+    if (!shouldIncrement) {
+      return { profile, streakIncremented: false };
     }
 
-    const newStreakDays = targetStreak && targetStreak > (profile.streakDays || 0)
-      ? targetStreak
-      : shouldIncrement
-        ? (profile.streakDays || 0) + 1
-        : profile.streakDays || 1;
+    const newStreakDays = (profile.streakDays || 0) + 1;
 
     const updatedProfile: UserCultivationState = {
       ...profile,
       streakDays: newStreakDays,
+      lastActiveDate: todayStr,
     };
 
     if (client) {
@@ -158,7 +162,7 @@ export class CultivationService {
     }
 
     this.inMemoryState.set(userId, updatedProfile);
-    return { profile: updatedProfile, streakIncremented: shouldIncrement };
+    return { profile: updatedProfile, streakIncremented: true };
   }
 
   async addExp(
