@@ -62,7 +62,7 @@ jobs:
           flutter build apk --release --dart-define=BACKEND_URL=https://tienlo.onrender.com/api
           cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/TienLo-release.apk
 
-      - name: Determine Tag Name
+      - name: Determine Tag Name & Release Notes
         id: get_tag
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -70,6 +70,7 @@ jobs:
           else
             echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
           fi
+          node -e "const fs = require('fs'); const v = JSON.parse(fs.readFileSync('apps/backend/public/downloads/version.json', 'utf8')); fs.writeFileSync('RELEASE_NOTES.md', v.releaseNotes || '');"
 
       - name: Create GitHub Release & Upload APK
         uses: softprops/action-gh-release@v2
@@ -78,5 +79,6 @@ jobs:
           name: Tiên Lộ ${{ steps.get_tag.outputs.tag }} • Bản Cập Nhật
           draft: false
           prerelease: false
-          generate_release_notes: true
+          body_path: RELEASE_NOTES.md
+          generate_release_notes: false
           files: apps/frontend/build/app/outputs/flutter-apk/TienLo-release.apk
