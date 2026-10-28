@@ -1,9 +1,9 @@
 {
-  "latestVersion": "1.0.4",
-  "latestBuildNumber": 5,
+  "latestVersion": "1.0.5",
+  "latestBuildNumber": 6,
   "minSupportedVersion": "1.0.0",
-  "downloadUrl": "https://github.com/ManhNgoDev/TienLo/releases/download/v1.0.4/TienLo-release.apk",
-  "releaseNotes": "• Khai mở Bảng Xếp Hạng Leo Top (Thiên Kiêu Bảng) hiển thị Chuỗi ngày, Nhiệm vụ và Cảnh giới\n• Nâng cấp hệ thống AI tạo nhiệm vụ bám sát mục tiêu, đa dạng và không rập khuôn\n• Khóa phiên tu luyện: Cần hoàn thành 3/3 nhiệm vụ hôm nay trước khi mở session mới\n• Khai mở Phù Lục Các: Cửa hàng đổi Phù Lục, Đan Dược, Pháp Bảo bằng Nguyên Thạch và Túi Càn Khôn\n• Tối ưu hóa hiệu năng và kiến trúc toàn diện",
-  "publishedAt": "2026-10-25T15:30:00Z",
+  "downloadUrl": "https://github.com/ManhNgoDev/TienLo/releases/download/v1.0.5/TienLo-release.apk",
+  "releaseNotes": "• Nâng số nhiệm vụ hàng ngày mặc định lên 5 nhiệm vụ có con số đo đếm/rep cụ thể\n• Khai mở tính năng Khai Mở Thêm Nhiệm Vụ (AI Gen Thêm) khi muốn rèn luyện bứt phá\n• Tích hợp hệ thống báo lỗi tự động gửi thông báo trực tiếp đến Gmail nhà phát triển\n• Sửa lỗi cập nhật ứng dụng tự động mở trình cài đặt APK không bị văng/crash\n• Đồng bộ chuỗi ngày tu luyện chuẩn xác khi hoàn thành toàn bộ nhiệm vụ\n• Bảng Xếp Hạng kết nối API trực tiếp từ máy chủ",
+  "publishedAt": "2026-10-28T04:00:00Z",
   "forceUpdate": false
 }

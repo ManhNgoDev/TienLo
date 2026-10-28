@@ -182,12 +182,52 @@ class CultivationRepository {
     }
   }
 
-  Future<Map<String, dynamic>?> completeQuest(String questId) async {
+  Future<Map<String, dynamic>?> generateExtraQuest(
+    String goalPrompt, {
+    List<String>? existingTitles,
+    String? campaignId,
+  }) async {
+    final token = await _getToken();
+    final body = <String, dynamic>{
+      'goalPrompt': goalPrompt,
+    };
+    if (existingTitles != null) body['existingTitles'] = existingTitles;
+    if (campaignId != null) body['campaignId'] = campaignId;
+
+    try {
+      final res = await _apiClient.post(
+        ApiConstants.campaignsGenerateExtra,
+        token: token,
+        body: body,
+      );
+      return res as Map<String, dynamic>?;
+    } catch (e) {
+      debugPrint('Error generateExtraQuest: $e');
+      return null;
+    }
+  }
+
+  Future<Map<String, dynamic>?> completeQuest(
+    String questId, {
+    bool allCompleted = false,
+    int? streakDays,
+    String? questTitle,
+    int? exp,
+    int? spiritStones,
+  }) async {
     final token = await _getToken();
     try {
       final res = await _apiClient.post(
         ApiConstants.campaignQuestComplete(questId),
         token: token,
+        body: {
+          'allCompleted': allCompleted,
+          'streakDays': streakDays,
+          'questTitle': questTitle,
+          'exp': exp,
+          'spiritStones': spiritStones,
+          'localDate': DateTime.now().toIso8601String().split('T')[0],
+        },
       );
       return res as Map<String, dynamic>?;
     } catch (_) {

@@ -3,9 +3,11 @@ import 'package:http/http.dart' as http;
 import '../constants/api_constants.dart';
 
 class ApiClient {
-  final String baseUrl;
+  final String? _customBaseUrl;
 
-  ApiClient({String? baseUrl}) : baseUrl = baseUrl ?? ApiConstants.defaultBaseUrl;
+  ApiClient({String? baseUrl}) : _customBaseUrl = baseUrl;
+
+  String get baseUrl => _customBaseUrl ?? ApiConstants.defaultBaseUrl;
 
 
   Map<String, String> _buildHeaders(String? token) {

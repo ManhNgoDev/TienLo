@@ -64,14 +64,21 @@ class LeaderboardResult {
   });
 
   factory LeaderboardResult.fromJson(Map<String, dynamic> json) {
-    final list = (json['leaderboard'] as List<dynamic>?)
+    final rawList = json['leaderboard'] ?? json['items'] ?? json['data'];
+    final list = (rawList as List<dynamic>?)
             ?.map((e) => LeaderboardItem.fromJson(e as Map<String, dynamic>))
             .toList() ??
         [];
 
     LeaderboardItem? current;
-    if (json['currentUser'] != null) {
+    if (json['currentUser'] != null && json['currentUser'] is Map<String, dynamic>) {
       current = LeaderboardItem.fromJson(json['currentUser'] as Map<String, dynamic>);
+    } else {
+      try {
+        current = list.firstWhere((e) => e.isCurrentUser);
+      } catch (_) {
+        current = null;
+      }
     }
 
     return LeaderboardResult(

@@ -121,7 +121,7 @@ class CreateCampaignCard extends StatelessWidget {
                         const SizedBox(height: 3),
                         Text(
                           isLocked
-                              ? (lockedMessage ?? 'Đạo hữu cần hoàn thành 3/3 nhiệm vụ hôm nay để mở khóa phiên mới.')
+                              ? (lockedMessage ?? 'Đạo hữu cần hoàn thành toàn bộ nhiệm vụ hôm nay để mở khóa phiên mới.')
                               : 'AI biến mục tiêu lớn thành nhiệm vụ vừa sức.',
                           style: TextStyle(
                             color: isLocked ? const Color(0xFFFBBF24).withValues(alpha: 0.85) : const Color(0xFF8BA5BA),

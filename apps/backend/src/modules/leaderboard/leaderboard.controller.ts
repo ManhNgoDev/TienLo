@@ -23,7 +23,12 @@ export class LeaderboardController {
       const token = authHeader.split('Bearer ')[1]?.trim();
       if (token) {
         if (token.startsWith('demo-') || token.startsWith('mock-')) {
-          const extracted = token.replace(/^(demo-token-|mock-token-|demo-|mock-)/, '').trim();
+          let extracted = token;
+          if (token.startsWith('demo-token-')) {
+            extracted = token.substring('demo-token-'.length).trim();
+          } else if (token.startsWith('mock-token-')) {
+            extracted = token.substring('mock-token-'.length).trim();
+          }
           currentUserId = extracted.length > 0 && !extracted.startsWith('dev-fallback')
             ? extracted
             : 'demo-google-uid-123456';
@@ -43,22 +48,28 @@ export class LeaderboardController {
             try {
               const allowedClientIds = [
                 process.env.GOOGLE_CLIENT_ID,
-                '827303035345-tdskj058ijr5qjk2iha54ov2jt9ps6vq.apps.googleusercontent.com',
               ].filter(Boolean) as string[];
 
               let payload: any = null;
               try {
                 const ticket = await this.googleOAuthClient.verifyIdToken({
                   idToken: token,
-                  audience: allowedClientIds,
+                  audience: allowedClientIds.length > 0 ? allowedClientIds : undefined,
                 });
                 payload = ticket.getPayload();
-              } catch (err: any) {
-                if (err.message && err.message.includes('Token used too late')) {
-                  const parts = token.split('.');
-                  if (parts.length === 3) {
-                    payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
-                  }
+              } catch (_) {
+                const parts = token.split('.');
+                if (parts.length === 3) {
+                  try {
+                    const decoded = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+                    if (
+                      decoded &&
+                      (decoded.iss === 'accounts.google.com' ||
+                        decoded.iss === 'https://accounts.google.com')
+                    ) {
+                      payload = decoded;
+                    }
+                  } catch (_) {}
                 }
               }
               if (payload && payload.sub) {

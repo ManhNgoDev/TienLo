@@ -55,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<QuestItem> _quests = [];
   Map<String, dynamic>? _statisticsData;
   bool _isLoadingStats = false;
+  bool _isGeneratingExtraQuest = false;
 
   int get _completedCount => _quests.where((q) => q.isCompleted || q.isXpClaimed).length;
 
@@ -133,14 +134,14 @@ class _HomeScreenState extends State<HomeScreen> {
           }
           final rawQuests = activeCamp['quests'];
           if (rawQuests is List) {
-            for (final q in rawQuests.take(3)) {
+            for (final q in rawQuests) {
               loadedQuests.add(GoalAnalyzerService.mapToQuestItem(q));
             }
           }
         }
       }
 
-      // 3. Nếu vẫn rỗng nhưng đang có chiến dịch, phân tích tạo 3 nhiệm vụ
+      // 3. Nếu vẫn rỗng nhưng đang có chiến dịch, phân tích tạo nhiệm vụ
       if (loadedQuests.isEmpty && _activeCampaignTitle != null) {
         loadedQuests.addAll(GoalAnalyzerService.analyzeGoalAndCreateQuests(_activeCampaignTitle!));
       }
@@ -191,15 +192,21 @@ class _HomeScreenState extends State<HomeScreen> {
       final profile = await _cultivationRepository.getProfile();
 
       if (mounted) {
+        final savedStreak = prefs.getInt('user_streak_days_$uid') ?? 0;
+        final resolvedStreak = [profile.streakDays, savedStreak, _streakDays].reduce((a, b) => a > b ? a : b);
+        if (resolvedStreak > 0) {
+          await prefs.setInt('user_streak_days_$uid', resolvedStreak);
+        }
+
         setState(() {
           _cultivationProfile = profile;
           _currentExp = profile.currentExp;
           _maxExp = profile.maxExp;
           _spiritStones = profile.spiritStones;
-          _streakDays = profile.streakDays;
+          _streakDays = resolvedStreak;
           if (loadedQuests.isNotEmpty) {
             _quests.clear();
-            _quests.addAll(loadedQuests.take(3));
+            _quests.addAll(loadedQuests);
           }
         });
         if (isNewDay && _quests.isNotEmpty) {
@@ -288,10 +295,20 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() {
         _streakDays += 1;
       });
+      final prefs = await SharedPreferences.getInstance();
+      final uid = widget.user.id;
+      await prefs.setInt('user_streak_days_$uid', _streakDays);
     }
 
     try {
-      final res = await _cultivationRepository.completeQuest(quest.id);
+      final res = await _cultivationRepository.completeQuest(
+        quest.id,
+        allCompleted: allDoneAfter,
+        streakDays: _streakDays,
+        questTitle: quest.title,
+        exp: quest.xp,
+        spiritStones: quest.spiritStones,
+      );
       if (res != null) {
         await _loadCultivationProfile();
         _loadStatistics();
@@ -317,7 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      '🎉 Đạo hữu đã hoàn thành xuất sắc 3/3 nhiệm vụ hôm nay! Chuỗi ngày tu luyện tăng lên $_streakDays ngày!',
+                      '🎉 Đạo hữu đã hoàn thành xuất sắc toàn bộ ${_quests.length}/${_quests.length} nhiệm vụ hôm nay! Chuỗi ngày tu luyện tăng lên $_streakDays ngày!',
                       style: const TextStyle(
                         color: Color(0xFFFDE68A),
                         fontWeight: FontWeight.bold,
@@ -377,14 +394,14 @@ class _HomeScreenState extends State<HomeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: const Color(0xFF7F1D1D),
-          content: const Row(
+          content: Row(
             children: [
-              Icon(Icons.lock_rounded, color: Color(0xFFFCA5A5), size: 20),
-              SizedBox(width: 10),
+              const Icon(Icons.lock_rounded, color: Color(0xFFFCA5A5), size: 20),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  'Đạo hữu hiện đang trong phiên tu luyện! Hãy hoàn thành toàn bộ 3 nhiệm vụ hiện tại trước khi khai mở phiên mới.',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                  'Đạo hữu hiện đang trong phiên tu luyện! Hãy hoàn thành toàn bộ ${_quests.length} nhiệm vụ hiện tại trước khi khai mở phiên mới.',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
                 ),
               ),
             ],
@@ -431,7 +448,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final campaignData = await _cultivationRepository.generateAiCampaign(text, durationDays: duration);
       if (campaignData != null && campaignData['quests'] != null) {
         final List<dynamic> rawQuests = campaignData['quests'];
-        for (var q in rawQuests.take(3)) {
+        for (var q in rawQuests) {
           newQuests.add(GoalAnalyzerService.mapToQuestItem(q));
         }
       }
@@ -487,7 +504,7 @@ class _HomeScreenState extends State<HomeScreen> {
         _campaignStartDate = todayStr;
         _campaignController.clear();
         _quests.clear();
-        _quests.addAll(newQuests.take(3));
+        _quests.addAll(newQuests);
       });
       _saveLocalQuests();
       _loadStatistics();
@@ -495,8 +512,70 @@ class _HomeScreenState extends State<HomeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           backgroundColor: const Color(0xFF0F261C),
-          content: Text('Thiên Đạo đã khởi tạo chiến dịch $duration ngày với 3 nhiệm vụ hôm nay!'),
+          content: Text('Thiên Đạo đã khởi tạo chiến dịch $duration ngày với ${_quests.length} nhiệm vụ hôm nay!'),
           duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleGenerateExtraQuest() async {
+    if (_isGeneratingExtraQuest) return;
+
+    final goalPrompt = _activeCampaignTitle ?? 'Rèn luyện thể lực và tu dưỡng thân tâm';
+    setState(() {
+      _isGeneratingExtraQuest = true;
+    });
+
+    QuestItem? newQuest;
+    try {
+      final existingTitles = _quests.map((q) => q.title).toList();
+      final res = await _cultivationRepository.generateExtraQuest(
+        goalPrompt,
+        existingTitles: existingTitles,
+      );
+      if (res != null) {
+        newQuest = GoalAnalyzerService.mapToQuestItem(res);
+      }
+    } catch (_) {}
+
+    if (newQuest == null) {
+      final existingTitles = _quests.map((q) => q.title).toList();
+      newQuest = GoalAnalyzerService.generateSingleExtraQuest(
+        goalPrompt,
+        existingTitles: existingTitles,
+      );
+    }
+
+    if (mounted) {
+      setState(() {
+        _isGeneratingExtraQuest = false;
+        _quests.add(newQuest!);
+      });
+      _saveLocalQuests();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: const Color(0xFF0F261C),
+          content: Row(
+            children: [
+              const Icon(Icons.auto_awesome, color: Color(0xFFF2C465), size: 20),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Thiên Đạo AI đã ban bố thêm nhiệm vụ: "${newQuest.title}"!',
+                  style: const TextStyle(
+                    color: Color(0xFFFDE68A),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          duration: const Duration(seconds: 4),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         ),
       );
     }
@@ -628,6 +707,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             campaignCurrentDay: _campaignCurrentDay,
                             campaignTotalDays: _campaignTotalDays,
                             completedCount: _completedCount,
+                            totalQuests: _quests.length,
                           ),
                           const SizedBox(height: 16),
                         ],
@@ -637,20 +717,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           controller: _campaignController,
                           isGeneratingAi: _isGeneratingAi,
                           isLocked: _isSessionOngoing,
-                          lockedMessage: 'Đạo hữu cần hoàn thành 3/3 nhiệm vụ hôm nay trước khi mở phiên mới.',
+                          lockedMessage: 'Đạo hữu cần hoàn thành toàn bộ ${_quests.length} nhiệm vụ hôm nay trước khi mở phiên mới.',
                           onSubmitted: _addCampaign,
                           onLockedTap: () {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 backgroundColor: const Color(0xFF7F1D1D),
-                                content: const Row(
+                                content: Row(
                                   children: [
-                                    Icon(Icons.lock_rounded, color: Color(0xFFFCA5A5), size: 18),
-                                    SizedBox(width: 8),
+                                    const Icon(Icons.lock_rounded, color: Color(0xFFFCA5A5), size: 18),
+                                    const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
-                                        'Phiên tu luyện đang dở dang! Hãy hoàn thành toàn bộ 3 nhiệm vụ hiện tại trước.',
-                                        style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+                                        'Phiên tu luyện đang dở dang! Hãy hoàn thành toàn bộ ${_quests.length} nhiệm vụ hiện tại trước.',
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
                                       ),
                                     ),
                                   ],
@@ -669,6 +749,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           quests: _quests,
                           completedCount: _completedCount,
                           onToggleQuest: _toggleQuest,
+                          onAddExtraQuest: _handleGenerateExtraQuest,
+                          isGeneratingExtra: _isGeneratingExtraQuest,
                         ),
                       ],
                     ],

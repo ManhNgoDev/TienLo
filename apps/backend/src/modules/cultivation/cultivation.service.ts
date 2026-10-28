@@ -98,6 +98,7 @@ export class CultivationService {
   async incrementStreakIfEligible(
     userId: string,
     dateStr?: string,
+    targetStreak?: number,
   ): Promise<{ profile: UserCultivationState; streakIncremented: boolean }> {
     const profile = await this.getProfile(userId);
     const todayStr = dateStr || new Date().toISOString().split('T')[0];
@@ -119,11 +120,16 @@ export class CultivationService {
       } catch (_) {}
     }
 
-    if (!shouldIncrement) {
-      return { profile, streakIncremented: false };
+    if (!shouldIncrement && targetStreak && targetStreak > (profile.streakDays || 0)) {
+      shouldIncrement = true;
     }
 
-    const newStreakDays = (profile.streakDays || 0) + 1;
+    const newStreakDays = targetStreak && targetStreak > (profile.streakDays || 0)
+      ? targetStreak
+      : shouldIncrement
+        ? (profile.streakDays || 0) + 1
+        : profile.streakDays || 1;
+
     const updatedProfile: UserCultivationState = {
       ...profile,
       streakDays: newStreakDays,
@@ -133,17 +139,26 @@ export class CultivationService {
       try {
         await client
           .from('user_cultivations')
-          .update({
+          .upsert({
+            user_id: userId,
+            realm_index: profile.realmIndex,
+            realm_name: profile.realmName,
+            sub_realm: profile.subRealm,
+            current_exp: profile.currentExp,
+            max_exp: profile.maxExp,
+            total_exp: profile.totalExp,
+            spirit_stones: profile.spiritStones,
             streak_days: newStreakDays,
             last_active_date: todayStr,
             updated_at: new Date().toISOString(),
-          })
-          .eq('user_id', userId);
-      } catch (_) {}
+          }, { onConflict: 'user_id' });
+      } catch (err: any) {
+        this.logger.warn(`Lỗi cập nhật streak_days: ${err?.message}`);
+      }
     }
 
     this.inMemoryState.set(userId, updatedProfile);
-    return { profile: updatedProfile, streakIncremented: true };
+    return { profile: updatedProfile, streakIncremented: shouldIncrement };
   }
 
   async addExp(

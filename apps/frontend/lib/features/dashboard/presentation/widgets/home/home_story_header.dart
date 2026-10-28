@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../../auth/domain/user_model.dart';
 import '../../../data/cultivation_repository.dart';
+import '../bug_report_dialog.dart';
 
 class HomeStoryHeader extends StatelessWidget {
   final UserModel user;
@@ -109,6 +110,32 @@ class HomeStoryHeader extends StatelessWidget {
             ],
           ),
         ),
+        // Nút Báo Lỗi / Hỗ Trợ
+        IconButton(
+          onPressed: () => showBugReportDialog(
+            context,
+            screenName: 'Màn hình Chính (Đã đăng nhập)',
+          ),
+          icon: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFFEF4444).withValues(alpha: 0.16),
+              border: Border.all(
+                color: const Color(0xFFEF4444).withValues(alpha: 0.5),
+                width: 1.2,
+              ),
+            ),
+            child: const Icon(
+              Icons.bug_report_rounded,
+              color: Color(0xFFFCA5A5),
+              size: 18,
+            ),
+          ),
+          tooltip: 'Báo lỗi & Góp ý tới Gmail Admin',
+        ),
+        const SizedBox(width: 4),
         GestureDetector(
           onTap: onAvatarTap,
           behavior: HitTestBehavior.opaque,

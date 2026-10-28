@@ -3,7 +3,7 @@ import { GoogleGenAI } from '@google/genai';
 import { SupabaseService } from '../database/supabase.service.js';
 import { CultivationService } from '../cultivation/cultivation.service.js';
 import { QuestDifficulty, DIFFICULTY_REWARDS } from '../cultivation/cultivation.constants.js';
-import { extractDurationDays, generateFallbackQuests } from './campaigns-fallback.helper.js';
+import { extractDurationDays, generateFallbackQuests, generateSingleExtraFallbackQuest } from './campaigns-fallback.helper.js';
 import { computeCampaignStatistics } from './campaigns-statistics.helper.js';
 
 export interface GeneratedQuest {
@@ -133,49 +133,94 @@ export class CampaignsService {
     // 1. Thử gọi Gemini AI nếu có client
     if (this.genAiClient) {
       try {
-        const prompt = `Bạn là "HỆ THỐNG SOLO LEVELING" (Giao diện ban bố Nhiệm Vụ Hàng Ngày - Daily Quests chuẩn phong cách Thợ Săn Thăng Cấp Một Mình kết hợp Tiên Lộ Tu Thân).
+        const prompt = `Bạn là "HỆ THỐNG SOLO LEVELING" (Giao diện ban bố Mệnh Lệnh Nhiệm Vụ Hàng Ngày - Daily Quests tối thượng phong cách Thợ Săn Sung Jin-Woo kết hợp Tiên Lộ Tu Thân).
 Người chơi (Người Thức Tỉnh) thiết lập mục tiêu rèn luyện đời thực: "${goalPrompt}".
-Thời gian chiến dịch được xác định là ${calculatedDuration} ngày. MỖI NGÀY người chơi BẮT BUỘC có đúng 3 NHIỆM VỤ HÀNG NGÀY (Daily Quests).
+Thời gian chiến dịch: ${calculatedDuration} ngày. MỖI NGÀY người chơi BẮT BUỘC nhận đúng 5 NHIỆM VỤ HÀNG NGÀY (Daily Quests).
 
-QUY TẮC CỐT LÕI (BẮT BUỘC TUÂN THỦ NGHIÊM NGẶT):
-1. TUYỆT ĐỐI BÁM SÁT LĨNH VỰC CỦA MỤC TIÊU:
-   - Nếu người chơi yêu cầu về LẬP TRÌNH / CNTT: Các nhiệm vụ PHẢI là viết code, debug, giải thuật toán, đọc tài liệu framework, refactor code, commit Git.
-   - Nếu người chơi yêu cầu về NGOẠI NGỮ (Tiếng Anh, IELTS, Tiếng Nhật, v.v.): Các nhiệm vụ PHẢI là học từ vựng SRS, nghe podcast, shadowing, viết bài luận, làm đề thi.
-   - Nếu người chơi yêu cầu về ĐỌC SÁCH / HỌC TẬP: Các nhiệm vụ PHẢI là đọc số trang sách cụ thể, ghi chép sơ đồ tư duy, giải bài tập, học sâu Pomodoro.
-   - Nếu người chơi yêu cầu về NGHỆ THUẬT / ÂM NHẠC: Các nhiệm vụ PHẢI là luyện ngón đàn, ký họa, hoàn thiện tác phẩm, xướng âm.
-   - NẾU VÀ CHỈ NẾU mục tiêu là THỂ THAO / TẬP GYM / CHẠY BỘ / GIẢM CÂN: Mới ban bố nhiệm vụ thể chất (chống đẩy, chạy bộ, squat, plank).
-   - [ĐẶC BIỆT CẤM ĐOÁN]: TUYỆT ĐỐI KHÔNG TỰ TIỆN ĐƯA CÁC NHIỆM VỤ KHÔNG LIÊN QUAN NHƯ "UỐNG ĐỦ 2L NƯỚC", "CHỐNG ĐẨY", "GẬP BỤNG", "NGỦ ĐỦ GIẤC" VÀO CÁC MỤC TIÊU HỌC TẬP, CODE, NGOẠI NGỮ, TÀI CHÍNH HAY NGHỆ THUẬT!
+QUY TẮC CỐT TỬ (BẮT BUỘC TUÂN THỦ NGHIÊM NGẶT 100%):
+1. NHIỆM VỤ PHẢI LÀ MỆNH LỆNH HÀNH ĐỘNG CÓ CON SỐ ĐO ĐẾM RÕ RÀNG (ACTIONABLE REPS & QUANTIFIABLE METRICS):
+   - Mọi nhiệm vụ PHẢI là một bài tập hoặc hành động cụ thể kèm con số đếm dứt khoát (Số lần, cái, phút, km, trang, dòng, bài) chuẩn phong cách Daily Quest của Solo Leveling ("100 cái hít đất, 100 cái gập bụng, 100 cái squat, chạy 10km").
+   - Nếu mục tiêu liên quan THỂ DỤC / GẬP BỤNG / TẬP GYM / RÈN THÂN THỂ / GIẢM MỠ / TĂNG CÂN / SỨC KHỎE / WORKOUT:
+     * BẮT BUỘC tạo các bài tập đếm số lần rõ ràng theo cú pháp: [Tên động tác] + [Số lượng cụ thể]:
+       + "Gập bụng (Sit-ups) 50 lần" (chia 2-3 hiệp)
+       + "Chống đẩy (Push-ups) 35 cái" (chuẩn form ngực sát đất)
+       + "Squat (Gánh đùi) 50 lần" (đùi song song sàn)
+       + "Plank siết cơ bụng 60 giây" (3 hiệp)
+       + "Gập bụng đạp xe (Bicycle Crunches) 60 lần"
+       + "Nhảy dây 300 cái" hoặc "Chạy bộ 3.0 km"
+       + "Kéo xà đơn (Pull-ups) 15 cái"
+   - Nếu mục tiêu liên quan HỌC TẬP / LẬP TRÌNH / NGOẠI NGỮ / ĐỌC SÁCH:
+     * BẮT BUỘC có con số định lượng rõ ràng:
+       + "Đọc chính xác 25 trang sách chuyên môn"
+       + "Giải 2 bài tập thuật toán LeetCode hoặc viết 60 dòng code"
+       + "Học thuộc và viết lại 20 từ vựng mới"
+       + "Tập trung học sâu Pomodoro đúng 45 phút không xao nhãng"
 
-2. TÍNH NGẪU NHIÊN VÀ ĐA DẠNG HÓA CAO (VARIETY & RANDOMIZATION):
-   - Không được rập khuôn hay lặp lại các công thức cứng nhắc.
-   - Linh hoạt thay đổi số lượng, thời gian (ví dụ: 25, 35, 45, 50 phút; 15, 25, 40 trang sách; 40, 70, 100 dòng code; 15, 20 từ vựng...).
-   - Mang đến cảm giác mới mẻ, sống động và kích thích tính chinh phục của một Thợ Săn thực thụ.
+2. TUYỆT ĐỐI CẤM NHIỆM VỤ DẠNG LỜI NHẮC NHỞ, KHUYÊN BẢO, MƠ HỒ:
+   - ❌ CẤM TUYỆT ĐỐI: "Khởi động làm nóng", "Nhớ uống đủ 2L nước", "Không ăn đồ ngọt", "Ngủ sớm trước 23h", "Duy trì tinh thần lạc quan", "Giãn cơ phục hồi", "Chuẩn bị tư duy", "Ý thức nâng cao sức khỏe", "Ăn uống điều độ".
+   - ✔️ BẮT BUỘC: Mọi nhiệm vụ PHẢI là CHỈ TIÊU HÀNH ĐỘNG RÕ RÀNG. Người chơi đếm đủ số lần / làm xong số phút / đọc xong số trang là tick hoàn thành.
 
-3. ĐỊNH LƯỢNG RÕ RÀNG VÀ PHÂN BỔ 3 CẤP ĐỘ NHIỆM VỤ MỖI NGÀY:
-   - Nhiệm vụ 1: Độ khó EASY (DỄ) - Hành động vi mô khởi động / tích lũy nền tảng phù hợp với lĩnh vực. Thưởng: 80-120 Linh Lực (EXP), 10-15 Nguyên Thạch.
-   - Nhiệm vụ 2: Độ khó MEDIUM (VỪA) - Nhiệm vụ thực chiến trọng tâm của ngày (học sâu, code thực tế, luyện tập chính). Thưởng: 150-250 Linh Lực (EXP), 20-30 Nguyên Thạch.
-   - Nhiệm vụ 3: Độ khó HARD (KHÓ) - Thử thách cực hạn bứt phá vùng an toàn / sản phẩm hoàn chỉnh / sprint chuyên sâu. Thưởng: 300-500 Linh Lực (EXP), 40-60 Nguyên Thạch.
+3. PHÂN BỔ 5 CẤP ĐỘ NHIỆM VỤ MỖI NGÀY:
+   - 2 Nhiệm vụ độ khó EASY (DỄ): Chỉ tiêu vừa sức khởi đầu (Ví dụ: Gập bụng 30 lần, Chống đẩy 20 cái, Squat 35 cái, Đọc 15 trang, Học 15 từ). Thưởng: 80-120 Linh Lực (EXP), 10-15 Nguyên Thạch.
+   - 2 Nhiệm vụ độ khó MEDIUM (VỪA): Trọng tâm thực chiến (Ví dụ: Gập bụng 60 lần, Chống đẩy 40 cái, Squat 60 cái, Code 60 dòng, Học 40 phút). Thưởng: 150-250 Linh Lực (EXP), 20-30 Nguyên Thạch.
+   - 1 Nhiệm vụ độ khó HARD (KHÓ): Cực hạn bứt phá (Ví dụ: 100 lần gập bụng, 100 cái squat, 60 cái chống đẩy, Chạy 3.5km, Code module hoàn chỉnh). Thưởng: 300-500 Linh Lực (EXP), 40-60 Nguyên Thạch.
 
-QUY TẮC ĐỊNH DẠNG:
-- "campaignTitle": Tiêu đề chiến dịch đậm chất Hệ Thống Solo Leveling (ví dụ: "[HỆ THỐNG] Khởi Động: Thăng Cấp Lập Trình Viên", "[HỆ THỐNG] Chinh Phục Cảnh Giới: Ngoại Ngữ Thượng Thừa", v.v.).
-- "title": Bắt buộc chứa HÀNH ĐỘNG CỤ THỂ + CON SỐ ĐỊNH LƯỢNG (Ví dụ: "Học sâu Pomodoro 45 phút", "Viết 60 dòng code chuẩn Clean Code", "Học 20 từ vựng IELTS").
-- "subtitle": Lời huấn thị nghiêm khắc, hướng dẫn kỹ thuật phong cách Hệ Thống Solo Leveling (Ví dụ: "Tập trung tuyệt đối, ngắt kết nối mạng xã hội. Không hoàn thành sẽ bị xử phạt!").
-- "difficulty": CHỈ được là một trong 3 giá trị: "EASY", "MEDIUM", "HARD".
-- "iconType": Chọn một trong: "study", "fitness", "walk", "meditation", "water", "medal".
-- Trả về đúng 3 nhiệm vụ.
+QUY TẮC ĐỊNH DẠNG JSON:
+- "campaignTitle": Tiêu đề chiến dịch đậm chất Solo Leveling (Ví dụ: "[HỆ THỐNG] Mệnh Lệnh Rèn Luyện: ${goalPrompt}").
+- "title": Tên bài tập / hành động + số lượng rõ ràng (Ví dụ: "Gập bụng (Sit-ups) 50 lần", "Chống đẩy (Push-ups) 35 cái", "Squat 50 lần").
+- "subtitle": Lời huấn thị nghiêm khắc từ Hệ Thống (Ví dụ: "Chia 3 hiệp, siết cơ chuẩn form. Không hoàn thành sẽ bị xử phạt!").
+- "difficulty": "EASY", "MEDIUM", hoặc "HARD".
+- "iconType": "fitness", "study", "walk", "meditation", "water", "medal".
+- Trả về đúng 5 nhiệm vụ (2 EASY, 2 MEDIUM, 1 HARD).
 
-Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đúng cấu trúc sau:
+Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm:
 {
   "campaignTitle": "[HỆ THỐNG] Thăng Cấp Thợ Săn: ${goalPrompt}",
   "durationDays": ${calculatedDuration},
   "quests": [
     {
-      "title": "Tiêu đề hành động định lượng",
-      "subtitle": "Lời huấn thị nghiêm khắc từ Hệ Thống",
+      "title": "Gập bụng (Sit-ups) 35 lần",
+      "subtitle": "Chia 2 hiệp, siết chặt cơ bụng khởi đầu",
       "difficulty": "EASY",
       "expReward": 100,
       "stoneReward": 15,
-      "iconType": "study",
+      "iconType": "fitness",
+      "isDaily": true
+    },
+    {
+      "title": "Plank siết cơ bụng 45 giây",
+      "subtitle": "Giữ thẳng sống lưng, thở đều đặn",
+      "difficulty": "EASY",
+      "expReward": 110,
+      "stoneReward": 15,
+      "iconType": "fitness",
+      "isDaily": true
+    },
+    {
+      "title": "Chống đẩy (Push-ups) 30 cái",
+      "subtitle": "Ngực sát đất, siết cơ lõi chuẩn form",
+      "difficulty": "MEDIUM",
+      "expReward": 220,
+      "stoneReward": 25,
+      "iconType": "fitness",
+      "isDaily": true
+    },
+    {
+      "title": "Gập bụng đạp xe (Bicycle Crunches) 50 lần",
+      "subtitle": "Khai phá toàn diện cơ liên sườn và bụng dưới",
+      "difficulty": "MEDIUM",
+      "expReward": 240,
+      "stoneReward": 28,
+      "iconType": "fitness",
+      "isDaily": true
+    },
+    {
+      "title": "Squat (Gánh đùi) 70 cái",
+      "subtitle": "Đùi song song mặt đất, bứt phá giới hạn thể lực",
+      "difficulty": "HARD",
+      "expReward": 420,
+      "stoneReward": 50,
+      "iconType": "medal",
       "isDaily": true
     }
   ]
@@ -211,7 +256,7 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
           finalDuration = parsed.durationDays;
         }
         if (Array.isArray(parsed.quests) && parsed.quests.length > 0) {
-          rawQuests = parsed.quests.slice(0, 3);
+          rawQuests = parsed.quests.slice(0, 5);
         }
       } catch (err: any) {
         this.logger.warn(`Lỗi khi gọi Gemini AI: ${err.message}. Chuyển sang quy tắc nội bộ.`);
@@ -224,8 +269,8 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
       campaignTitle = `[HỆ THỐNG] Nhiệm Vụ Hàng Ngày: ${goalPrompt}`;
     }
 
-    // 3. Chuẩn hóa danh sách Quests (luôn đảm bảo 3 nhiệm vụ mỗi ngày)
-    const quests: GeneratedQuest[] = rawQuests.slice(0, 3).map((q, idx) => {
+    // 3. Chuẩn hóa danh sách Quests (luôn đảm bảo 5 nhiệm vụ mỗi ngày)
+    const quests: GeneratedQuest[] = rawQuests.slice(0, 5).map((q, idx) => {
       let diff = QuestDifficulty.MEDIUM;
       if (q.difficulty === 'EASY') diff = QuestDifficulty.EASY;
       else if (q.difficulty === 'HARD') diff = QuestDifficulty.HARD;
@@ -343,6 +388,14 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
   async completeQuest(
     userId: string,
     questId: string,
+    body?: {
+      allCompleted?: boolean;
+      streakDays?: number;
+      localDate?: string;
+      questTitle?: string;
+      exp?: number;
+      spiritStones?: number;
+    },
   ): Promise<{
     questId: string;
     expAwarded: number;
@@ -365,15 +418,15 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
       }
     }
 
-    const expAwarded = targetQuest?.expReward || 150;
-    const stonesAwarded = targetQuest?.stoneReward || 20;
+    const expAwarded = body?.exp || targetQuest?.expReward || 150;
+    const stonesAwarded = body?.spiritStones || targetQuest?.stoneReward || 20;
 
     // Cộng Linh Lực & Linh Thạch qua CultivationService
     const expResult = await this.cultivationService.addExp(userId, expAwarded);
     await this.cultivationService.addSpiritStones(
       userId,
       stonesAwarded,
-      `Thưởng hoàn thành nhiệm vụ: ${targetQuest?.title || questId}`,
+      `Thưởng hoàn thành nhiệm vụ: ${body?.questTitle || targetQuest?.title || questId}`,
     );
 
     // Cập nhật Supabase
@@ -392,15 +445,16 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
     }
 
     // Kiểm tra xem tất cả nhiệm vụ trong chiến dịch hôm nay đã hoàn thành chưa
-    let allCompleted = false;
-    let streakIncremented = false;
+    let allCompleted = body?.allCompleted === true;
 
-    for (const c of userCamps) {
-      if (c.quests.some((item) => item.id === questId)) {
-        if (c.quests.length > 0 && c.quests.every((q) => q.isCompleted || q.isXpClaimed)) {
-          allCompleted = true;
+    if (!allCompleted) {
+      for (const c of userCamps) {
+        if (c.quests.some((item) => item.id === questId)) {
+          if (c.quests.length > 0 && c.quests.every((q) => q.isCompleted || q.isXpClaimed)) {
+            allCompleted = true;
+          }
+          break;
         }
-        break;
       }
     }
 
@@ -430,12 +484,16 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
     }
 
     let finalCultivationState = expResult.profile;
+    let streakIncremented = false;
+
     if (allCompleted) {
-      const streakRes = await this.cultivationService.incrementStreakIfEligible(userId);
-      if (streakRes.streakIncremented) {
-        streakIncremented = true;
-        finalCultivationState = streakRes.profile;
-      }
+      const streakRes = await this.cultivationService.incrementStreakIfEligible(
+        userId,
+        body?.localDate,
+        body?.streakDays,
+      );
+      finalCultivationState = streakRes.profile;
+      streakIncremented = streakRes.streakIncremented;
     }
 
     return {
@@ -446,6 +504,166 @@ Trả về DUY NHẤT một JSON hợp lệ không có giải thích thêm, đú
       streakIncremented,
       cultivation: finalCultivationState,
     };
+  }
+
+  async generateExtraQuest(
+    userId: string,
+    goalPrompt: string,
+    existingTitles: string[] = [],
+    campaignId?: string,
+  ): Promise<GeneratedQuest> {
+    let resolvedCampaignId = campaignId;
+    const client = this.supabaseService.getClient();
+
+    if (!resolvedCampaignId) {
+      if (client) {
+        try {
+          const { data: dbCamps } = await client
+            .from('campaigns')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('status', 'ACTIVE')
+            .order('created_at', { ascending: false })
+            .limit(1);
+          if (dbCamps && dbCamps.length > 0) {
+            resolvedCampaignId = dbCamps[0].id;
+          }
+        } catch (_) {}
+      }
+      if (!resolvedCampaignId) {
+        const userCamps = this.inMemoryCampaigns.get(userId) || [];
+        const active = userCamps.find((c) => c.status === 'ACTIVE');
+        if (active) resolvedCampaignId = active.id;
+      }
+    }
+    if (!resolvedCampaignId) {
+      resolvedCampaignId = `camp-${Date.now()}`;
+    }
+
+    let rawQuest: {
+      title: string;
+      subtitle: string;
+      difficulty: string;
+      expReward?: number;
+      stoneReward?: number;
+      iconType?: string;
+      isDaily?: boolean;
+    } | null = null;
+
+    if (this.genAiClient) {
+      try {
+        const prompt = `Bạn là "HỆ THỐNG SOLO LEVELING" (Giao diện ban bố Mệnh Lệnh Nhiệm Vụ Hàng Ngày tối thượng).
+Người chơi (Người Thức Tỉnh) muốn LÀM THÊM / BỨT PHÁ GIỚI HẠN với mục tiêu: "${goalPrompt}".
+Danh sách các nhiệm vụ hiện tại đã có (TUYỆT ĐỐI KHÔNG ĐƯỢC TRÙNG LẶP):
+${existingTitles.length > 0 ? existingTitles.map((t) => `- ${t}`).join('\n') : '- Chưa có nhiệm vụ nào'}
+
+QUY TẮC CỐT TỬ:
+1. MỆNH LỆNH HÀNH ĐỘNG CÓ SỐ ĐO ĐẾM RÕ RÀNG (Actionable reps & quantifiable metrics):
+   - BẮT BUỘC có số đếm dứt khoát: [Tên động tác/hành động] + [Số lượng cụ thể] (Ví dụ: "Gập bụng đạp xe 50 lần", "Nhảy dây 300 cái", "Hít xà đơn 15 cái", "Đọc 20 trang sách", "Giải 1 bài LeetCode").
+2. TUYỆT ĐỐI CẤM LỜI NHẮC NHỞ, KHUYÊN BẢO MƠ HỒ ("uống nước", "nghỉ ngơi", "ngủ sớm").
+3. ĐÂY LÀ NHIỆM VỤ LÀM THÊM ĐỘT PHÁ:
+   - Độ khó nên là HARD hoặc MEDIUM.
+   - Thưởng: 250-450 Linh Lực (EXP), 30-50 Nguyên Thạch.
+
+Trả về DUY NHẤT một JSON hợp lệ:
+{
+  "title": "Gập bụng đạp xe (Bicycle Crunches) 50 lần",
+  "subtitle": "Khai mở cực hạn cơ thể, siết chặt cơ liên sườn chuẩn form",
+  "difficulty": "HARD",
+  "expReward": 350,
+  "stoneReward": 40,
+  "iconType": "fitness",
+  "isDaily": true
+}`;
+
+        const candidateModels = [
+          'gemini-2.5-flash',
+          'gemini-2.0-flash',
+          'gemini-1.5-flash',
+        ];
+
+        let response: any;
+        for (const model of candidateModels) {
+          try {
+            response = await this.genAiClient.models.generateContent({
+              model,
+              contents: prompt,
+              config: {
+                responseMimeType: 'application/json',
+                temperature: 0.9,
+              },
+            });
+            if (response?.text) break;
+          } catch (modelErr: any) {
+            this.logger.debug(`Model ${model} không khả dụng cho extra quest: ${modelErr.message}`);
+          }
+        }
+
+        const text = response?.text?.trim() || '';
+        const parsed = JSON.parse(text);
+        if (parsed.title) {
+          rawQuest = parsed;
+        }
+      } catch (err: any) {
+        this.logger.warn(`Lỗi Gemini AI khi tạo extra quest: ${err.message}`);
+      }
+    }
+
+    if (!rawQuest) {
+      rawQuest = generateSingleExtraFallbackQuest(goalPrompt, existingTitles);
+    }
+
+    let diff = QuestDifficulty.HARD;
+    if (rawQuest.difficulty === 'EASY') diff = QuestDifficulty.EASY;
+    else if (rawQuest.difficulty === 'MEDIUM') diff = QuestDifficulty.MEDIUM;
+    else if (rawQuest.difficulty === 'BREAKTHROUGH') diff = QuestDifficulty.BREAKTHROUGH;
+
+    const rewardTier = DIFFICULTY_REWARDS[diff];
+    const expReward = rawQuest.expReward || rewardTier.minExp;
+    const stoneReward = rawQuest.stoneReward || rewardTier.minStones;
+
+    const quest: GeneratedQuest = {
+      id: `q-${Date.now()}-extra`,
+      campaignId: resolvedCampaignId,
+      title: rawQuest.title,
+      subtitle: rawQuest.subtitle || 'Nhiệm vụ bứt phá làm thêm',
+      difficulty: diff,
+      expReward,
+      stoneReward,
+      iconType: rawQuest.iconType || 'medal',
+      isDaily: true,
+      isCompleted: false,
+      isXpClaimed: false,
+    };
+
+    if (client) {
+      try {
+        await client.from('quests').insert({
+          id: quest.id,
+          campaign_id: quest.campaignId,
+          user_id: userId,
+          title: quest.title,
+          subtitle: quest.subtitle,
+          difficulty: quest.difficulty,
+          exp_reward: quest.expReward,
+          stone_reward: quest.stoneReward,
+          icon_type: quest.iconType,
+          is_daily: true,
+          is_completed: false,
+          is_xp_claimed: false,
+        });
+      } catch (err: any) {
+        this.logger.warn(`Lỗi lưu quest bổ sung vào Supabase: ${err.message}`);
+      }
+    }
+
+    const userCamps = this.inMemoryCampaigns.get(userId) || [];
+    const activeCamp = userCamps.find((c) => c.id === resolvedCampaignId);
+    if (activeCamp) {
+      activeCamp.quests.push(quest);
+    }
+
+    return quest;
   }
 
   private generateFallbackQuests(prompt: string) {

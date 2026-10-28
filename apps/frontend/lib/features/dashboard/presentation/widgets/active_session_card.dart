@@ -7,6 +7,7 @@ class ActiveSessionCard extends StatelessWidget {
   final int campaignCurrentDay;
   final int campaignTotalDays;
   final int completedCount;
+  final int? totalQuests;
 
   const ActiveSessionCard({
     super.key,
@@ -14,6 +15,7 @@ class ActiveSessionCard extends StatelessWidget {
     required this.campaignCurrentDay,
     required this.campaignTotalDays,
     required this.completedCount,
+    this.totalQuests,
   });
 
   @override
@@ -164,9 +166,9 @@ class ActiveSessionCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '$completedCount/3 nhiệm vụ hôm nay',
+                    '$completedCount/${totalQuests ?? 5} nhiệm vụ hôm nay',
                     style: TextStyle(
-                      color: completedCount == 3 ? const Color(0xFF10B981) : const Color(0xFFF2C465),
+                      color: completedCount >= (totalQuests ?? 5) ? const Color(0xFF10B981) : const Color(0xFFF2C465),
                       fontSize: 11.5,
                       fontWeight: FontWeight.w600,
                     ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../../core/constants/api_constants.dart';
 import '../../../auth/domain/user_model.dart';
 import '../../data/cultivation_repository.dart';
 import '../../data/leaderboard_repository.dart';
@@ -82,6 +83,32 @@ class _LeaderboardViewState extends State<LeaderboardView> {
     _fetchLeaderboard();
   }
 
+  int _calculateRank(int streak, int quests, CultivationProfileModel? profile) {
+    final items = _leaderboardData?.items ?? [];
+    if (items.isEmpty) return 1;
+
+    final existingIdx = items.indexWhere((e) => e.isCurrentUser || e.userId == widget.currentUser.id);
+    if (existingIdx != -1) return items[existingIdx].rank;
+
+    for (int i = 0; i < items.length; i++) {
+      final it = items[i];
+      if (_selectedSort == 'streak') {
+        if (streak > it.streakDays) return i + 1;
+      } else if (_selectedSort == 'quests') {
+        if (quests > it.completedQuestsCount) return i + 1;
+      } else if (_selectedSort == 'realm') {
+        final pRealm = profile?.realmIndex ?? 0;
+        final pSub = profile?.subRealm ?? 1;
+        if (pRealm > it.realmIndex || (pRealm == it.realmIndex && pSub > it.subRealm)) {
+          return i + 1;
+        }
+      } else {
+        if (streak > it.streakDays) return i + 1;
+      }
+    }
+    return items.length + 1;
+  }
+
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -106,50 +133,112 @@ class _LeaderboardViewState extends State<LeaderboardView> {
                 ),
               ),
               const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'BẢNG PHONG THẦN • LEO TOP',
-                    style: TextStyle(
-                      color: Color(0xFFE8B95E),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.6,
-                    ),
-                  ),
-                  ShaderMask(
-                    shaderCallback: (bounds) => const LinearGradient(
-                      colors: [
-                        Color(0xFFFFFFFF),
-                        Color(0xFFFFF2D1),
-                        Color(0xFFF6CE70),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ).createShader(bounds),
-                    child: Text(
-                      'Thiên Kiêu Tiên Lộ',
-                      style: GoogleFonts.dancingScript(
-                        color: Colors.white,
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        height: 1.15,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'BẢNG PHONG THẦN • LEO TOP',
+                      style: TextStyle(
+                        color: Color(0xFFE8B95E),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.6,
                       ),
                     ),
-                  ),
-                ],
+                    ShaderMask(
+                      shaderCallback: (bounds) => const LinearGradient(
+                        colors: [
+                          Color(0xFFFFFFFF),
+                          Color(0xFFFFF2D1),
+                          Color(0xFFF6CE70),
+                        ],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ).createShader(bounds),
+                      child: Text(
+                        'Thiên Kiêu Tiên Lộ',
+                        style: GoogleFonts.dancingScript(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          height: 1.15,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: _isLoading
+                    ? null
+                    : () {
+                        widget.onRefreshParent?.call();
+                        _fetchLeaderboard();
+                      },
+                icon: _isLoading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Color(0xFFF3C766),
+                        ),
+                      )
+                    : const Icon(
+                        Icons.refresh_rounded,
+                        color: Color(0xFFF3C766),
+                        size: 22,
+                      ),
+                tooltip: 'Đồng bộ bảng phong thần',
               ),
             ],
           ),
           const SizedBox(height: 6),
-          Text(
-            'Trật tự sắp xếp: Chuỗi ngày tu luyện ➔ Nhiệm vụ hoàn thành ➔ Cảnh giới tầng X',
-            style: TextStyle(
-              fontSize: 11.5,
-              color: const Color(0xFF94A3B8).withValues(alpha: 0.9),
-              fontStyle: FontStyle.italic,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Text(
+                  'Chuỗi tu luyện ➔ Nhiệm vụ hoàn thành ➔ Cảnh giới',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    color: const Color(0xFF94A3B8).withValues(alpha: 0.9),
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: (ApiConstants.isLocal
+                          ? const Color(0xFF10B981)
+                          : const Color(0xFF38BDF8))
+                      .withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(
+                    color: (ApiConstants.isLocal
+                            ? const Color(0xFF10B981)
+                            : const Color(0xFF38BDF8))
+                        .withValues(alpha: 0.4),
+                    width: 0.8,
+                  ),
+                ),
+                child: Text(
+                  ApiConstants.isLocal ? '⚡ Local API' : '☁️ Cloud API',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: ApiConstants.isLocal
+                        ? const Color(0xFF34D399)
+                        : const Color(0xFF7DD3FC),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -160,6 +249,28 @@ class _LeaderboardViewState extends State<LeaderboardView> {
   Widget build(BuildContext context) {
     final items = _leaderboardData?.items ?? [];
     final currentUserItem = _leaderboardData?.currentUser;
+    final resolvedCurrentUser = currentUserItem ??
+        LeaderboardItem(
+          rank: _calculateRank(
+            widget.streakDays,
+            widget.completedCount,
+            widget.cultivationProfile,
+          ),
+          userId: widget.currentUser.id,
+          displayName: widget.currentUser.displayName,
+          avatarUrl: widget.currentUser.photoUrl,
+          streakDays: widget.streakDays,
+          completedQuestsCount: widget.completedCount,
+          realmIndex: widget.cultivationProfile?.realmIndex ?? 0,
+          realmName: widget.cultivationProfile?.realmName ?? 'Phàm Nhân',
+          subRealm: widget.cultivationProfile?.subRealm ?? 1,
+          realmText: widget.cultivationProfile != null
+              ? '${widget.cultivationProfile!.realmName} Tầng ${widget.cultivationProfile!.subRealm}'
+              : 'Phàm Nhân',
+          totalExp: widget.cultivationProfile?.totalExp ?? 0,
+          isCurrentUser: true,
+          isNpc: false,
+        );
 
     return RefreshIndicator(
       onRefresh: () async {
@@ -184,9 +295,7 @@ class _LeaderboardViewState extends State<LeaderboardView> {
             ),
             const SizedBox(height: 16),
 
-            if (currentUserItem != null) ...[
-              UserStandingCard(currentUser: currentUserItem),
-            ],
+            UserStandingCard(currentUser: resolvedCurrentUser),
 
             if (_isLoading) ...[
               const SizedBox(height: 60),

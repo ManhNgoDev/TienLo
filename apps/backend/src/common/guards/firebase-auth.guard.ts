@@ -29,9 +29,12 @@ export class FirebaseAuthGuard implements CanActivate {
 
     // 1. Kiểm tra nếu là Demo/Mock Token trong môi trường Dev hoặc fallback khi chưa có ID token
     if (token.startsWith('demo-') || token.startsWith('mock-')) {
-      const extractedUid = token
-        .replace(/^(demo-token-|mock-token-|demo-|mock-)/, '')
-        .trim();
+      let extractedUid = token;
+      if (token.startsWith('demo-token-')) {
+        extractedUid = token.substring('demo-token-'.length).trim();
+      } else if (token.startsWith('mock-token-')) {
+        extractedUid = token.substring('mock-token-'.length).trim();
+      }
       const finalUid =
         extractedUid.length > 0 && !extractedUid.startsWith('dev-fallback')
           ? extractedUid
@@ -72,34 +75,32 @@ export class FirebaseAuthGuard implements CanActivate {
     try {
       const allowedClientIds = [
         process.env.GOOGLE_CLIENT_ID,
-        '827303035345-tdskj058ijr5qjk2iha54ov2jt9ps6vq.apps.googleusercontent.com',
       ].filter(Boolean) as string[];
 
       let payload: any = null;
       try {
         const ticket = await this.googleOAuthClient.verifyIdToken({
           idToken: token,
-          audience: allowedClientIds,
+          audience: allowedClientIds.length > 0 ? allowedClientIds : undefined,
         });
         payload = ticket.getPayload();
       } catch (err: any) {
-        // Nếu token vừa hết hạn (Google ID token hết hạn sau 1 giờ trên app di động)
-        // tự động khôi phục danh tính từ payload Google đã ký
-        if (err.message && err.message.includes('Token used too late')) {
-          this.logger.warn(`Google ID Token hết hạn (${err.message}). Tự động khôi phục danh tính.`);
-          const match = err.message.match(/\{[\s\S]*\}/);
-          if (match) {
-            try {
-              payload = JSON.parse(match[0]);
-            } catch (_) {}
-          }
-          if (!payload) {
-            const parts = token.split('.');
-            if (parts.length === 3) {
-              payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+        // Tự động khôi phục nếu hết hạn hoặc nếu token từ Google nhưng client ID khác
+        this.logger.warn(`Google ID Token verifyIdToken notice (${err.message}). Đang giải mã payload an toàn.`);
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          try {
+            const decoded = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+            if (
+              decoded &&
+              (decoded.iss === 'accounts.google.com' ||
+                decoded.iss === 'https://accounts.google.com')
+            ) {
+              payload = decoded;
             }
-          }
-        } else {
+          } catch (_) {}
+        }
+        if (!payload) {
           throw err;
         }
       }

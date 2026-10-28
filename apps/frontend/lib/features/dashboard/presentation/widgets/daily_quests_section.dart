@@ -8,12 +8,16 @@ class DailyQuestsSection extends StatelessWidget {
   final List<QuestItem> quests;
   final int completedCount;
   final ValueChanged<QuestItem> onToggleQuest;
+  final VoidCallback? onAddExtraQuest;
+  final bool isGeneratingExtra;
 
   const DailyQuestsSection({
     super.key,
     required this.quests,
     required this.completedCount,
     required this.onToggleQuest,
+    this.onAddExtraQuest,
+    this.isGeneratingExtra = false,
   });
 
   Widget _buildEmptyQuestsCard() {
@@ -120,7 +124,7 @@ class DailyQuestsSection extends StatelessWidget {
                     end: Alignment.bottomRight,
                   ).createShader(bounds),
                   child: Text(
-                    'Ba hành động tạo khác biệt',
+                    'Nhiệm vụ rèn luyện thăng cấp',
                     style: GoogleFonts.dancingScript(
                       color: Colors.white,
                       fontSize: 26,
@@ -193,11 +197,151 @@ class DailyQuestsSection extends StatelessWidget {
         // List of Quests or Empty State
         if (quests.isEmpty)
           _buildEmptyQuestsCard()
-        else
+        else ...[
           ...quests.map((quest) => QuestCard(
                 quest: quest,
                 onToggle: onToggleQuest,
               )),
+          if (onAddExtraQuest != null) ...[
+            const SizedBox(height: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: isGeneratingExtra ? null : onAddExtraQuest,
+                    borderRadius: BorderRadius.circular(18),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFFC59A44).withValues(alpha: 0.18),
+                            const Color(0xFF10B981).withValues(alpha: 0.12),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(
+                          color: const Color(0xFFC59A44).withValues(alpha: 0.55),
+                          width: 1.2,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFC59A44).withValues(alpha: 0.15),
+                            blurRadius: 12,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFE5A93C), Color(0xFFF7D382)],
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFE5A93C).withValues(alpha: 0.4),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: isGeneratingExtra
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2.2,
+                                        color: Color(0xFF0D1B2A),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.auto_awesome_rounded,
+                                      color: Color(0xFF0D1B2A),
+                                      size: 20,
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      isGeneratingExtra
+                                          ? 'ĐANG DIỄN TOÁN NHIỆM VỤ...'
+                                          : 'KHAI MỞ THÊM NHIỆM VỤ',
+                                      style: const TextStyle(
+                                        color: Color(0xFFF2C465),
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.8,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF10B981).withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(6),
+                                        border: Border.all(
+                                          color: const Color(0xFF10B981).withValues(alpha: 0.6),
+                                          width: 0.8,
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        '+1 AI',
+                                        style: TextStyle(
+                                          color: Color(0xFF34D399),
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  isGeneratingExtra
+                                      ? 'Thiên Đạo AI đang thấu thị mục tiêu để ban bố mệnh lệnh...'
+                                      : 'Muốn rèn luyện thêm? Nhấn để AI tạo thêm nhiệm vụ bứt phá!',
+                                  style: const TextStyle(
+                                    color: Color(0xFF8BA5BA),
+                                    fontSize: 11.5,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 14,
+                            color: const Color(0xFFF2C465).withValues(alpha: 0.7),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
       ],
     );
   }

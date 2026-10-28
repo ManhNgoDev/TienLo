@@ -54,17 +54,22 @@ class AuthService {
     }
   }
 
-  /// Đăng nhập chế độ giả lập (Dành cho Dev khi chưa thiết lập Google Cloud OAuth / Firebase)
-  Future<AuthResult> signInWithDemo() async {
+  /// Đăng nhập chế độ giả lập (Dành cho Dev khi test local hoặc chưa thiết lập Firebase)
+  Future<AuthResult> signInWithDemo({
+    String uid = 'demo-google-uid-123456',
+    String displayName = 'Mạnh Ngô (Dev)',
+    String email = 'manh.ngo@tienlo.app',
+    String? photoUrl,
+  }) async {
     // Giả lập network delay nhẹ
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 300));
 
     return AuthResult(
-      idToken: 'demo-token-${DateTime.now().millisecondsSinceEpoch}',
-      uid: 'demo-google-uid-123456',
-      email: 'manh.ngo@tienlo.app',
-      displayName: 'Mạnh Ngô (Dev)',
-      photoUrl: null,
+      idToken: 'demo-token-$uid',
+      uid: uid,
+      email: email,
+      displayName: displayName,
+      photoUrl: photoUrl,
     );
   }
 

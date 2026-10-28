@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import '../bug_report_dialog.dart';
 
 class AccountSettingsCard extends StatelessWidget {
   final int spiritStones;
@@ -147,6 +148,21 @@ class AccountSettingsCard extends StatelessWidget {
                         ),
                       );
                     },
+                  ),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 14),
+                    height: 1,
+                    color: const Color(0xFF1E2F40),
+                  ),
+                  _buildTile(
+                    icon: Icons.bug_report_rounded,
+                    iconColor: const Color(0xFFEF4444),
+                    title: 'Báo cáo sự cố & Góp ý',
+                    subtitle: 'Gửi lỗi trực tiếp tới Gmail Quản Trị Viên',
+                    onTap: () => showBugReportDialog(
+                      context,
+                      screenName: 'Màn hình Hồ sơ Cá nhân (Đã đăng nhập)',
+                    ),
                   ),
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 14),

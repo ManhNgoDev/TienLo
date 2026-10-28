@@ -175,6 +175,7 @@ class AppUpdateService {
         return OtaUpdate().execute(
           downloadUrl,
           destinationFilename: 'TienLo-release.apk',
+          androidProviderAuthority: 'com.tienlo.frontend.ota_update_provider',
         );
       } catch (e) {
         debugPrint('[AppUpdateService] OtaUpdate execute error: $e');

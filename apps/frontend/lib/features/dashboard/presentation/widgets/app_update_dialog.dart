@@ -61,19 +61,39 @@ class _AppUpdateDialogState extends State<AppUpdateDialog> {
                 break;
               case OtaStatus.INSTALLING:
                 _progress = 1.0;
-                _statusText = 'Tải hoàn tất! Đang khởi tạo cài đặt đè...';
+                _statusText = 'Tải hoàn tất! Đang mở trình cài đặt hệ thống...';
+                break;
+              case OtaStatus.INSTALLATION_DONE:
+                _progress = 1.0;
+                _statusText = 'Cài đặt hoàn tất!';
+                _isDownloading = false;
                 break;
               case OtaStatus.ALREADY_RUNNING_ERROR:
                 _errorMessage = 'Quá trình tải đang diễn ra trong nền.';
                 _isDownloading = false;
                 break;
               case OtaStatus.PERMISSION_NOT_GRANTED_ERROR:
-                _errorMessage = 'Thiếu quyền cài đặt ứng dụng từ nguồn không xác định. Vui lòng cấp quyền trong Cài đặt.';
+                _errorMessage = 'Thiếu quyền cài đặt ứng dụng từ nguồn không xác định. Vui lòng cấp quyền trong Cài đặt thiết bị.';
+                _isDownloading = false;
+                break;
+              case OtaStatus.DOWNLOAD_ERROR:
+                _errorMessage = 'Tải bản cập nhật thất bại: ${event.value ?? 'Lỗi tải tệp'}.';
+                _isDownloading = false;
+                break;
+              case OtaStatus.CHECKSUM_ERROR:
+                _errorMessage = 'Tệp cài đặt APK không toàn vẹn (Lỗi mã kiểm tra).';
+                _isDownloading = false;
+                break;
+              case OtaStatus.INSTALLATION_ERROR:
+                _errorMessage = 'Không thể mở trình cài đặt: ${event.value ?? 'Lỗi cài đặt'}.';
+                _isDownloading = false;
+                break;
+              case OtaStatus.CANCELED:
+                _statusText = 'Đã hủy tải bản cập nhật.';
                 _isDownloading = false;
                 break;
               case OtaStatus.INTERNAL_ERROR:
-              default:
-                _errorMessage = 'Không thể tải bản cập nhật: ${event.value ?? 'Lỗi không xác định'}.';
+                _errorMessage = 'Không thể cập nhật: ${event.value ?? 'Lỗi không xác định'}.';
                 _isDownloading = false;
                 break;
             }

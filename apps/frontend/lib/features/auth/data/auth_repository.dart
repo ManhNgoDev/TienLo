@@ -28,9 +28,19 @@ class AuthRepository {
     return _syncAndSave(authResult);
   }
 
-  /// Đăng nhập chế độ thử nghiệm (Demo)
-  Future<UserModel> signInWithDemo() async {
-    final authResult = await _authService.signInWithDemo();
+  /// Đăng nhập chế độ thử nghiệm (Demo / Local Dev)
+  Future<UserModel> signInWithDemo({
+    String uid = 'demo-google-uid-123456',
+    String displayName = 'Mạnh Ngô (Dev)',
+    String email = 'manh.ngo@tienlo.app',
+    String? photoUrl,
+  }) async {
+    final authResult = await _authService.signInWithDemo(
+      uid: uid,
+      displayName: displayName,
+      email: email,
+      photoUrl: photoUrl,
+    );
     return _syncAndSave(authResult);
   }
 
@@ -80,8 +90,15 @@ class AuthRepository {
 
   /// Lấy token hợp lệ (tự động làm mới qua GoogleSignIn nếu cần)
   Future<String?> getValidToken() async {
+    final saved = await getSavedToken();
+    if (saved != null && (saved.startsWith('demo-') || saved.startsWith('mock-'))) {
+      return saved;
+    }
+
     try {
-      final freshToken = await _authService.getFreshIdToken();
+      final freshToken = await _authService
+          .getFreshIdToken()
+          .timeout(const Duration(seconds: 2));
       if (freshToken != null && freshToken.isNotEmpty) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString(_keyToken, freshToken);
@@ -89,7 +106,7 @@ class AuthRepository {
       }
     } catch (_) {}
 
-    return getSavedToken();
+    return saved;
   }
 
   /// Kiểm tra trạng thái đăng nhập

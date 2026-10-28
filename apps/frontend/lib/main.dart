@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'core/constants/api_constants.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/data/auth_repository.dart';
@@ -35,13 +34,7 @@ class _TienLoAppState extends State<TienLoApp> {
 
   Future<void> _checkInitialState() async {
     // 1. Tải URL cấu hình nếu có trong SharedPreferences
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final savedUrl = prefs.getString('custom_backend_url');
-      if (savedUrl != null && savedUrl.trim().isNotEmpty) {
-        ApiConstants.customBaseUrl = savedUrl.trim();
-      }
-    } catch (_) {}
+    await ApiConstants.loadSavedEnvironment();
 
     // 2. Kiểm tra tài khoản đã lưu
     final savedUser = await _authRepository.getSavedUser();

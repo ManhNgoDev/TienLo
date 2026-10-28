@@ -31,12 +31,78 @@ function pickRandom<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
 }
 
+function buildQuestsFromPools(
+  easyPool: QuestTemplate[],
+  medPool: QuestTemplate[],
+  hardPool: QuestTemplate[],
+  targetCount: number = 5,
+): Array<QuestTemplate & { isDaily: boolean }> {
+  const result: QuestTemplate[] = [];
+  const usedTitles = new Set<string>();
+
+  const pickFrom = (pool: QuestTemplate[], maxCount: number) => {
+    const shuffled = [...pool].sort(() => 0.5 - Math.random());
+    for (const item of shuffled) {
+      if (!usedTitles.has(item.title) && maxCount > 0) {
+        usedTitles.add(item.title);
+        result.push(item);
+        maxCount--;
+      }
+    }
+  };
+
+  // Ưu tiên: 2 EASY, 2 MEDIUM, 1 HARD (Tổng = 5)
+  pickFrom(easyPool, 2);
+  pickFrom(medPool, 2);
+  pickFrom(hardPool, 1);
+
+  // Nếu bất kỳ pool nào thiếu để đạt 5, bù đắp từ các pool còn lại
+  if (result.length < targetCount) {
+    const combined = [...medPool, ...hardPool, ...easyPool].sort(() => 0.5 - Math.random());
+    for (const item of combined) {
+      if (!usedTitles.has(item.title) && result.length < targetCount) {
+        usedTitles.add(item.title);
+        result.push(item);
+      }
+    }
+  }
+
+  // Dự phòng an toàn tuyệt đối
+  while (result.length < targetCount && (easyPool.length || medPool.length || hardPool.length)) {
+    const all = [...easyPool, ...medPool, ...hardPool];
+    result.push(pickRandom(all));
+  }
+
+  return result.slice(0, targetCount).map((q) => ({ ...q, isDaily: true }));
+}
+
 function cleanTopic(prompt: string): string {
   let cleaned = prompt
     .replace(/(tôi\s*(muốn|cần|đang|sẽ)|mục\s*tiêu|kế\s*hoạch|chiến\s*dịch|trong\s*\d+\s*(ngày|tuần|tháng)|trong\s*(nửa|một|hai|ba)\s*(tháng|tuần))/gi, '')
     .trim();
   if (cleaned.length < 3) cleaned = prompt.trim();
   return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+}
+
+export function generateSingleExtraFallbackQuest(
+  prompt: string,
+  existingTitles: string[] = [],
+): {
+  title: string;
+  subtitle: string;
+  difficulty: string;
+  expReward: number;
+  stoneReward: number;
+  iconType: string;
+  isDaily: boolean;
+} {
+  const allGenerated = generateFallbackQuests(prompt);
+  const existingSet = new Set(existingTitles);
+  const candidates = allGenerated.filter((q) => !existingSet.has(q.title));
+  if (candidates.length > 0) {
+    return candidates[Math.floor(Math.random() * candidates.length)];
+  }
+  return allGenerated[Math.floor(Math.random() * allGenerated.length)];
 }
 
 export function generateFallbackQuests(prompt: string): Array<{
@@ -128,11 +194,7 @@ export function generateFallbackQuests(prompt: string): Array<{
       },
     ];
 
-    return [
-      { ...pickRandom(easyPool), isDaily: true },
-      { ...pickRandom(medPool), isDaily: true },
-      { ...pickRandom(hardPool), isDaily: true },
-    ];
+    return buildQuestsFromPools(easyPool, medPool, hardPool, 5);
   }
 
   // 2. Ngoại ngữ (Tiếng Anh, IELTS, TOEIC, Tiếng Nhật, Hàn, Trung...)
@@ -156,6 +218,14 @@ export function generateFallbackQuests(prompt: string): Array<{
         stoneReward: 10,
         iconType: 'study',
       },
+      {
+        title: 'Luyện đọc to trôi chảy 1 đoạn văn ngoại ngữ 15 phút',
+        subtitle: 'Chú trọng ngữ điệu và ngắt nghỉ tự nhiên theo câu',
+        difficulty: 'EASY',
+        expReward: 90,
+        stoneReward: 12,
+        iconType: 'study',
+      },
     ];
 
     const medPool: QuestTemplate[] = [
@@ -173,6 +243,14 @@ export function generateFallbackQuests(prompt: string): Array<{
         difficulty: 'MEDIUM',
         expReward: 220,
         stoneReward: 26,
+        iconType: 'study',
+      },
+      {
+        title: 'Thực hành nói tiếng Anh theo chủ đề 25 phút bấm giờ',
+        subtitle: 'Mở rộng vốn câu và phản xạ giao tiếp tự tin',
+        difficulty: 'MEDIUM',
+        expReward: 225,
+        stoneReward: 27,
         iconType: 'study',
       },
     ];
@@ -196,30 +274,35 @@ export function generateFallbackQuests(prompt: string): Array<{
       },
     ];
 
-    return [
-      { ...pickRandom(easyPool), isDaily: true },
-      { ...pickRandom(medPool), isDaily: true },
-      { ...pickRandom(hardPool), isDaily: true },
-    ];
+    return buildQuestsFromPools(easyPool, medPool, hardPool, 5);
   }
 
   // 3. Chạy bộ / Đi bộ / Cardio sức bền
-  if (/chạy bộ|chạy|marathon|chay|cardio|nhảy dây|đi bộ|pace/i.test(lower)) {
+  if (/chạy bộ|chạy|marathon|chay|cardio|nhảy dây|đi bộ|pace|bước chân/i.test(lower)) {
     const km = pickRandom([3, 4, 5]);
+    const jumpRopes = pickRandom([250, 300, 350]);
     const easyPool: QuestTemplate[] = [
       {
-        title: 'Khởi động kỹ khớp cổ chân, đầu gối và cơ đùi 10 phút',
-        subtitle: 'Làm nóng nhịp tim để hạn chế tối đa nguy cơ chấn thương',
+        title: `Nhảy dây ${jumpRopes} cái nhịp nhàng`,
+        subtitle: 'Kích hoạt nhịp tim và điều hòa nhịp thở đều đặn',
         difficulty: 'EASY',
-        expReward: 80,
+        expReward: 85,
         stoneReward: 10,
         iconType: 'walk',
       },
       {
-        title: 'Đi bộ nhanh 1.5km hoặc nhảy dây 250 cái nhịp nhàng',
-        subtitle: 'Kích hoạt cơ gân kheo và điều hòa nhịp thở trước buổi chạy',
+        title: 'Đi bộ nhanh 1.5km hoặc chạy nhẹ 10 phút',
+        subtitle: 'Duy trì guồng chân đều đặn và hít thở sâu',
         difficulty: 'EASY',
         expReward: 90,
+        stoneReward: 12,
+        iconType: 'walk',
+      },
+      {
+        title: 'Squat bật nhảy (Jump Squats) 30 lần',
+        subtitle: 'Tăng cường sức bật và sức bền cơ đùi',
+        difficulty: 'EASY',
+        expReward: 95,
         stoneReward: 12,
         iconType: 'walk',
       },
@@ -233,6 +316,14 @@ export function generateFallbackQuests(prompt: string): Array<{
         expReward: 230,
         stoneReward: 28,
         iconType: 'walk',
+      },
+      {
+        title: 'Gập bụng 50 lần kết hợp bật nhảy Burpees 20 cái',
+        subtitle: 'Tổ hợp cardio đốt mỡ toàn thân cường độ cao',
+        difficulty: 'MEDIUM',
+        expReward: 240,
+        stoneReward: 28,
+        iconType: 'fitness',
       },
       {
         title: 'Chạy biến tốc (Fartlek): 6 hiệp chạy nhanh 1 phút xen kẽ đi bộ',
@@ -254,8 +345,8 @@ export function generateFallbackQuests(prompt: string): Array<{
         iconType: 'medal',
       },
       {
-        title: 'Chạy bền 45 phút liên tục kết hợp ép dẻo giãn cơ sâu sau chạy',
-        subtitle: 'Phục hồi cơ bắp toàn diện để chuẩn bị cho chuỗi ngày tiếp theo',
+        title: 'Thử thách Cardio: Nhảy dây 500 cái & Chạy bền 35 phút',
+        subtitle: 'Vượt ngưỡng mệt mỏi, nâng cấp thể lực toàn diện',
         difficulty: 'HARD',
         expReward: 440,
         stoneReward: 55,
@@ -263,37 +354,59 @@ export function generateFallbackQuests(prompt: string): Array<{
       },
     ];
 
-    return [
-      { ...pickRandom(easyPool), isDaily: true },
-      { ...pickRandom(medPool), isDaily: true },
-      { ...pickRandom(hardPool), isDaily: true },
-    ];
+    return buildQuestsFromPools(easyPool, medPool, hardPool, 5);
   }
 
-  // 4. Thể hình / Gym / Tăng cơ / Calisthenics
-  if (/gym|thể hình|tăng cơ|tạ|xà đơn|chống đẩy|hít đất|squat|cơ bụng|six pack|thể lực/i.test(lower)) {
+  // 4. Thể dục / Thể hình / Gym / Gập bụng / Chống đẩy / Calisthenics
+  if (/thể dục|tập thể dục|gym|thể hình|tăng cơ|tạ|xà đơn|chống đẩy|hít đất|squat|gập bụng|cơ bụng|six pack|thể lực|calisthenics|workout|luyện tập/i.test(lower)) {
     const pushCount = pickRandom([40, 50, 60]);
-    const squatCount = pickRandom([60, 70, 80]);
+    const squatCount = pickRandom([50, 60, 70]);
+    const situpEasy = pickRandom([30, 40, 45]);
+    const situpMed = pickRandom([60, 70, 80]);
     const easyPool: QuestTemplate[] = [
       {
-        title: 'Khởi động làm nóng toàn thân & xoay khớp chuyên sâu 12 phút',
-        subtitle: 'Kích hoạt hệ thần kinh trung ương và các sợi cơ mục tiêu',
+        title: `Gập bụng (Sit-ups) ${situpEasy} lần`,
+        subtitle: 'Chia 2-3 hiệp, siết chặt cơ bụng suốt bài tập',
         difficulty: 'EASY',
-        expReward: 80,
+        expReward: 90,
+        stoneReward: 12,
+        iconType: 'fitness',
+      },
+      {
+        title: `Chống đẩy (Push-ups) ${pickRandom([20, 25, 30])} cái chuẩn form`,
+        subtitle: 'Ngực sát đất, siết cơ lõi, không võng lưng',
+        difficulty: 'EASY',
+        expReward: 85,
         stoneReward: 10,
         iconType: 'fitness',
       },
       {
-        title: 'Giãn cơ tĩnh 15 phút & nạp đủ 25g protein sau buổi tập',
-        subtitle: 'Đảm bảo dưỡng chất cho cơ bắp phục hồi và gia tăng khối lượng',
+        title: `Squat (Gánh đùi) ${pickRandom([35, 40, 45])} cái`,
+        subtitle: 'Hạ mông đùi song song mặt sàn, siết cơ mông đùi',
         difficulty: 'EASY',
-        expReward: 95,
+        expReward: 90,
         stoneReward: 12,
+        iconType: 'fitness',
+      },
+      {
+        title: `Plank siết chặt cơ bụng ${pickRandom([45, 60])} giây`,
+        subtitle: 'Giữ thân người thẳng tuyệt đối, kích hoạt toàn bộ cơ lõi',
+        difficulty: 'EASY',
+        expReward: 85,
+        stoneReward: 10,
         iconType: 'fitness',
       },
     ];
 
     const medPool: QuestTemplate[] = [
+      {
+        title: `Gập bụng (Sit-ups) ${situpMed} lần chia 3 hiệp`,
+        subtitle: 'Siết chặt cơ bụng suốt bài tập, nâng người dứt khoát',
+        difficulty: 'MEDIUM',
+        expReward: 220,
+        stoneReward: 26,
+        iconType: 'fitness',
+      },
       {
         title: `Chống đẩy ${pushCount} cái & Squat ${squatCount} cái chuẩn form`,
         subtitle: 'Chia làm 4 hiệp, ngực sát đất, kiểm soát chuyển động lúc hạ người',
@@ -303,7 +416,15 @@ export function generateFallbackQuests(prompt: string): Array<{
         iconType: 'fitness',
       },
       {
-        title: 'Tập luyện cơ trọng tâm: Plank 3 hiệp (mỗi hiệp 60s) & Gập bụng 50 cái',
+        title: `Gập bụng đạp xe (Bicycle Crunches) ${pickRandom([50, 60, 70])} lần`,
+        subtitle: 'Khuỷu tay chạm gối đối diện, siết liên sườn đốt mỡ eo',
+        difficulty: 'MEDIUM',
+        expReward: 225,
+        stoneReward: 27,
+        iconType: 'fitness',
+      },
+      {
+        title: 'Tập cơ trọng tâm: Plank 3 hiệp (mỗi hiệp 60s) & 40 cái gập bụng',
         subtitle: 'Siết chặt cơ bụng suốt bài tập, không để võng thắt lưng',
         difficulty: 'MEDIUM',
         expReward: 220,
@@ -314,106 +435,150 @@ export function generateFallbackQuests(prompt: string): Array<{
 
     const hardPool: QuestTemplate[] = [
       {
-        title: 'Thử thách cực hạn: 100 cái Squat hoặc 20 cái kéo xà đơn',
-        subtitle: 'Chia hiệp hợp lý, chạm ngưỡng thất bại để kích hoạt đồng hóa',
+        title: 'Thử thách cực hạn: 100 lần gập bụng (Sit-ups)',
+        subtitle: 'Chia hiệp hợp lý, hoàn thành chuẩn form, ý chí sắt đá',
         difficulty: 'HARD',
         expReward: 410,
         stoneReward: 50,
         iconType: 'medal',
       },
       {
-        title: 'Buổi tập tạ cường độ cao 50 phút bứt phá giới hạn tạ',
-        subtitle: 'Tăng mức tạ lũy tiến (Progressive Overload) an toàn',
+        title: 'Thử thách cực hạn: 100 cái Squat & 50 cái chống đẩy',
+        subtitle: 'Chia hiệp hợp lý, chạm ngưỡng thất bại để kích hoạt đồng hóa',
+        difficulty: 'HARD',
+        expReward: 420,
+        stoneReward: 50,
+        iconType: 'medal',
+      },
+      {
+        title: 'Chinh phục 15 cái kéo xà đơn (Pull-ups) hoặc 70 cái chống đẩy',
+        subtitle: 'Kéo ngực chạm xà hoặc chống đẩy chuẩn biên độ',
         difficulty: 'HARD',
         expReward: 430,
         stoneReward: 55,
         iconType: 'medal',
       },
+      {
+        title: 'Gập bụng nâng chân (Leg Raises) 80 lần & Plank 120 giây',
+        subtitle: 'Tôi luyện cơ bụng thép, đốt cháy mỡ thừa vùng bụng dưới',
+        difficulty: 'HARD',
+        expReward: 420,
+        stoneReward: 52,
+        iconType: 'medal',
+      },
     ];
 
-    return [
-      { ...pickRandom(easyPool), isDaily: true },
-      { ...pickRandom(medPool), isDaily: true },
-      { ...pickRandom(hardPool), isDaily: true },
-    ];
+    return buildQuestsFromPools(easyPool, medPool, hardPool, 5);
   }
 
   // 5. Tăng cân / Dinh dưỡng thể hình
   if (/tăng\s*(thêm)?\s*(\d+)?\s*(cân|kg|ký)|bulk|tăng\s*cân/i.test(lower)) {
     const easyPool: QuestTemplate[] = [
       {
-        title: 'Bổ sung thêm 1 bữa phụ giàu protein và tinh bột tốt',
-        subtitle: 'Sữa chua, chuối, hạt dinh dưỡng hoặc yến mạch giữa các bữa chính',
+        title: 'Squat (Gánh đùi) 35 cái & Chống đẩy 20 cái kích thích cơ',
+        subtitle: 'Kích hoạt các nhóm cơ lớn giúp cơ thể hấp thu dưỡng chất tối đa',
         difficulty: 'EASY',
         expReward: 90,
+        stoneReward: 12,
+        iconType: 'fitness',
+      },
+      {
+        title: 'Gập bụng 40 lần & Hít đất 25 cái tăng cường trao đổi chất',
+        subtitle: 'Thúc đẩy tiêu hóa và kích thích sự thèm ăn lành mạnh',
+        difficulty: 'EASY',
+        expReward: 95,
         stoneReward: 12,
         iconType: 'fitness',
       },
     ];
     const medPool: QuestTemplate[] = [
       {
-        title: 'Tập kháng lực kích thích cơ bắp 40 phút (Squat, chống đẩy)',
-        subtitle: 'Tập nặng để chuyển hóa calo dư thừa thành cơ nạc thay vì mỡ',
+        title: 'Tập kháng lực 40 phút: 50 cái Squat, 40 cái chống đẩy, 50 lần gập bụng',
+        subtitle: 'Tập nặng để chuyển hóa calo thặng dư thành cơ nạc',
         difficulty: 'MEDIUM',
         expReward: 220,
         stoneReward: 26,
         iconType: 'fitness',
       },
-    ];
-    const hardPool: QuestTemplate[] = [
       {
-        title: 'Đạt thặng dư 400-500 kcal trong ngày & ngủ đủ 8 tiếng',
-        subtitle: 'Ngủ sâu phục hồi hormone tăng trưởng giúp đồng hóa tối đa',
-        difficulty: 'HARD',
-        expReward: 390,
-        stoneReward: 45,
-        iconType: 'medal',
-      },
-    ];
-    return [
-      { ...pickRandom(easyPool), isDaily: true },
-      { ...pickRandom(medPool), isDaily: true },
-      { ...pickRandom(hardPool), isDaily: true },
-    ];
-  }
-
-  // 6. Giảm cân / Giảm mỡ / Siết cơ
-  if (/giảm cân|giảm mỡ|giam can|giam mo|siết cơ|thâm hụt calo|diet|ăn kiêng/i.test(lower)) {
-    const easyPool: QuestTemplate[] = [
-      {
-        title: 'Cắt giảm 100% đường tinh luyện, nước ngọt có ga và bánh kẹo hôm nay',
-        subtitle: 'Ổn định lượng đường huyết, chấm dứt cảm giác thèm ăn vặt',
-        difficulty: 'EASY',
-        expReward: 90,
-        stoneReward: 12,
+        title: 'Tổ hợp tăng cơ: 4 hiệp Squat (mỗi hiệp 20 cái) & 40 cái chống đẩy',
+        subtitle: 'Kích hoạt tối đa áp lực cơ học lên các nhóm cơ lớn',
+        difficulty: 'MEDIUM',
+        expReward: 230,
+        stoneReward: 28,
         iconType: 'fitness',
       },
     ];
-    const medPool: QuestTemplate[] = [
-      {
-        title: 'Vận động đốt mỡ: Đạt 8.000 bước chân hoặc 30 phút cardio',
-        subtitle: 'Gia tăng tiêu hao năng lượng ngoài tập luyện (NEAT)',
-        difficulty: 'MEDIUM',
-        expReward: 220,
-        stoneReward: 26,
-        iconType: 'walk',
-      },
-    ];
     const hardPool: QuestTemplate[] = [
       {
-        title: 'Áp dụng nhịn ăn gián đoạn 16/8 và không ăn sau 20h tối',
-        subtitle: 'Tạo cửa sổ thâm hụt calo giúp cơ thể dùng mỡ thừa làm năng lượng',
+        title: 'Thử thách thể lực: 8 hiệp Squat tăng tạ hoặc 80 cái Squat bodyweight',
+        subtitle: 'Chạm ngưỡng mỏi cơ bắp, kích thích tối đa hormone phát triển',
         difficulty: 'HARD',
         expReward: 400,
         stoneReward: 50,
         iconType: 'medal',
       },
     ];
-    return [
-      { ...pickRandom(easyPool), isDaily: true },
-      { ...pickRandom(medPool), isDaily: true },
-      { ...pickRandom(hardPool), isDaily: true },
+    return buildQuestsFromPools(easyPool, medPool, hardPool, 5);
+  }
+
+  // 6. Giảm cân / Giảm mỡ / Siết cơ
+  if (/giảm cân|giảm mỡ|giam can|giam mo|siết cơ|thâm hụt calo|diet|ăn kiêng/i.test(lower)) {
+    const easyPool: QuestTemplate[] = [
+      {
+        title: 'Gập bụng (Sit-ups) 40 lần & Plank 60 giây siết eo',
+        subtitle: 'Siết chặt cơ bụng, đốt cháy mỡ thừa vùng eo',
+        difficulty: 'EASY',
+        expReward: 90,
+        stoneReward: 12,
+        iconType: 'fitness',
+      },
+      {
+        title: 'Nhảy dây 300 cái đốt mỡ toàn thân',
+        subtitle: 'Kích hoạt quá trình tiêu hao calo nhanh chóng',
+        difficulty: 'EASY',
+        expReward: 85,
+        stoneReward: 10,
+        iconType: 'walk',
+      },
     ];
+    const medPool: QuestTemplate[] = [
+      {
+        title: 'Vận động đốt mỡ: Đạt 8.000 bước chân hoặc 60 lần gập bụng đạp xe',
+        subtitle: 'Gia tăng tiêu hao năng lượng, thắt chặt vòng 2',
+        difficulty: 'MEDIUM',
+        expReward: 220,
+        stoneReward: 26,
+        iconType: 'fitness',
+      },
+      {
+        title: 'Chạy bộ 3.0 km hoặc 30 cái Burpees đốt mỡ',
+        subtitle: 'Đẩy cao nhịp tim, duy trì trạng thái đốt mỡ sau tập luyện',
+        difficulty: 'MEDIUM',
+        expReward: 230,
+        stoneReward: 28,
+        iconType: 'walk',
+      },
+    ];
+    const hardPool: QuestTemplate[] = [
+      {
+        title: 'Tổ hợp đốt mỡ cực hạn: 80 lần gập bụng, 60 cái squat, 30 cái burpees',
+        subtitle: 'Tập liên hoàn đốt cháy calo cực đại, cơ bụng săn chắc',
+        difficulty: 'HARD',
+        expReward: 410,
+        stoneReward: 50,
+        iconType: 'medal',
+      },
+      {
+        title: 'Nhảy dây 600 cái & Plank 3 hiệp (mỗi hiệp 60 giây)',
+        subtitle: 'Thử thách sức bền ý chí thợ săn, định hình cơ thể',
+        difficulty: 'HARD',
+        expReward: 420,
+        stoneReward: 52,
+        iconType: 'medal',
+      },
+    ];
+    return buildQuestsFromPools(easyPool, medPool, hardPool, 5);
   }
 
   // 7. Đọc sách / Học tập / Nghiên cứu / Tri thức
@@ -477,11 +642,7 @@ export function generateFallbackQuests(prompt: string): Array<{
       },
     ];
 
-    return [
-      { ...pickRandom(easyPool), isDaily: true },
-      { ...pickRandom(medPool), isDaily: true },
-      { ...pickRandom(hardPool), isDaily: true },
-    ];
+    return buildQuestsFromPools(easyPool, medPool, hardPool, 5);
   }
 
   // 8. Nghệ thuật / Âm nhạc / Đàn / Vẽ
@@ -496,6 +657,14 @@ export function generateFallbackQuests(prompt: string): Array<{
         stoneReward: 10,
         iconType: 'study',
       },
+      {
+        title: `Luyện tập kỹ thuật cơ bản 20 phút (${topic})`,
+        subtitle: 'Chỉnh sửa tư thế chuẩn và chuyển động tay dứt khoát',
+        difficulty: 'EASY',
+        expReward: 90,
+        stoneReward: 12,
+        iconType: 'study',
+      },
     ];
     const medPool: QuestTemplate[] = [
       {
@@ -504,6 +673,14 @@ export function generateFallbackQuests(prompt: string): Array<{
         difficulty: 'MEDIUM',
         expReward: 220,
         stoneReward: 26,
+        iconType: 'study',
+      },
+      {
+        title: 'Luyện tập phân đoạn khó nhất của tác phẩm 30 phút tập trung',
+        subtitle: 'Lặp lại tối thiểu 10 lần chuẩn xác không lỗi nhịp',
+        difficulty: 'MEDIUM',
+        expReward: 230,
+        stoneReward: 28,
         iconType: 'study',
       },
     ];
@@ -517,11 +694,7 @@ export function generateFallbackQuests(prompt: string): Array<{
         iconType: 'medal',
       },
     ];
-    return [
-      { ...pickRandom(easyPool), isDaily: true },
-      { ...pickRandom(medPool), isDaily: true },
-      { ...pickRandom(hardPool), isDaily: true },
-    ];
+    return buildQuestsFromPools(easyPool, medPool, hardPool, 5);
   }
 
   // 9. Tài chính / Tiết kiệm / Đầu tư
@@ -535,6 +708,14 @@ export function generateFallbackQuests(prompt: string): Array<{
         stoneReward: 10,
         iconType: 'study',
       },
+      {
+        title: 'Kiểm tra số dư tài khoản và cập nhật bảng ngân sách cá nhân',
+        subtitle: 'Nắm vững tình hình tài chính thực tế trước khi ra quyết định',
+        difficulty: 'EASY',
+        expReward: 85,
+        stoneReward: 10,
+        iconType: 'study',
+      },
     ];
     const medPool: QuestTemplate[] = [
       {
@@ -543,6 +724,14 @@ export function generateFallbackQuests(prompt: string): Array<{
         difficulty: 'MEDIUM',
         expReward: 210,
         stoneReward: 25,
+        iconType: 'study',
+      },
+      {
+        title: 'Tối ưu hóa 1 chi phí định kỳ và tìm kiếm giải pháp gia tăng thu nhập',
+        subtitle: 'Cắt giảm các gói dịch vụ thừa, tập trung vào giá trị sinh lời',
+        difficulty: 'MEDIUM',
+        expReward: 220,
+        stoneReward: 26,
         iconType: 'study',
       },
     ];
@@ -556,11 +745,7 @@ export function generateFallbackQuests(prompt: string): Array<{
         iconType: 'medal',
       },
     ];
-    return [
-      { ...pickRandom(easyPool), isDaily: true },
-      { ...pickRandom(medPool), isDaily: true },
-      { ...pickRandom(hardPool), isDaily: true },
-    ];
+    return buildQuestsFromPools(easyPool, medPool, hardPool, 5);
   }
 
   // 10. Thiền định / Tâm thức / Giấc ngủ
@@ -575,6 +760,14 @@ export function generateFallbackQuests(prompt: string): Array<{
         stoneReward: 10,
         iconType: 'meditation',
       },
+      {
+        title: 'Tập hít thở 4-7-8 đúng 10 chu kỳ đưa cơ thể vào trạng thái thư giãn',
+        subtitle: 'Cân bằng hệ thần kinh đối giao cảm, giải tỏa stress tức thì',
+        difficulty: 'EASY',
+        expReward: 80,
+        stoneReward: 10,
+        iconType: 'meditation',
+      },
     ];
     const medPool: QuestTemplate[] = [
       {
@@ -583,6 +776,14 @@ export function generateFallbackQuests(prompt: string): Array<{
         difficulty: 'MEDIUM',
         expReward: 200,
         stoneReward: 24,
+        iconType: 'meditation',
+      },
+      {
+        title: 'Thiền hành hoặc đi dạo tĩnh lặng 25 phút không dùng điện thoại',
+        subtitle: 'Cảm nhận từng bước chân và hòa mình vào khoảnh khắc hiện tại',
+        difficulty: 'MEDIUM',
+        expReward: 210,
+        stoneReward: 25,
         iconType: 'meditation',
       },
     ];
@@ -596,11 +797,7 @@ export function generateFallbackQuests(prompt: string): Array<{
         iconType: 'medal',
       },
     ];
-    return [
-      { ...pickRandom(easyPool), isDaily: true },
-      { ...pickReward(medPool), isDaily: true },
-      { ...pickRandom(hardPool), isDaily: true },
-    ];
+    return buildQuestsFromPools(easyPool, medPool, hardPool, 5);
   }
 
   // 11. Mặc định Thông Minh Đa Lĩnh Vực (Tự Động Bóc Tách Chủ Đề Của Người Dùng)
@@ -665,11 +862,7 @@ export function generateFallbackQuests(prompt: string): Array<{
     },
   ];
 
-  return [
-    { ...pickRandom(generalEasy), isDaily: true },
-    { ...pickRandom(generalMed), isDaily: true },
-    { ...pickRandom(generalHard), isDaily: true },
-  ];
+  return buildQuestsFromPools(generalEasy, generalMed, generalHard, 5);
 }
 
 function pickReward(items: QuestTemplate[]): QuestTemplate {

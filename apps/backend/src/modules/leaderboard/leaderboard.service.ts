@@ -238,7 +238,32 @@ export class LeaderboardService {
       });
     }
 
-    // 2. Thêm các tiền bối NPC nếu danh sách dưới 15 người để bảng luôn sinh động
+    // 2. Đảm bảo người dùng hiện tại (currentUserId) luôn có mặt trong bảng xếp hạng
+    if (currentUserId && !seenUids.has(currentUserId)) {
+      seenUids.add(currentUserId);
+      const cult = cultMap.get(currentUserId);
+      const streakDays = cult?.streak_days != null ? Number(cult.streak_days) : 0;
+      const realmIndex = cult?.realm_index != null ? Number(cult.realm_index) : 0;
+      const subRealm = cult?.sub_realm != null ? Number(cult.sub_realm) : 1;
+      const totalExp = cult?.total_exp != null ? Number(cult.total_exp) : 0;
+      const realmName = cult?.realm_name || (CULTIVATION_REALMS[realmIndex]?.name ?? 'Phàm Nhân');
+
+      mergedList.push({
+        userId: currentUserId,
+        displayName: 'Đạo Hữu Tiên Lộ (Bạn)',
+        avatarUrl: null,
+        streakDays,
+        completedQuestsCount: completedQuestsMap.get(currentUserId) || 0,
+        realmIndex,
+        realmName,
+        subRealm,
+        realmText: realmIndex === 0 ? 'Phàm Nhân' : `${realmName} Tầng ${subRealm}`,
+        totalExp,
+        isNpc: false,
+      });
+    }
+
+    // 3. Thêm các tiền bối NPC nếu danh sách dưới 15 người để bảng luôn sinh động
     for (const npc of CULTIVATOR_BENCHMARKS) {
       if (!seenUids.has(npc.userId)) {
         mergedList.push(npc);
