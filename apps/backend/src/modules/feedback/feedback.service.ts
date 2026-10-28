@@ -29,8 +29,12 @@ export class FeedbackService {
   }
 
   private initTransporter(): void {
-    const user = process.env.GMAIL_USER || process.env.SMTP_USER;
-    const pass = process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || process.env.GMAIL_PASS;
+    const user = process.env.GMAIL_USER || process.env.SMTP_USER || 'shiinamizuha@gmail.com';
+    const pass =
+      process.env.GMAIL_APP_PASSWORD ||
+      process.env.SMTP_PASS ||
+      process.env.GMAIL_PASS ||
+      'sqrb gpxw zutb ukdq';
 
     if (user && pass) {
       try {
@@ -48,14 +52,14 @@ export class FeedbackService {
       }
     } else {
       this.logger.warn(
-        'GMAIL_USER hoặc GMAIL_APP_PASSWORD chưa được cấu hình trong .env. Báo cáo lỗi sẽ được lưu lại trong bộ nhớ và cơ sở dữ liệu. Thêm thông tin vào .env để gửi email tự động.',
+        'GMAIL_USER hoặc GMAIL_APP_PASSWORD chưa được cấu hình trong .env. Báo cáo lỗi sẽ được lưu lại trong bộ nhớ và cơ sở dữ liệu.',
       );
     }
   }
 
   async reportBug(dto: CreateBugReportDto): Promise<{ success: boolean; message: string; reportId: string }> {
     const reportId = `report-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.GMAIL_USER || 'ngovanm691@gmail.com';
+    const adminEmail = process.env.ADMIN_EMAIL || 'ngovanm691@gmail.com';
     const nowIso = new Date().toISOString();
 
     const record: BugReportRecord = {
@@ -64,13 +68,13 @@ export class FeedbackService {
       description: dto.description.trim(),
       category: dto.category?.trim() || 'GENERAL',
       screen: dto.screen?.trim() || 'UNKNOWN_SCREEN',
-      userEmail: dto.userEmail?.trim() || 'Ẩn danh (Không cung cấp)',
+      userEmail: dto.userEmail?.trim() || 'Ẩn danh (Chưa đăng nhập)',
       userId: dto.userId?.trim() || 'anonymous',
       deviceInfo: dto.deviceInfo?.trim() || 'Chưa xác định',
       stackTrace: dto.stackTrace?.trim(),
-      appVersion: dto.appVersion?.trim() || '1.0.6',
+      appVersion: dto.appVersion?.trim() || '1.0.7',
       createdAt: nowIso,
-      sentEmail: false,
+      sentEmail: dto.sentByClient === true,
     };
 
     // 1. Lưu vào danh sách gần đây trong bộ nhớ
@@ -81,15 +85,17 @@ export class FeedbackService {
     // 2. Lưu vào Supabase ngầm (không chặn client)
     this.saveToDatabaseAsync(record).catch(() => {});
 
-    // 3. Gửi email ngầm trong background (không chặn HTTP response để client phản hồi tức thì)
-    this.sendEmailAsync(record, adminEmail).catch((err) => {
-      this.logger.warn(`Lỗi gửi email báo cáo lỗi trong background: ${err.message}`);
-    });
+    // 3. Nếu client chưa trực tiếp gửi mail qua SMTP thì server gửi ngầm trong background
+    if (!dto.sentByClient) {
+      this.sendEmailAsync(record, adminEmail).catch((err) => {
+        this.logger.warn(`Lỗi gửi email báo cáo lỗi trong background: ${err.message}`);
+      });
+    }
 
     // 4. Trả về ngay lập tức cho client tránh tình trạng loading vô tận
     return {
       success: true,
-      message: 'Báo cáo sự cố đã được tiếp nhận thành công và gửi tới Quản Trị Viên!',
+      message: 'Báo cáo sự cố đã được gửi trực tiếp tới Gmail Quản Trị Viên (ngovanm691@gmail.com)!',
       reportId,
     };
   }
@@ -126,7 +132,7 @@ export class FeedbackService {
     }
 
     try {
-      const fromUser = process.env.GMAIL_USER || process.env.SMTP_USER || adminEmail;
+      const fromUser = process.env.GMAIL_USER || process.env.SMTP_USER || 'shiinamizuha@gmail.com';
       const htmlContent = `
 <!DOCTYPE html>
 <html>

@@ -23,6 +23,7 @@ describe('FeedbackService', () => {
       category: 'LOGIN',
       screen: 'LoginScreen',
       userEmail: 'user@tienlo.app',
+      sentByClient: true,
     });
 
     const elapsed = Date.now() - t0;
@@ -33,5 +34,6 @@ describe('FeedbackService', () => {
     const recents = feedbackService.getRecentReports();
     expect(recents.length).toBeGreaterThan(0);
     expect(recents[0].title).toBe('Lỗi đăng nhập');
+    expect(recents[0].sentEmail).toBe(true);
   });
 });

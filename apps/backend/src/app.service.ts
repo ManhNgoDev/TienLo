@@ -41,11 +41,11 @@ export class AppService {
     const repo = process.env.GITHUB_REPO || 'TienLo';
     const defaultDownloadUrl = `https://github.com/${owner}/${repo}/releases/latest/download/TienLo-release.apk`;
 
-    let latestVersion = '1.0.6';
+    let latestVersion = '1.0.7';
     let releaseNotes =
-      '• Bảng Xếp Hạng & Bục Vinh Danh: Lấy 100% người chơi thật từ Supabase database, loại bỏ hoàn toàn NPC cố định Hàn Lập\n• Báo Cáo Sự Cố: Tối ưu phản hồi tức thì dưới 10ms, xử lý gửi email ngầm và khắc phục triệt để lỗi treo loading\n• Màn hình Thống Kê: Khi chưa có session/chiến dịch hiển thị chuẩn xác 0% thay vì 7% mặc định\n• Giao diện tràn viền Edge-to-Edge: Xóa dải đen dư thừa dưới thanh điều hướng hệ thống';
+      '• Báo Cáo Sự Cố: Gửi trực tiếp từ Gmail Hệ Thống (shiinamizuha@gmail.com) tới Gmail Admin (ngovanm691@gmail.com), bỏ hoàn toàn ô bắt nhập email\n• Bảng Xếp Hạng & Bục Vinh Danh: Lấy 100% người chơi thật từ Supabase database\n• Màn hình Thống Kê: Khi chưa có session/chiến dịch hiển thị chuẩn xác 0%\n• Giao diện tràn viền Edge-to-Edge chuẩn xác trên mọi thiết bị Android';
     let publishedAt = new Date().toISOString();
-    let downloadUrl = `https://github.com/${owner}/${repo}/releases/download/v1.0.6/TienLo-release.apk`;
+    let downloadUrl = `https://github.com/${owner}/${repo}/releases/download/v1.0.7/TienLo-release.apk`;
 
     try {
       const res = await fetch(
@@ -80,7 +80,7 @@ export class AppService {
 
     return {
       latestVersion,
-      latestBuildNumber: 4,
+      latestBuildNumber: 8,
       minSupportedVersion: '1.0.0',
       downloadUrl,
       releaseNotes,

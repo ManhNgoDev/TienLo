@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 export class CreateBugReportDto {
   @IsNotEmpty({ message: 'Tiêu đề báo cáo không được để trống' })
@@ -38,4 +38,8 @@ export class CreateBugReportDto {
   @IsOptional()
   @IsString()
   appVersion?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  sentByClient?: boolean;
 }

@@ -1,9 +1,9 @@
 {
-  "latestVersion": "1.0.6",
-  "latestBuildNumber": 7,
+  "latestVersion": "1.0.7",
+  "latestBuildNumber": 8,
   "minSupportedVersion": "1.0.0",
-  "downloadUrl": "https://github.com/ManhNgoDev/TienLo/releases/download/v1.0.6/TienLo-release.apk",
-  "releaseNotes": "• Bảng Xếp Hạng & Bục Vinh Danh: Lấy 100% người chơi thật từ Supabase database, loại bỏ hoàn toàn NPC cố định Hàn Lập\n• Báo Cáo Sự Cố: Tối ưu phản hồi tức thì dưới 10ms, xử lý gửi email ngầm và khắc phục triệt để lỗi treo loading\n• Màn hình Thống Kê: Khi chưa có session/chiến dịch hiển thị chuẩn xác 0% thay vì 7% mặc định\n• Giao diện tràn viền Edge-to-Edge: Xóa dải đen dư thừa dưới thanh điều hướng hệ thống",
-  "publishedAt": "2026-10-28T05:00:00Z",
+  "downloadUrl": "https://github.com/ManhNgoDev/TienLo/releases/download/v1.0.7/TienLo-release.apk",
+  "releaseNotes": "• Báo Cáo Sự Cố: Gửi trực tiếp từ Gmail Hệ Thống (shiinamizuha@gmail.com) tới Gmail Admin (ngovanm691@gmail.com), bỏ hoàn toàn ô bắt nhập email\n• Bảng Xếp Hạng & Bục Vinh Danh: Lấy 100% người chơi thật từ Supabase database\n• Màn hình Thống Kê: Khi chưa có session/chiến dịch hiển thị chuẩn xác 0%\n• Giao diện tràn viền Edge-to-Edge chuẩn xác trên mọi thiết bị Android",
+  "publishedAt": "2026-10-28T05:40:00Z",
   "forceUpdate": false
 }

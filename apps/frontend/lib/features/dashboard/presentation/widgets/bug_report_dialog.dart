@@ -45,13 +45,13 @@ class _BugReportBottomSheetState extends State<_BugReportBottomSheet> {
 
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
-  final _emailController = TextEditingController();
 
   late String _selectedCategory;
   bool _isSubmitting = false;
   bool _includeStackTrace = true;
   String? _statusMessage;
   bool _isSuccess = false;
+  String _currentAccountLabel = 'Đang kiểm tra tài khoản...';
 
   final List<Map<String, String>> _categories = [
     {'code': 'LOGIN', 'label': 'Đăng nhập'},
@@ -76,27 +76,33 @@ class _BugReportBottomSheetState extends State<_BugReportBottomSheet> {
       _descController.text = 'Gặp lỗi trong quá trình sử dụng:\n${widget.initialError}';
     }
 
-    _loadUserEmail();
+    _loadUserInfo();
   }
 
-  Future<void> _loadUserEmail() async {
+  Future<void> _loadUserInfo() async {
     try {
       final user = await _authRepository.getSavedUser();
-      if (user != null && user.email.isNotEmpty && mounted) {
-        setState(() {
-          if (_emailController.text.isEmpty) {
-            _emailController.text = user.email;
-          }
-        });
-      }
-    } catch (_) {}
+      if (!mounted) return;
+      setState(() {
+        if (user != null && user.email.isNotEmpty) {
+          final uname = user.displayName.trim();
+          _currentAccountLabel = uname.isNotEmpty ? '$uname (${user.email})' : user.email;
+        } else {
+          _currentAccountLabel = 'Khách (Chưa đăng nhập)';
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _currentAccountLabel = 'Khách (Chưa đăng nhập)';
+      });
+    }
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _descController.dispose();
-    _emailController.dispose();
     super.dispose();
   }
 
@@ -131,7 +137,6 @@ class _BugReportBottomSheetState extends State<_BugReportBottomSheet> {
         description: desc,
         category: _selectedCategory,
         screen: widget.screenName,
-        userEmail: _emailController.text.trim(),
         stackTrace: _includeStackTrace ? widget.initialError : null,
       );
 
@@ -295,35 +300,33 @@ class _BugReportBottomSheetState extends State<_BugReportBottomSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Email liên hệ
-            const Text(
-              'EMAIL CỦA BẠN (ĐỂ ADMIN PHẢN HỒI)',
-              style: TextStyle(
-                color: Color(0xFF94A3B8),
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.8,
+            // Thông tin gửi tự động của hệ thống (không cần nhập email)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B).withValues(alpha: 0.7),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.white10),
               ),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: _emailController,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
-              decoration: InputDecoration(
-                hintText: 'Nhập email của bạn (ví dụ: ban@gmail.com)',
-                hintStyle: const TextStyle(color: Colors.white30, fontSize: 13),
-                prefixIcon: const Icon(Icons.email_outlined, color: Colors.white38, size: 18),
-                filled: true,
-                fillColor: const Color(0xFF1E293B),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none,
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: const BorderSide(color: Color(0xFFEF4444)),
-                ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.verified_user_rounded,
+                    color: Color(0xFF38BDF8),
+                    size: 18,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Hệ thống tự động gửi về Gmail Admin • Đính kèm: $_currentAccountLabel',
+                      style: const TextStyle(
+                        color: Color(0xFFCBD5E1),
+                        fontSize: 11.5,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 14),
