@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../../../../core/constants/api_constants.dart';
 import '../../../dashboard/presentation/widgets/bug_report_dialog.dart';
 import '../../data/auth_repository.dart';
@@ -20,6 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final AuthRepository _authRepository = AuthRepository();
   bool _isLoading = false;
   String? _errorMessage;
+  bool _isPlatformError = false;
 
   void _processAuthError(dynamic e) {
     final errorStr = e.toString();
@@ -30,15 +32,21 @@ class _LoginScreenState extends State<LoginScreen> {
         errorStr.contains('PlatformException') ||
         errorStr.contains('channel-error') ||
         errorStr.contains('MissingPluginException')) {
+      _isPlatformError = true;
       _errorMessage =
-          'Đăng nhập Google chưa thành công. Vui lòng thử lại hoặc gửi báo cáo lỗi bên dưới.';
+          'Google Sign-In lỗi nền tảng (ApiException 10):\n'
+          '• Nguyên nhân: Chưa gán mã SHA-1 vào Firebase Console hoặc file google-services.json chưa cập nhật.\n'
+          '• Giải pháp: Bạn có thể chọn "Vào bằng Local Dev" bên dưới để test mọi tính năng game ngay!';
     } else if (errorStr.contains('SocketException') ||
         errorStr.contains('Connection refused') ||
         errorStr.contains('Failed host lookup') ||
         errorStr.contains('ClientException')) {
+      _isPlatformError = false;
       _errorMessage =
-          'Không thể kết nối máy chủ (${ApiConstants.defaultBaseUrl}). Vui lòng kiểm tra kết nối mạng và thử lại.';
+          'Không thể kết nối máy chủ (${ApiConstants.defaultBaseUrl}).\n'
+          'Vui lòng kiểm tra server Backend đã chạy chưa hoặc bấm vào nút Môi trường ở góc trên để chọn lại.';
     } else {
+      _isPlatformError = false;
       _errorMessage = errorStr.replaceFirst('Exception: ', '');
     }
   }
@@ -47,6 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
+      _isPlatformError = false;
     });
 
     try {
@@ -63,6 +72,405 @@ class _LoginScreenState extends State<LoginScreen> {
         });
       }
     }
+  }
+
+  Future<void> _handleDemoSignIn({
+    String uid = 'demo-google-uid-123456',
+    String displayName = 'Mạnh Ngô (Dev)',
+    String email = 'manh.ngo@tienlo.app',
+  }) async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+      _isPlatformError = false;
+    });
+
+    try {
+      final user = await _authRepository.signInWithDemo(
+        uid: uid,
+        displayName: displayName,
+        email: email,
+      );
+      widget.onLoginSuccess(user);
+    } catch (e) {
+      setState(() {
+        _processAuthError(e);
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _showCustomDevAccountDialog() async {
+    final nameCtrl = TextEditingController(text: 'Đạo Hữu Tiêu Diêu');
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0F1E2E),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: Color(0xFFE5B869), width: 1.2),
+        ),
+        title: const Row(
+          children: [
+            Icon(Icons.edit_note_rounded, color: Color(0xFFE5B869), size: 22),
+            SizedBox(width: 8),
+            Text(
+              'Tạo Nhân Vật Test Local',
+              style: TextStyle(
+                color: Color(0xFFFDE68A),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Nhập đạo hiệu nhân vật để test trên môi trường hiện tại:',
+              style: TextStyle(color: Color(0xFFCBD5E1), fontSize: 12),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: nameCtrl,
+              autofocus: true,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: const Color(0xFF070B12),
+                hintText: 'Ví dụ: Hàn Lập, Tiêu Viêm...',
+                hintStyle: const TextStyle(color: Color(0xFF64748B)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFF334155)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: const BorderSide(color: Color(0xFFE5B869)),
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy', style: TextStyle(color: Color(0xFF94A3B8))),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              final name = nameCtrl.text.trim();
+              if (name.isNotEmpty) {
+                Navigator.pop(ctx);
+                final cleanId = name
+                    .toLowerCase()
+                    .replaceAll(RegExp(r'[^a-z0-9]'), '')
+                    .padRight(6, 'dev');
+                _handleDemoSignIn(
+                  uid: 'dev-custom-$cleanId',
+                  displayName: name,
+                  email: '$cleanId@tienlo.local',
+                );
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFD97706),
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            child: const Text('Đăng Nhập Test'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showEnvironmentSelectorDialog() async {
+    BackendEnvType selectedType = ApiConstants.currentEnvType;
+    final lanCtrl = TextEditingController(
+      text: ApiConstants.customBaseUrl ?? 'http://192.168.1.100:3000/api',
+    );
+    String pingResult = '';
+    bool isPinging = false;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0F1E2E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        side: BorderSide(color: Color(0xFF38BDF8), width: 1),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 20,
+              right: 20,
+              top: 20,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.tune_rounded, color: Color(0xFF38BDF8), size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Cấu Hình Môi Trường Backend',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded, color: Color(0xFF94A3B8)),
+                      onPressed: () => Navigator.pop(ctx),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Chọn môi trường để test local trước khi triển khai production:',
+                  style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                ),
+                const SizedBox(height: 16),
+
+                // Option 1: Android Emulator
+                _buildEnvOption(
+                  ctx: ctx,
+                  title: '📱 Máy Ảo Android (10.0.2.2:3000)',
+                  subtitle: 'http://10.0.2.2:3000/api',
+                  isSelected: selectedType == BackendEnvType.emulator,
+                  onTap: () => setModalState(() => selectedType = BackendEnvType.emulator),
+                ),
+                const SizedBox(height: 8),
+
+                // Option 2: Localhost PC
+                _buildEnvOption(
+                  ctx: ctx,
+                  title: '💻 Máy Tính / Web (localhost:3000)',
+                  subtitle: 'http://localhost:3000/api',
+                  isSelected: selectedType == BackendEnvType.localhost,
+                  onTap: () => setModalState(() => selectedType = BackendEnvType.localhost),
+                ),
+                const SizedBox(height: 8),
+
+                // Option 3: LAN Wi-Fi
+                _buildEnvOption(
+                  ctx: ctx,
+                  title: '📡 Mạng LAN Wi-Fi (Điện thoại thật)',
+                  subtitle: selectedType == BackendEnvType.lan ? lanCtrl.text : 'Tuỳ chỉnh IP máy tính',
+                  isSelected: selectedType == BackendEnvType.lan,
+                  onTap: () => setModalState(() => selectedType = BackendEnvType.lan),
+                ),
+                if (selectedType == BackendEnvType.lan) ...[
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: lanCtrl,
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    decoration: InputDecoration(
+                      hintText: 'http://192.168.1.xxx:3000/api',
+                      hintStyle: const TextStyle(color: Color(0xFF64748B)),
+                      filled: true,
+                      fillColor: const Color(0xFF070B12),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 8),
+
+                // Option 4: Production Render
+                _buildEnvOption(
+                  ctx: ctx,
+                  title: '☁️ Production (Render Cloud)',
+                  subtitle: ApiConstants.productionRenderUrl,
+                  isSelected: selectedType == BackendEnvType.production,
+                  onTap: () => setModalState(() => selectedType = BackendEnvType.production),
+                ),
+                const SizedBox(height: 14),
+
+                // Ping Status
+                if (pingResult.isNotEmpty) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: pingResult.contains('✅')
+                          ? const Color(0xFF065F46).withValues(alpha: 0.6)
+                          : const Color(0xFF7F1D1D).withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      pingResult,
+                      style: TextStyle(
+                        color: pingResult.contains('✅')
+                            ? const Color(0xFFA7F3D0)
+                            : const Color(0xFFFCA5A5),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
+                // Action Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: isPinging
+                            ? null
+                            : () async {
+                                setModalState(() {
+                                  isPinging = true;
+                                  pingResult = 'Đang kiểm tra kết nối...';
+                                });
+                                final testUrl = selectedType == BackendEnvType.lan
+                                    ? lanCtrl.text.trim()
+                                    : selectedType.defaultUrl;
+                                final sw = Stopwatch()..start();
+                                try {
+                                  final uri = Uri.parse('$testUrl${ApiConstants.health}');
+                                  final res = await http.get(uri).timeout(const Duration(seconds: 4));
+                                  sw.stop();
+                                  if (res.statusCode >= 200 && res.statusCode < 300) {
+                                    setModalState(() {
+                                      pingResult = '✅ Kết nối tốt! (${sw.elapsedMilliseconds}ms)';
+                                      isPinging = false;
+                                    });
+                                  } else {
+                                    setModalState(() {
+                                      pingResult = '⚠️ Server phản hồi mã: ${res.statusCode}';
+                                      isPinging = false;
+                                    });
+                                  }
+                                } catch (err) {
+                                  sw.stop();
+                                  setModalState(() {
+                                    pingResult = '❌ Không thể kết nối tới $testUrl (Kiểm tra lại IP hoặc server)';
+                                    isPinging = false;
+                                  });
+                                }
+                              },
+                        icon: isPinging
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF38BDF8)),
+                              )
+                            : const Icon(Icons.bolt_rounded, size: 16, color: Color(0xFF38BDF8)),
+                        label: const Text('Kiểm Tra (Ping)', style: TextStyle(color: Color(0xFF38BDF8))),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFF38BDF8)),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final custom = selectedType == BackendEnvType.lan ? lanCtrl.text.trim() : null;
+                          await ApiConstants.setEnvironment(selectedType, custom);
+                          if (ctx.mounted) {
+                            Navigator.pop(ctx);
+                          }
+                          if (mounted) {
+                            setState(() {});
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0284C7),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        child: const Text('Áp Dụng'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildEnvOption({
+    required BuildContext ctx,
+    required String title,
+    required String subtitle,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? const Color(0xFF0369A1).withValues(alpha: 0.3)
+              : const Color(0xFF070B12).withValues(alpha: 0.6),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? const Color(0xFF38BDF8) : const Color(0xFF1E293B),
+            width: isSelected ? 1.5 : 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+              color: isSelected ? const Color(0xFF38BDF8) : const Color(0xFF64748B),
+              size: 18,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : const Color(0xFFCBD5E1),
+                      fontSize: 13,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
