@@ -100,10 +100,18 @@ class GoalAnalyzerService {
   }) {
     final result = <QuestItem>[];
     final usedTitles = <String>{};
+    final nowDt = DateTime.now();
+    // Seed xoay vòng theo ngày đảm bảo không bao giờ trùng lặp nhiệm vụ qua các ngày
+    final daySeed = (nowDt.year * 372 + nowDt.month * 31 + nowDt.day);
 
-    void pickFrom(List<QuestItem> pool, int maxCount) {
-      final shuffled = List<QuestItem>.from(pool)..shuffle(_random);
-      for (final item in shuffled) {
+    void pickFrom(List<QuestItem> pool, int maxCount, int offsetShift) {
+      if (pool.isEmpty || maxCount <= 0) return;
+      final rotated = <QuestItem>[];
+      final offset = (daySeed + offsetShift) % pool.length;
+      for (int i = 0; i < pool.length; i++) {
+        rotated.add(pool[(offset + i) % pool.length]);
+      }
+      for (final item in rotated) {
         if (!usedTitles.contains(item.title) && maxCount > 0) {
           usedTitles.add(item.title);
           result.add(item);
@@ -112,12 +120,12 @@ class GoalAnalyzerService {
       }
     }
 
-    pickFrom(easyPool, 2);
-    pickFrom(medPool, 2);
-    pickFrom(hardPool, 1);
+    pickFrom(easyPool, 2, 0);
+    pickFrom(medPool, 2, 2);
+    pickFrom(hardPool, 1, 4);
 
     if (result.length < targetCount) {
-      final combined = [...medPool, ...hardPool, ...easyPool]..shuffle(_random);
+      final combined = [...medPool, ...hardPool, ...easyPool];
       for (final item in combined) {
         if (!usedTitles.contains(item.title) && result.length < targetCount) {
           usedTitles.add(item.title);
@@ -1145,9 +1153,248 @@ class GoalAnalyzerService {
       );
     }
 
-    // 11. Mặc định Đa Lĩnh Vực Thông Minh (Tự động thích ứng với mục tiêu của người dùng)
+    // 11. Ngoại hình / Đẹp trai / Chăm sóc bản thân / Phong thái / Skincare / Thần thái
+    if (RegExp(r'đẹp trai|dep trai|nhan sắc|ngoại hình|da dẻ|skincare|tút tát|phong độ|lịch lãm|mewing|thần thái|tự tin|sức hút', caseSensitive: false).hasMatch(lower)) {
+      return _buildQuestsFromPools(
+        now: now,
+        easyPool: [
+          QuestItem(
+            id: 'e1',
+            title: 'Uống 1 ly nước ấm mật ong chanh 300ml buổi sáng thanh lọc cơ thể',
+            subtitle: 'Cấp ẩm tức thì cho làn da và kích hoạt quá trình trao đổi chất',
+            xp: 85,
+            spiritStones: 10,
+            difficulty: 'EASY',
+            icon: Icons.water_drop_outlined,
+            iconColor: const Color(0xFF38BDF8),
+          ),
+          QuestItem(
+            id: 'e2',
+            title: 'Skincare buổi sáng chuẩn 3 bước: Rửa mặt - Cân bằng ẩm - Chống nắng',
+            subtitle: 'Bảo vệ hàng rào da khỏi tia UV và khói bụi đô thị',
+            xp: 95,
+            spiritStones: 12,
+            difficulty: 'EASY',
+            icon: Icons.auto_awesome,
+            iconColor: const Color(0xFF34D399),
+          ),
+          QuestItem(
+            id: 'e3',
+            title: 'Thực hành tư thế thẳng lưng 15 phút, ngực mở rộng, vai thả lỏng',
+            subtitle: 'Định hình dáng đi đĩnh đạc, toát lên phong thái tự tin bản lĩnh',
+            xp: 90,
+            spiritStones: 12,
+            difficulty: 'EASY',
+            icon: Icons.fitness_center_rounded,
+            iconColor: const Color(0xFF60A5FA),
+          ),
+          QuestItem(
+            id: 'e4',
+            title: 'Tập Mewing & siết cơ hàm 10 phút trước gương',
+            subtitle: 'Đặt lưỡi sát vòm họng trên, định hình đường viền quai hàm góc cạnh',
+            xp: 85,
+            spiritStones: 10,
+            difficulty: 'EASY',
+            icon: Icons.face_rounded,
+            iconColor: const Color(0xFFFBBF24),
+          ),
+          QuestItem(
+            id: 'e5',
+            title: 'Chỉnh trang trang phục & đầu tóc gọn gàng, thơm tho đầu ngày',
+            subtitle: 'Diện mạo chỉn chu tạo ấn tượng tốt và năng lượng tích cực',
+            xp: 90,
+            spiritStones: 10,
+            difficulty: 'EASY',
+            icon: Icons.checkroom_rounded,
+            iconColor: const Color(0xFFA78BFA),
+          ),
+        ],
+        medPool: [
+          QuestItem(
+            id: 'm1',
+            title: 'Cardio / Nhảy dây 25 phút toát mồ hôi thải độc da sáng khỏe',
+            subtitle: 'Thúc đẩy lưu thông máu, giúp da dẻ hồng hào và săn chắc cơ thể',
+            xp: 220,
+            spiritStones: 26,
+            difficulty: 'MEDIUM',
+            icon: Icons.directions_run_rounded,
+            iconColor: const Color(0xFFF59E0B),
+          ),
+          QuestItem(
+            id: 'm2',
+            title: 'Quy trình Skincare buổi tối: Tẩy trang + Rửa mặt + Thoa serum/kem ẩm',
+            subtitle: 'Phục hồi tế bào da tổn thương trong suốt giấc ngủ đêm',
+            xp: 210,
+            spiritStones: 25,
+            difficulty: 'MEDIUM',
+            icon: Icons.auto_awesome,
+            iconColor: const Color(0xFF34D399),
+          ),
+          QuestItem(
+            id: 'm3',
+            title: 'Ăn uống dưỡng nhan: Nạp 1 đĩa rau củ/trái cây, tuyệt đối không đồ chiên',
+            subtitle: 'Bổ sung chất chống oxy hóa tự nhiên, ngăn ngừa lão hóa sớm',
+            xp: 200,
+            spiritStones: 24,
+            difficulty: 'MEDIUM',
+            icon: Icons.restaurant_rounded,
+            iconColor: const Color(0xFF10B981),
+          ),
+          QuestItem(
+            id: 'm4',
+            title: 'Luyện ánh mắt và nụ cười tự tin, giao tiếp lịch lãm 15 phút',
+            subtitle: 'Tập nói chuyện tự tin trước gương với chất giọng ấm và rõ ràng',
+            xp: 215,
+            spiritStones: 25,
+            difficulty: 'MEDIUM',
+            icon: Icons.record_voice_over_rounded,
+            iconColor: const Color(0xFF38BDF8),
+          ),
+        ],
+        hardPool: [
+          QuestItem(
+            id: 'h1',
+            title: 'Tập luyện thể hình kháng lực 45 phút săn chắc toàn thân',
+            subtitle: 'Phát triển cơ bắp, đốt mỡ thừa, xây dựng vóc dáng chuẩn nam tính',
+            xp: 420,
+            spiritStones: 52,
+            difficulty: 'HARD',
+            icon: Icons.fitness_center_rounded,
+            iconColor: const Color(0xFFFBBF24),
+          ),
+          QuestItem(
+            id: 'h2',
+            title: 'Lên giường ngủ sâu trước 22h45 (ngủ đủ 7.5 tiếng tái tạo nhan sắc)',
+            subtitle: 'Khung giờ vàng để cơ thể sản sinh collagen và hormone tăng trưởng',
+            xp: 410,
+            spiritStones: 50,
+            difficulty: 'HARD',
+            icon: Icons.bedtime_rounded,
+            iconColor: const Color(0xFFA78BFA),
+          ),
+        ],
+      );
+    }
+
+    // 12. Kỷ luật thép / Thợ săn mạnh nhất / Solo Leveling / Bá đạo vô địch
+    if (RegExp(r'mạnh nhất|manh nhat|bá đạo|vô địch|thợ săn|solo leveling|sung jin|vua|bá vương|kỷ luật thép', caseSensitive: false).hasMatch(lower)) {
+      return _buildQuestsFromPools(
+        now: now,
+        easyPool: [
+          QuestItem(
+            id: 'e1',
+            title: 'Chống đẩy (Push-ups) 35 cái chuẩn form ngực sát đất',
+            subtitle: 'Siết cơ lõi, giữ thân người thành đường thẳng tắp',
+            xp: 100,
+            spiritStones: 15,
+            difficulty: 'EASY',
+            icon: Icons.fitness_center_rounded,
+            iconColor: const Color(0xFF60A5FA),
+          ),
+          QuestItem(
+            id: 'e2',
+            title: 'Gập bụng (Sit-ups) 40 lần kích hoạt cơ bụng',
+            subtitle: 'Dùng lực cơ bụng kéo người lên, thở ra nhịp nhàng',
+            xp: 95,
+            spiritStones: 14,
+            difficulty: 'EASY',
+            icon: Icons.fitness_center_rounded,
+            iconColor: const Color(0xFF60A5FA),
+          ),
+          QuestItem(
+            id: 'e3',
+            title: 'Squat (Gánh đùi) 45 lần bứt phá sức mạnh trụ chân',
+            subtitle: 'Đùi song song mặt đất, dồn lực đều vào gót chân',
+            xp: 100,
+            spiritStones: 15,
+            difficulty: 'EASY',
+            icon: Icons.fitness_center_rounded,
+            iconColor: const Color(0xFF60A5FA),
+          ),
+          QuestItem(
+            id: 'e4',
+            title: 'Tắm nước mát kích hoạt tinh thần chiến binh Thợ Săn',
+            subtitle: 'Thúc đẩy trao đổi chất, tôi luyện ý chí không chùn bước',
+            xp: 85,
+            spiritStones: 12,
+            difficulty: 'EASY',
+            icon: Icons.water_drop_outlined,
+            iconColor: const Color(0xFF38BDF8),
+          ),
+        ],
+        medPool: [
+          QuestItem(
+            id: 'm1',
+            title: 'Chống đẩy (Push-ups) 70 cái chia 2-3 hiệp chuẩn form',
+            subtitle: 'Bứt phá thể lực, siết chặt cơ ngực và bắp tay sau',
+            xp: 230,
+            spiritStones: 28,
+            difficulty: 'MEDIUM',
+            icon: Icons.fitness_center_rounded,
+            iconColor: const Color(0xFFF59E0B),
+          ),
+          QuestItem(
+            id: 'm2',
+            title: 'Gập bụng đạp xe (Bicycle Crunches) 80 lần',
+            subtitle: 'Tôi luyện toàn diện cơ bụng 6 múi và cơ liên sườn thép',
+            xp: 240,
+            spiritStones: 30,
+            difficulty: 'MEDIUM',
+            icon: Icons.fitness_center_rounded,
+            iconColor: const Color(0xFFF59E0B),
+          ),
+          QuestItem(
+            id: 'm3',
+            title: 'Chạy bộ bền bỉ 3.0 km nâng cao dung tích phổi',
+            subtitle: 'Duy trì nhịp thở ổn định, không dừng lại giữa chừng',
+            xp: 250,
+            spiritStones: 32,
+            difficulty: 'MEDIUM',
+            icon: Icons.directions_run_rounded,
+            iconColor: const Color(0xFF34D399),
+          ),
+          QuestItem(
+            id: 'm4',
+            title: 'Tập trung sâu 45 phút tôi luyện kỹ năng chuyên môn cốt lõi',
+            subtitle: 'Loại bỏ mọi thú vui vô bổ, dồn 100% tâm trí vào mục tiêu tối thượng',
+            xp: 230,
+            spiritStones: 28,
+            difficulty: 'MEDIUM',
+            icon: Icons.psychology_rounded,
+            iconColor: const Color(0xFFA78BFA),
+          ),
+        ],
+        hardPool: [
+          QuestItem(
+            id: 'h1',
+            title: 'Thử thách Sung Jin-Woo: 100 cái hít đất + 100 gập bụng + 100 squat',
+            subtitle: 'Mệnh lệnh tối thượng từ Hệ Thống, bứt phá giới hạn thể xác phàm nhân',
+            xp: 450,
+            spiritStones: 55,
+            difficulty: 'HARD',
+            icon: Icons.military_tech_rounded,
+            iconColor: const Color(0xFFFBBF24),
+          ),
+          QuestItem(
+            id: 'h2',
+            title: 'Chạy bộ 5.0 km không ngừng nghỉ vượt qua ngưỡng giới hạn',
+            subtitle: 'Tôi luyện ý chí kiên định như kim cương bất hoại',
+            xp: 440,
+            spiritStones: 54,
+            difficulty: 'HARD',
+            icon: Icons.military_tech_rounded,
+            iconColor: const Color(0xFFFBBF24),
+          ),
+        ],
+      );
+    }
+
+    // 13. Mặc định Đa Lĩnh Vực Thông Minh (Tự động thích ứng, xoay vòng theo ngày)
     final studyMins = _pick([30, 45, 50]);
-    final actionMins = _pick([40, 50, 60]);
+    final actionMins = _pick([35, 45, 60]);
+    final readPages = _pick([15, 20, 25]);
+    final repsCount = _pick([30, 40, 50]);
+
     return _buildQuestsFromPools(
       now: now,
       easyPool: [
@@ -1165,21 +1412,41 @@ class GoalAnalyzerService {
           id: 'e2',
           title: 'Khởi động 15 phút: Thực hiện bước vi mô đầu tiên của $topic',
           subtitle: 'Phá vỡ sức ỳ ban đầu bằng hành động nhỏ dứt khoát',
-          xp: 90,
-          spiritStones: 12,
+          xp: 85,
+          spiritStones: 10,
           difficulty: 'EASY',
           icon: Icons.auto_awesome,
           iconColor: const Color(0xFF60A5FA),
         ),
         QuestItem(
           id: 'e3',
-          title: 'Gập bụng 35 lần hoặc Chống đẩy 20 cái kích hoạt thể lực rèn luyện $topic',
-          subtitle: 'Thể chất mạnh mẽ là nền tảng cho mọi ý chí',
+          title: 'Đọc và ghi chú $readPages trang kiến thức chuyên sâu bổ trợ $topic',
+          subtitle: 'Đúc kết 3 bài học thực chiến có thể ứng dụng ngay hôm nay',
           xp: 95,
           spiritStones: 12,
           difficulty: 'EASY',
+          icon: Icons.menu_book_rounded,
+          iconColor: const Color(0xFF38BDF8),
+        ),
+        QuestItem(
+          id: 'e4',
+          title: 'Vận động thể chất nhẹ nhàng $repsCount nhịp khởi động năng lượng cho $topic',
+          subtitle: 'Đánh thức cơ thể, sẵn sàng cho những thử thách lớn hơn',
+          xp: 90,
+          spiritStones: 11,
+          difficulty: 'EASY',
           icon: Icons.fitness_center_rounded,
-          iconColor: const Color(0xFF60A5FA),
+          iconColor: const Color(0xFF34D399),
+        ),
+        QuestItem(
+          id: 'e5',
+          title: 'Sắp xếp không gian làm việc & loại bỏ 3 yếu tố gây xao nhãng khỏi $topic',
+          subtitle: 'Tạo môi trường tĩnh lặng tối đa để duy trì sự tập trung tuyệt đối',
+          xp: 80,
+          spiritStones: 10,
+          difficulty: 'EASY',
+          icon: Icons.cleaning_services_rounded,
+          iconColor: const Color(0xFFA78BFA),
         ),
       ],
       medPool: [
@@ -1205,13 +1472,33 @@ class GoalAnalyzerService {
         ),
         QuestItem(
           id: 'm3',
-          title: 'Giải quyết dứt điểm 1 khâu quan trọng nhất trong kế hoạch $topic',
+          title: 'Giải quyết dứt điểm 1 trở ngại khó khăn nhất trong kế hoạch $topic',
           subtitle: 'Không trì hoãn những việc khó, dũng mãnh đối mặt',
+          xp: 240,
+          spiritStones: 30,
+          difficulty: 'MEDIUM',
+          icon: Icons.bolt_rounded,
+          iconColor: const Color(0xFFF59E0B),
+        ),
+        QuestItem(
+          id: 'm4',
+          title: 'Tối ưu hóa quy trình thực hiện $topic nhanh hơn 20% so với hôm qua',
+          subtitle: 'Rút ngắn thời gian lãng phí, nâng cao năng suất thực tế',
+          xp: 225,
+          spiritStones: 27,
+          difficulty: 'MEDIUM',
+          icon: Icons.trending_up_rounded,
+          iconColor: const Color(0xFF34D399),
+        ),
+        QuestItem(
+          id: 'm5',
+          title: 'Rèn luyện thể lực 30 phút duy trì sức bền dẻo dai hỗ trợ $topic',
+          subtitle: 'Một tinh thần minh mẫn chỉ ngự trị trong một cơ thể cường tráng',
           xp: 230,
           spiritStones: 28,
           difficulty: 'MEDIUM',
-          icon: Icons.auto_awesome,
-          iconColor: const Color(0xFFF59E0B),
+          icon: Icons.fitness_center_rounded,
+          iconColor: const Color(0xFF38BDF8),
         ),
       ],
       hardPool: [
@@ -1229,8 +1516,18 @@ class GoalAnalyzerService {
           id: 'h2',
           title: 'Thử thách cực hạn: Tổng kết ngày và tối ưu hóa quy trình rèn luyện $topic',
           subtitle: 'Không ngừng nâng cấp bản thân lên một tầm cao mới',
-          xp: 420,
+          xp: 430,
           spiritStones: 52,
+          difficulty: 'HARD',
+          icon: Icons.military_tech_rounded,
+          iconColor: const Color(0xFFFBBF24),
+        ),
+        QuestItem(
+          id: 'h3',
+          title: 'Sprint cường độ cao 60 phút: Chinh phục mục tiêu khó khăn nhất của $topic',
+          subtitle: 'Dốc toàn bộ 100% năng lượng hoàn thành vượt mức chỉ tiêu',
+          xp: 440,
+          spiritStones: 55,
           difficulty: 'HARD',
           icon: Icons.military_tech_rounded,
           iconColor: const Color(0xFFFBBF24),

@@ -7,7 +7,7 @@ def send_update_email():
     smtp_pass = 'sqrb gpxw zutb ukdq'
     admin_email = 'ngovanm691@gmail.com'
     reporter_email = 'phuczx210@gmail.com'
-    version = 'v1.1.3'
+    version = 'v1.1.4'
 
     recipients = [reporter_email, admin_email]
 

@@ -1,9 +1,9 @@
 {
-  "latestVersion": "1.1.3",
-  "latestBuildNumber": 14,
+  "latestVersion": "1.1.4",
+  "latestBuildNumber": 15,
   "minSupportedVersion": "1.0.0",
-  "downloadUrl": "https://github.com/ManhNgoDev/TienLo/releases/download/v1.1.3/TienLo-release.apk",
-  "releaseNotes": "🌐 Link tải thủ công qua Web:\n👉 https://tienlo.onrender.com\n📥 Tải thẳng APK: https://tienlo.onrender.com/download\n────────────────────\n• Khôi Phục & Bảo Toàn Túi Càn Khôn: Tự động khôi phục 100% tất cả vật phẩm đã mua từ lịch sử giao dịch và lưu trữ vĩnh viễn không bao giờ thất lạc\n• Bổ Sung Nút SỬ DỤNG: Trực tiếp dùng đan dược trong túi đồ để nhận ngay hàng ngàn Linh Lực (EXP) bứt phá cảnh giới tức thì\n• Tinh Chỉnh Hitbox Vùng Bấm & Nút Mua: Mở rộng vùng tương tác toàn thẻ và nút Đổi Bảo cực nhạy, nút tăng giảm số lượng to rõ\n• Bí Kíp Nhập Môn (Hướng Dẫn Tân Thủ): Cẩm nang hướng dẫn mở đầu trực quan cho người mới tiếp cận con đường tu tiên và Solo Leveling\n• Đa Dạng Hóa Hệ Thống Nhiệm Vụ: Bổ sung kho nhiệm vụ phong phú (Làm đẹp/Đẹp trai, Thể lực/Solo Leveling, Kỷ luật thép...), dẹp bỏ hoàn toàn sự trùng lặp đơn điệu, bổ sung thanh tiến độ rực rỡ\n• Thông Báo Cập Nhật Sửa Lỗi Qua Gmail: Tự động gửi email thông báo chi tiết khắc phục sự cố và link tải mới nhất vào Gmail của người dùng",
-  "publishedAt": "2026-11-20T12:30:00Z",
+  "downloadUrl": "https://github.com/ManhNgoDev/TienLo/releases/download/v1.1.4/TienLo-release.apk",
+  "releaseNotes": "🌐 Link tải thủ công qua Web:\n👉 https://tienlo.onrender.com\n📥 Tải thẳng APK: https://tienlo.onrender.com/download\n────────────────────\n• Khắc Phục Triệt Để Trùng Lặp Nhiệm Vụ: Tích hợp thuật toán xoay vòng theo ngày và bổ sung kho nhiệm vụ đa lĩnh vực (Làm đẹp/Đẹp trai, Thể lực/Solo Leveling, Kỷ luật thép...), đảm bảo mỗi ngày nhận các nhiệm vụ hoàn toàn mới mẻ, phong phú\n• Khôi Phục & Bảo Toàn Túi Càn Khôn: Tự động khôi phục 100% tất cả vật phẩm đã mua từ lịch sử giao dịch và lưu trữ vĩnh viễn không bao giờ thất lạc\n• Bổ Sung Nút SỬ DỤNG: Trực tiếp dùng đan dược trong túi đồ để nhận ngay hàng ngàn Linh Lực (EXP) bứt phá cảnh giới tức thì\n• Tinh Chỉnh Hitbox Vùng Bấm & Nút Mua: Mở rộng vùng tương tác toàn thẻ và nút Đổi Bảo cực nhạy, nút tăng giảm số lượng to rõ\n• Bí Kíp Nhập Môn (Hướng Dẫn Tân Thủ): Cẩm nang hướng dẫn mở đầu trực quan cho người mới tiếp cận con đường tu tiên và Solo Leveling\n• Thanh Tiến Độ Nhiệm Vụ Rực Rỡ: Bổ sung thanh tiến độ phần trăm % và phần thưởng chuỗi ngày sinh động\n• Thông Báo Cập Nhật Sửa Lỗi Qua Gmail: Tự động gửi email thông báo chi tiết khắc phục sự cố và link tải mới nhất vào Gmail của người dùng",
+  "publishedAt": "2026-11-20T13:30:00Z",
   "forceUpdate": false
 }
