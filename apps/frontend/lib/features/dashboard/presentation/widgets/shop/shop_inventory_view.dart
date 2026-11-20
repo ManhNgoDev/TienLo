@@ -4,11 +4,13 @@ import '../../../domain/shop_item_model.dart';
 class ShopInventoryView extends StatelessWidget {
   final List<UserInventoryItemModel> inventory;
   final VoidCallback onGoToShop;
+  final ValueChanged<UserInventoryItemModel> onUseItem;
 
   const ShopInventoryView({
     super.key,
     required this.inventory,
     required this.onGoToShop,
+    required this.onUseItem,
   });
 
   @override
@@ -96,76 +98,127 @@ class ShopInventoryView extends StatelessWidget {
               width: 1.1,
             ),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF0E2235),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: const Color(0xFFF2C465).withValues(alpha: 0.6),
-                    width: 1.2,
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0E2235),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: const Color(0xFFF2C465).withValues(alpha: 0.6),
+                        width: 1.2,
+                      ),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        item.iconData,
+                        color: const Color(0xFFF2C465),
+                        size: 24,
+                      ),
+                    ),
                   ),
-                ),
-                child: Center(
-                  child: Icon(
-                    item.iconData,
-                    color: const Color(0xFFF2C465),
-                    size: 24,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Text(
-                            item.name,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w700,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                item.name,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
                             ),
-                          ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFC59A44).withValues(alpha: 0.25),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: const Color(0xFFF2C465).withValues(alpha: 0.6),
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: Text(
+                                'Số lượng: ${item.quantity}',
+                                style: const TextStyle(
+                                  color: Color(0xFFFDE68A),
+                                  fontSize: 11.5,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFC59A44).withValues(alpha: 0.25),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: const Color(0xFFF2C465).withValues(alpha: 0.6),
-                              width: 0.8,
-                            ),
-                          ),
-                          child: Text(
-                            'x${item.quantity}',
-                            style: const TextStyle(
-                              color: Color(0xFFFDE68A),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                            ),
+                        const SizedBox(height: 5),
+                        Text(
+                          item.effect,
+                          style: const TextStyle(
+                            color: Color(0xFF94A3B8),
+                            fontSize: 12,
+                            height: 1.35,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      item.effect,
-                      style: const TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 12,
-                        height: 1.35,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              // Action Button: SỬ DỤNG VẬT PHẨM
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () => onUseItem(item),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF059669), Color(0xFF10B981)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF10B981).withValues(alpha: 0.35),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.bolt_rounded, size: 16, color: Colors.white),
+                          SizedBox(width: 5),
+                          Text(
+                            'SỬ DỤNG',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),

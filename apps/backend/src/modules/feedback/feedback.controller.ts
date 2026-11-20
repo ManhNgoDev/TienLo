@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Post, HttpCode, HttpStatus } from '@nestjs/common';
 import { FeedbackService } from './feedback.service.js';
 import { CreateBugReportDto } from './dto/create-bug-report.dto.js';
+import { SendUpdateNoticeDto } from './dto/send-update-notice.dto.js';
 
 @Controller('feedback')
 export class FeedbackController {
@@ -15,5 +16,11 @@ export class FeedbackController {
   @Get('recent')
   async getRecentReports() {
     return this.feedbackService.getRecentReports();
+  }
+
+  @Post('send-update-notice')
+  @HttpCode(HttpStatus.OK)
+  async sendUpdateNotice(@Body() dto: SendUpdateNoticeDto) {
+    return this.feedbackService.sendUpdateNotice(dto);
   }
 }

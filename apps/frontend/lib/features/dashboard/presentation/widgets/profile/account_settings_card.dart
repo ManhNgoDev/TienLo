@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../bug_report_dialog.dart';
+import '../guide/beginner_guide_modal.dart';
 
 class AccountSettingsCard extends StatelessWidget {
   final int spiritStones;
@@ -129,6 +130,18 @@ class AccountSettingsCard extends StatelessWidget {
                         ),
                       );
                     },
+                  ),
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 14),
+                    height: 1,
+                    color: const Color(0xFF1E2F40),
+                  ),
+                  _buildTile(
+                    icon: Icons.menu_book_rounded,
+                    iconColor: const Color(0xFF38BDF8),
+                    title: 'Bí Kíp Nhập Môn (Hướng Dẫn)',
+                    subtitle: 'Cẩm nang tu tiên & hướng dẫn Solo Leveling',
+                    onTap: () => BeginnerGuideModal.show(context),
                   ),
                   Container(
                     margin: const EdgeInsets.symmetric(horizontal: 14),

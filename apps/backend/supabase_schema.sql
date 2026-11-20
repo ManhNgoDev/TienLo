@@ -145,12 +145,46 @@ CREATE TABLE IF NOT EXISTS public.spirit_stone_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id TEXT NOT NULL,                -- Firebase UID
     amount INT NOT NULL,                  -- Dương (thưởng), Âm (tiêu thụ)
-    type TEXT NOT NULL,                   -- 'QUEST_REWARD', 'LEVEL_UP', 'STREAK_BONUS', 'SHOP_BUY'
+    type TEXT NOT NULL,                   -- 'QUEST_REWARD', 'LEVEL_UP', 'STREAK_BONUS', 'SHOP_BUY', 'SPEND', 'ITEM_USE'
     description TEXT NOT NULL,
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON public.spirit_stone_transactions(user_id);
+
+-- 6. Bảng Túi Càn Khôn & Kho Đồ Người Chơi (User Inventory)
+CREATE TABLE IF NOT EXISTS public.user_inventory (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,                -- Firebase UID
+    item_id TEXT NOT NULL,                -- ID vật phẩm (ví dụ: 'dan_tu_khi', 'phu_ho_menh')
+    name TEXT NOT NULL,
+    category TEXT NOT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    effect TEXT,
+    icon_type TEXT,
+    purchased_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    CONSTRAINT user_inventory_user_item_unique UNIQUE (user_id, item_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_inventory_user_id ON public.user_inventory(user_id);
+
+-- 7. Bảng Báo Cáo Sự Cố & Lỗi (Bug Reports)
+CREATE TABLE IF NOT EXISTS public.bug_reports (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    category TEXT DEFAULT 'GENERAL',
+    screen TEXT DEFAULT 'UNKNOWN_SCREEN',
+    user_email TEXT,
+    user_id TEXT,
+    device_info TEXT,
+    stack_trace TEXT,
+    app_version TEXT,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_bug_reports_user_id ON public.bug_reports(user_id);
 
 -- Enable RLS (Row Level Security)
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -158,6 +192,8 @@ ALTER TABLE public.user_cultivations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.campaigns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.quests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.spirit_stone_transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_inventory ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bug_reports ENABLE ROW LEVEL SECURITY;
 
 -- Tạo chính sách RLS cho phép truy cập
 DROP POLICY IF EXISTS "Cho phep toan quyen voi service role" ON public.users;
@@ -174,3 +210,9 @@ CREATE POLICY "Cho phep toan quyen voi service role quests" ON public.quests FOR
 
 DROP POLICY IF EXISTS "Cho phep toan quyen voi service role transactions" ON public.spirit_stone_transactions;
 CREATE POLICY "Cho phep toan quyen voi service role transactions" ON public.spirit_stone_transactions FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Cho phep toan quyen voi service role inventory" ON public.user_inventory;
+CREATE POLICY "Cho phep toan quyen voi service role inventory" ON public.user_inventory FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Cho phep toan quyen voi service role bug_reports" ON public.bug_reports;
+CREATE POLICY "Cho phep toan quyen voi service role bug_reports" ON public.bug_reports FOR ALL USING (true);

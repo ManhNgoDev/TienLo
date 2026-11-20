@@ -14,6 +14,7 @@ import '../widgets/create_campaign_card.dart';
 import '../widgets/cultivation_realms_modal.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import '../widgets/daily_quests_section.dart';
+import '../widgets/guide/beginner_guide_modal.dart';
 import '../widgets/home/home_story_header.dart';
 import '../widgets/leaderboard_view.dart';
 import '../widgets/penalty_dialog.dart';
@@ -317,6 +318,18 @@ class _HomeScreenState extends State<HomeScreen> {
       }
       _loadStatistics();
       _checkAppUpdate();
+
+      final hasSeenGuide = prefs.getBool('has_seen_beginner_guide_$uid') ?? false;
+      if (!hasSeenGuide && mounted) {
+        await prefs.setBool('has_seen_beginner_guide_$uid', true);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Future.delayed(const Duration(milliseconds: 600), () {
+            if (mounted) {
+              BeginnerGuideModal.show(context);
+            }
+          });
+        });
+      }
     } catch (_) {}
   }
 

@@ -800,15 +800,212 @@ export function generateFallbackQuests(prompt: string): Array<{
     return buildQuestsFromPools(easyPool, medPool, hardPool, 5);
   }
 
-  // 11. Mặc định Thông Minh Đa Lĩnh Vực (Tự Động Bóc Tách Chủ Đề Của Người Dùng)
-  // Tuyệt đối không ép buộc uống nước hay chống đẩy nếu mục tiêu là việc khác!
+  // 11. Ngoại hình / Đẹp trai / Chăm sóc bản thân / Phong thái / Skincare / Thần thái
+  if (/đẹp trai|dep trai|nhan sắc|ngoại hình|da dẻ|skincare|tút tát|phong độ|lịch lãm|mewing|thần thái|tự tin|sức hút/i.test(lower)) {
+    const easyPool: QuestTemplate[] = [
+      {
+        title: 'Uống 1 ly nước ấm mật ong chanh 300ml buổi sáng thanh lọc cơ thể',
+        subtitle: 'Cấp ẩm tức thì cho làn da và kích hoạt quá trình trao đổi chất',
+        difficulty: 'EASY',
+        expReward: 85,
+        stoneReward: 10,
+        iconType: 'water',
+      },
+      {
+        title: 'Skincare buổi sáng chuẩn 3 bước: Rửa mặt - Cân bằng ẩm - Chống nắng',
+        subtitle: 'Bảo vệ hàng rào da khỏi tia UV và khói bụi đô thị',
+        difficulty: 'EASY',
+        expReward: 95,
+        stoneReward: 12,
+        iconType: 'fitness',
+      },
+      {
+        title: 'Thực hành tư thế thẳng lưng 15 phút, ngực mở rộng, vai thả lỏng',
+        subtitle: 'Định hình dáng đi đĩnh đạc, toát lên phong thái tự tin bản lĩnh',
+        difficulty: 'EASY',
+        expReward: 90,
+        stoneReward: 12,
+        iconType: 'fitness',
+      },
+      {
+        title: 'Tập Mewing & cơ hàm 10 phút trước gương',
+        subtitle: 'Đặt lưỡi sát vòm họng trên, định hình đường viền quai hàm góc cạnh',
+        difficulty: 'EASY',
+        expReward: 85,
+        stoneReward: 10,
+        iconType: 'fitness',
+      },
+      {
+        title: 'Chỉnh trang trang phục & đầu tóc gọn gàng, thơm tho đầu ngày',
+        subtitle: 'Diện mạo chỉn chu tạo ấn tượng tốt và năng lượng tích cực',
+        difficulty: 'EASY',
+        expReward: 90,
+        stoneReward: 10,
+        iconType: 'medal',
+      },
+    ];
+
+    const medPool: QuestTemplate[] = [
+      {
+        title: 'Cardio / Nhảy dây 25 phút toát mồ hôi thải độc da sáng khỏe',
+        subtitle: 'Thúc đẩy lưu thông máu, giúp da dẻ hồng hào và săn chắc cơ thể',
+        difficulty: 'MEDIUM',
+        expReward: 220,
+        stoneReward: 26,
+        iconType: 'fitness',
+      },
+      {
+        title: 'Quy trình Skincare buổi tối: Tẩy trang + Rửa mặt + Thoa serum/kem ẩm',
+        subtitle: 'Phục hồi tế bào da tổn thương trong suốt giấc ngủ đêm',
+        difficulty: 'MEDIUM',
+        expReward: 210,
+        stoneReward: 25,
+        iconType: 'fitness',
+      },
+      {
+        title: 'Ăn uống dưỡng nhan: Nạp 1 đĩa rau củ/trái cây, tuyệt đối không đồ chiên',
+        subtitle: 'Bổ sung chất chống oxy hóa tự nhiên, ngăn ngừa lão hóa sớm',
+        difficulty: 'MEDIUM',
+        expReward: 200,
+        stoneReward: 24,
+        iconType: 'water',
+      },
+      {
+        title: 'Luyện ánh mắt và nụ cười tự tin, giao tiếp lịch lãm 15 phút',
+        subtitle: 'Tập nói chuyện tự tin trước gương với chất giọng ấm và rõ ràng',
+        difficulty: 'MEDIUM',
+        expReward: 215,
+        stoneReward: 25,
+        iconType: 'study',
+      },
+    ];
+
+    const hardPool: QuestTemplate[] = [
+      {
+        title: 'Tập luyện thể hình kháng lực 45 phút săn chắc toàn thân',
+        subtitle: 'Phát triển cơ bắp, đốt mỡ thừa, xây dựng vóc dáng chuẩn nam tính',
+        difficulty: 'HARD',
+        expReward: 420,
+        stoneReward: 52,
+        iconType: 'fitness',
+      },
+      {
+        title: 'Lên giường ngủ sâu trước 22h45 (ngủ đủ 7.5 tiếng tái tạo nhan sắc)',
+        subtitle: 'Khung giờ vàng để cơ thể sản sinh collagen và hormone tăng trưởng',
+        difficulty: 'HARD',
+        expReward: 410,
+        stoneReward: 50,
+        iconType: 'meditation',
+      },
+    ];
+
+    return buildQuestsFromPools(easyPool, medPool, hardPool, 5);
+  }
+
+  // 12. Kỷ luật thép / Thợ săn mạnh nhất / Solo Leveling / Bá đạo vô địch
+  if (/mạnh nhất|manh nhat|bá đạo|vô địch|thợ săn|solo leveling|sung jin|vua|bá vương|kỷ luật thép/i.test(lower)) {
+    const easyPool: QuestTemplate[] = [
+      {
+        title: 'Chống đẩy (Push-ups) 35 cái chuẩn form ngực sát đất',
+        subtitle: 'Siết cơ lõi, giữ thân người thành đường thẳng tắp',
+        difficulty: 'EASY',
+        expReward: 100,
+        stoneReward: 15,
+        iconType: 'fitness',
+      },
+      {
+        title: 'Gập bụng (Sit-ups) 40 lần kích hoạt cơ bụng',
+        subtitle: 'Dùng lực cơ bụng kéo người lên, thở ra nhịp nhàng',
+        difficulty: 'EASY',
+        expReward: 95,
+        stoneReward: 14,
+        iconType: 'fitness',
+      },
+      {
+        title: 'Squat (Gánh đùi) 45 lần bứt phá sức mạnh trụ chân',
+        subtitle: 'Đùi song song mặt đất, dồn lực đều vào gót chân',
+        difficulty: 'EASY',
+        expReward: 100,
+        stoneReward: 15,
+        iconType: 'fitness',
+      },
+      {
+        title: 'Tắm nước mát kích hoạt tinh thần chiến binh Thợ Săn',
+        subtitle: 'Thúc đẩy trao đổi chất, tôi luyện ý chí không chùn bước',
+        difficulty: 'EASY',
+        expReward: 85,
+        stoneReward: 12,
+        iconType: 'water',
+      },
+    ];
+
+    const medPool: QuestTemplate[] = [
+      {
+        title: 'Chống đẩy (Push-ups) 70 cái chia 2-3 hiệp chuẩn form',
+        subtitle: 'Bứt phá thể lực, siết chặt cơ ngực và bắp tay sau',
+        difficulty: 'MEDIUM',
+        expReward: 230,
+        stoneReward: 28,
+        iconType: 'fitness',
+      },
+      {
+        title: 'Gập bụng đạp xe (Bicycle Crunches) 80 lần',
+        subtitle: 'Tôi luyện toàn diện cơ bụng 6 múi và cơ liên sườn thép',
+        difficulty: 'MEDIUM',
+        expReward: 240,
+        stoneReward: 30,
+        iconType: 'fitness',
+      },
+      {
+        title: 'Chạy bộ bền bỉ 3.0 km nâng cao dung tích phổi',
+        subtitle: 'Duy trì nhịp thở ổn định, không dừng lại giữa chừng',
+        difficulty: 'MEDIUM',
+        expReward: 250,
+        stoneReward: 32,
+        iconType: 'walk',
+      },
+      {
+        title: 'Tập trung sâu 45 phút tôi luyện kỹ năng chuyên môn cốt lõi',
+        subtitle: 'Loại bỏ mọi thú vui vô bổ, dồn 100% tâm trí vào mục tiêu tối thượng',
+        difficulty: 'MEDIUM',
+        expReward: 230,
+        stoneReward: 28,
+        iconType: 'study',
+      },
+    ];
+
+    const hardPool: QuestTemplate[] = [
+      {
+        title: 'Thử thách Sung Jin-Woo: 100 cái hít đất + 100 gập bụng + 100 squat',
+        subtitle: 'Mệnh lệnh tối thượng từ Hệ Thống, bứt phá giới hạn thể xác phàm nhân',
+        difficulty: 'HARD',
+        expReward: 450,
+        stoneReward: 55,
+        iconType: 'medal',
+      },
+      {
+        title: 'Chạy bộ 5.0 km không ngừng nghỉ vượt qua ngưỡng giới hạn',
+        subtitle: 'Tôi luyện ý chí kiên định như kim cương bất hoại',
+        difficulty: 'HARD',
+        expReward: 440,
+        stoneReward: 54,
+        iconType: 'medal',
+      },
+    ];
+
+    return buildQuestsFromPools(easyPool, medPool, hardPool, 5);
+  }
+
+  // 13. Mặc định Thông Minh Đa Lĩnh Vực (Tự Động Bóc Tách Chủ Đề, Biến Thiên Đa Dạng Theo Ngày)
   const studyMins = pickRandom([30, 45, 50]);
-  const actionMins = pickRandom([40, 50, 60]);
+  const actionMins = pickRandom([35, 45, 60]);
+  const readPages = pickRandom([15, 20, 25]);
+  const repsCount = pickRandom([30, 40, 50]);
 
   const generalEasy: QuestTemplate[] = [
     {
       title: `Nghiên cứu tài liệu & lập danh mục hành động cho: ${topic}`,
-      subtitle: 'Chuẩn bị đầy đủ công cụ và môi trường trước khi thực hiện',
+      subtitle: 'Chuẩn bị đầy đủ công cụ và lộ trình rõ ràng trước khi hành động',
       difficulty: 'EASY',
       expReward: 90,
       stoneReward: 12,
@@ -821,6 +1018,30 @@ export function generateFallbackQuests(prompt: string): Array<{
       expReward: 85,
       stoneReward: 10,
       iconType: 'study',
+    },
+    {
+      title: `Đọc và ghi chú ${readPages} trang kiến thức chuyên sâu bổ trợ ${topic}`,
+      subtitle: 'Đúc kết 3 bài học thực chiến có thể ứng dụng ngay hôm nay',
+      difficulty: 'EASY',
+      expReward: 95,
+      stoneReward: 12,
+      iconType: 'study',
+    },
+    {
+      title: `Vận động thể chất nhẹ nhàng ${repsCount} nhịp khởi động năng lượng cho ${topic}`,
+      subtitle: 'Đánh thức cơ thể, sẵn sàng cho những thử thách lớn hơn',
+      difficulty: 'EASY',
+      expReward: 90,
+      stoneReward: 11,
+      iconType: 'fitness',
+    },
+    {
+      title: `Sắp xếp không gian làm việc & loại bỏ 3 yếu tố gây xao nhãng khỏi ${topic}`,
+      subtitle: 'Tạo môi trường tĩnh lặng tối đa để duy trì sự tập trung tuyệt đối',
+      difficulty: 'EASY',
+      expReward: 80,
+      stoneReward: 10,
+      iconType: 'meditation',
     },
   ];
 
@@ -841,6 +1062,30 @@ export function generateFallbackQuests(prompt: string): Array<{
       stoneReward: 28,
       iconType: 'study',
     },
+    {
+      title: `Giải quyết dứt điểm 1 trở ngại khó khăn nhất trong quá trình: ${topic}`,
+      subtitle: 'Không trì hoãn, đối đầu trực diện với mắt xích yếu nhất',
+      difficulty: 'MEDIUM',
+      expReward: 240,
+      stoneReward: 30,
+      iconType: 'medal',
+    },
+    {
+      title: `Tối ưu hóa quy trình thực hiện ${topic} nhanh hơn 20% so với hôm qua`,
+      subtitle: 'Rút ngắn thời gian lãng phí, nâng cao năng suất thực tế',
+      difficulty: 'MEDIUM',
+      expReward: 225,
+      stoneReward: 27,
+      iconType: 'study',
+    },
+    {
+      title: `Rèn luyện thể lực 30 phút duy trì sức bền dẻo dai hỗ trợ ${topic}`,
+      subtitle: 'Một tinh thần minh mẫn chỉ ngự trị trong một cơ thể cường tráng',
+      difficulty: 'MEDIUM',
+      expReward: 230,
+      stoneReward: 28,
+      iconType: 'fitness',
+    },
   ];
 
   const generalHard: QuestTemplate[] = [
@@ -858,6 +1103,14 @@ export function generateFallbackQuests(prompt: string): Array<{
       difficulty: 'HARD',
       expReward: 430,
       stoneReward: 52,
+      iconType: 'medal',
+    },
+    {
+      title: `Sprint cường độ cao 60 phút: Chinh phục mục tiêu khó khăn nhất của ${topic}`,
+      subtitle: 'Dốc toàn bộ 100% năng lượng hoàn thành vượt mức chỉ tiêu',
+      difficulty: 'HARD',
+      expReward: 440,
+      stoneReward: 55,
       iconType: 'medal',
     },
   ];

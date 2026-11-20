@@ -163,6 +163,144 @@ class _PhuLucCacModalState extends State<PhuLucCacModal> with SingleTickerProvid
     );
   }
 
+  void _onUseItem(UserInventoryItemModel item) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF0F1E2E),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFFC59A44), width: 1.2),
+        ),
+        title: Row(
+          children: [
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: const Color(0xFF0E2235),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFF2C465), width: 1),
+              ),
+              child: Center(
+                child: Icon(item.iconData, color: const Color(0xFFF2C465), size: 20),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Sử Dụng ${item.name}',
+                style: const TextStyle(
+                  color: Color(0xFFFDE68A),
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFF07121E),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF1E3A52), width: 1),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'HIỆU ỨNG GIA TRÌ:',
+                    style: TextStyle(
+                      color: Color(0xFF38BDF8),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    item.effect,
+                    style: const TextStyle(color: Colors.white, fontSize: 13, height: 1.35),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Số lượng trong túi: x${item.quantity}. Đạo hữu có chắc chắn muốn sử dụng 1x ${item.name} ngay lúc này?',
+              style: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12.5),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Hủy Bỏ', style: TextStyle(color: Color(0xFF94A3B8))),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF10B981),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                final res = await _shopRepository.useItem(item.itemId);
+                final inv = await _shopRepository.getInventory();
+                if (mounted) {
+                  setState(() {
+                    _inventory = inv;
+                  });
+                  final msg = res['effectMessage'] ?? res['message'] ?? 'Đã sử dụng thành công ${item.name}!';
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: const Color(0xFF064E3B),
+                      content: Row(
+                        children: [
+                          const Icon(Icons.auto_awesome, color: Color(0xFF34D399), size: 20),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              msg,
+                              style: const TextStyle(
+                                color: Color(0xFFFDE68A),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      duration: const Duration(seconds: 4),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  );
+                }
+              } catch (e) {
+                final cleanMsg = e.toString().replaceAll('Exception: ', '').trim();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      backgroundColor: const Color(0xFF7F1D1D),
+                      content: Text('Lỗi sử dụng: $cleanMsg', style: const TextStyle(color: Colors.white)),
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text('Xác Nhận Dùng', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -366,6 +504,7 @@ class _PhuLucCacModalState extends State<PhuLucCacModal> with SingleTickerProvid
                       onGoToShop: () {
                         _tabController.animateTo(0);
                       },
+                      onUseItem: _onUseItem,
                     ),
                   ],
                 ),

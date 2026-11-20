@@ -143,6 +143,7 @@ class ApiConstants {
   static const String shopItems = '/shop/items';
   static const String shopInventory = '/shop/inventory';
   static const String shopPurchase = '/shop/purchase';
+  static const String shopUse = '/shop/use';
 
   // App Self-Update
   static const String appVersion = '/app/version';
@@ -151,5 +152,6 @@ class ApiConstants {
 
   // Feedback & Bug Reporting
   static const String feedbackReport = '/feedback/report';
+  static const String feedbackNotifyUpdate = '/feedback/send-update-notice';
 }
 

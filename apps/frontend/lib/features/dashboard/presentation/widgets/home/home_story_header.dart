@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../../auth/domain/user_model.dart';
 import '../../../data/cultivation_repository.dart';
 import '../bug_report_dialog.dart';
+import '../guide/beginner_guide_modal.dart';
 
 class HomeStoryHeader extends StatelessWidget {
   final UserModel user;
@@ -110,6 +111,29 @@ class HomeStoryHeader extends StatelessWidget {
             ],
           ),
         ),
+        // Nút Hướng Dẫn Tân Thủ / Bí Kíp Nhập Môn
+        IconButton(
+          onPressed: () => BeginnerGuideModal.show(context),
+          icon: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: const Color(0xFF38BDF8).withValues(alpha: 0.16),
+              border: Border.all(
+                color: const Color(0xFF38BDF8).withValues(alpha: 0.5),
+                width: 1.2,
+              ),
+            ),
+            child: const Icon(
+              Icons.menu_book_rounded,
+              color: Color(0xFF7DD3FC),
+              size: 18,
+            ),
+          ),
+          tooltip: 'Bí Kíp Nhập Môn (Hướng Dẫn)',
+        ),
+        const SizedBox(width: 2),
         // Nút Báo Lỗi / Hỗ Trợ
         IconButton(
           onPressed: () => showBugReportDialog(

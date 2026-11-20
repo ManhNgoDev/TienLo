@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import nodemailer, { type Transporter } from 'nodemailer';
 import { CreateBugReportDto } from './dto/create-bug-report.dto.js';
+import { SendUpdateNoticeDto } from './dto/send-update-notice.dto.js';
 import { SupabaseService } from '../database/supabase.service.js';
 
 export interface BugReportRecord {
@@ -72,7 +73,7 @@ export class FeedbackService {
       userId: dto.userId?.trim() || 'anonymous',
       deviceInfo: dto.deviceInfo?.trim() || 'Chưa xác định',
       stackTrace: dto.stackTrace?.trim(),
-      appVersion: dto.appVersion?.trim() || '1.1.2',
+      appVersion: dto.appVersion?.trim() || '1.1.3',
       createdAt: nowIso,
       sentEmail: dto.sentByClient === true,
     };
@@ -221,6 +222,143 @@ export class FeedbackService {
       this.logger.log(`Đã gửi email báo cáo lỗi [${record.id}] thành công tới ${adminEmail}!`);
     } catch (mailErr: any) {
       this.logger.warn(`Không thể gửi email báo cáo lỗi qua Gmail: ${mailErr.message}`);
+    }
+  }
+
+  async sendUpdateNotice(dto: SendUpdateNoticeDto): Promise<{ success: boolean; message: string; recipients: string[] }> {
+    const adminEmail = process.env.ADMIN_EMAIL || 'ngovanm691@gmail.com';
+    const fromUser = process.env.GMAIL_USER || process.env.SMTP_USER || 'shiinamizuha@gmail.com';
+    const version = dto.updateVersion || 'v1.1.3';
+
+    // Xác định danh sách email nhận
+    const recipients: string[] = [];
+    if (dto.recipientEmail && dto.recipientEmail.includes('@')) {
+      recipients.push(dto.recipientEmail.trim());
+    } else {
+      // Gửi cho người báo lỗi gần đây hoặc mặc định phuczx210@gmail.com
+      recipients.push('phuczx210@gmail.com');
+      for (const r of this.recentReports) {
+        if (r.userEmail && r.userEmail.includes('@') && !recipients.includes(r.userEmail)) {
+          recipients.push(r.userEmail);
+        }
+      }
+    }
+
+    const defaultFixedIssues = [
+      '🎒 Khôi Phục & Bảo Toàn Túi Càn Khôn: Tự động khôi phục 100% tất cả vật phẩm đã mua (Tẩy Tủy Đan, Hộ Mệnh Phù, Tụ Khí Phù, Định Hồn Châu...) và lưu trữ vĩnh viễn không bao giờ thất lạc.',
+      '⚡ Bổ Sung Nút "SỬ DỤNG": Trực tiếp dùng đan dược trong túi đồ để nhận ngay hàng ngàn Linh Lực (EXP) bứt phá cảnh giới, kích hoạt phù lục & bảo vật tiện lợi.',
+      '🎯 Canh Chỉnh Vùng Chạm (Hitbox) & Nút Mua: Toàn bộ thẻ vật phẩm và nút Đổi Bảo đã được mở rộng hitbox chuẩn 1 chạm cực nhạy, nút tăng giảm số lượng to rõ, mượt mà.',
+      '📖 Ra Mắt Bí Kíp Nhập Môn (Hướng Dẫn Tân Thủ): Tích hợp cẩm nang hướng dẫn mở đầu trực quan, sinh động dành riêng cho người mới tu đạo.',
+      '📜 Đa Dạng Hóa Hệ Thống Nhiệm Vụ: Bổ sung kho nhiệm vụ phong phú đa chủ đề (Làm đẹp & Phong độ, Solo Leveling & Thể lực, Kỷ luật thép...), dẹp bỏ hoàn toàn sự trùng lặp đơn điệu.',
+    ];
+
+    const fixedIssues = dto.fixedIssues && dto.fixedIssues.length > 0 ? dto.fixedIssues : defaultFixedIssues;
+    const issuesHtml = fixedIssues
+      .map(
+        (issue) => `
+        <li style="margin-bottom: 12px; line-height: 1.6; color: #e2e8f0;">
+          <span style="color: #10b981; font-weight: bold; margin-right: 6px;">✔</span>
+          ${issue}
+        </li>`,
+      )
+      .join('');
+
+    const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #070d18; color: #e2e8f0; margin: 0; padding: 24px; }
+    .card { background-color: #0f172a; border: 1px solid #334155; border-radius: 16px; max-width: 650px; margin: 0 auto; overflow: hidden; box-shadow: 0 12px 30px rgba(0,0,0,0.6); }
+    .header { background: linear-gradient(135deg, #0f766e 0%, #047857 50%, #064e3b 100%); padding: 24px; border-bottom: 2px solid #10b981; text-align: center; }
+    .header h1 { margin: 0; font-size: 22px; color: #ffffff; letter-spacing: 0.5px; }
+    .badge { display: inline-block; padding: 5px 14px; border-radius: 20px; font-size: 12px; font-weight: 800; background-color: #f59e0b; color: #0f172a; text-transform: uppercase; margin-top: 10px; letter-spacing: 0.5px; }
+    .content { padding: 26px; }
+    .greeting { font-size: 16px; color: #f8fafc; line-height: 1.6; margin-bottom: 20px; }
+    .box { background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 18px 20px; margin-bottom: 22px; }
+    .box-title { font-size: 14px; font-weight: 700; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
+    .download-btn { display: inline-block; background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); color: #0f172a; font-weight: 800; font-size: 15px; text-decoration: none; padding: 14px 28px; border-radius: 12px; margin: 10px 0; text-align: center; box-shadow: 0 4px 15px rgba(234, 179, 8, 0.4); }
+    .footer { padding: 18px 24px; background-color: #070d18; border-top: 1px solid #1e293b; text-align: center; font-size: 12px; color: #94a3b8; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <h1>⚡ [TIÊN LỘ] THÔNG BÁO HOÀN TẤT KHẮC PHỤC SỰ CỐ</h1>
+      <div class="badge">BẢN CẬP NHẬT CHÍNH THỨC ${version} • ĐÃ SỬA CHỮA HOÀN TOÀN</div>
+    </div>
+    <div class="content">
+      <div class="greeting">
+        Kính gửi <strong>Đạo Hữu</strong>,<br><br>
+        Ban Quản Trị <strong>Tiên Lộ Tu Thân &amp; Solo Leveling</strong> xin gửi lời tri ân chân thành nhất tới Đạo Hữu vì đã dành thời gian quý báu gửi báo cáo sự cố và đóng góp ý kiến giúp hoàn thiện thế giới Tiên Lộ!<br><br>
+        Đội ngũ kỹ thuật đã tiến hành kiểm tra toàn diện, khắc phục triệt để mọi phản hồi và chính thức phát hành phiên bản <strong>${version}</strong> với các cải tiến trọng tâm sau:
+      </div>
+
+      <div class="box">
+        <div class="box-title">🛠️ CHI TIẾT CÁC ĐIỂM ĐÃ SỬA CHỮA &amp; NÂNG CẤP</div>
+        <ul style="margin: 0; padding-left: 20px;">
+          ${issuesHtml}
+        </ul>
+      </div>
+
+      <div style="text-align: center; margin: 26px 0;">
+        <p style="color: #94a3b8; font-size: 13.5px; margin-bottom: 14px;">Đạo hữu hãy cập nhật ngay để trải nghiệm phiên bản mượt mà nhất:</p>
+        <a href="https://tienlo.onrender.com" class="download-btn">🌐 TRANG CHỦ TIÊN LỘ &amp; TẢI BẢN MỚI</a>
+        <br>
+        <p style="font-size: 12.5px; color: #64748b; margin-top: 8px;">Hoặc tải thẳng file APK: <a href="https://tienlo.onrender.com/download" style="color: #38bdf8;">https://tienlo.onrender.com/download</a></p>
+      </div>
+
+      <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; font-style: italic; border-left: 3px solid #f59e0b; padding-left: 14px;">
+        "Đạo tâm kiên định, vạn kiếp bất diệt. Chúc Đạo Hữu tu vi tinh tiến, sớm ngày bứt phá cảnh giới, đắc đạo phi thăng!"
+      </p>
+    </div>
+    <div class="footer">
+      Tiên Lộ Tu Thân &amp; Solo Leveling • Hệ Thống Tự Động Chăm Sóc Người Tu Đạo<br>
+      Email hỗ trợ: ngovanm691@gmail.com • Trang chủ: https://tienlo.onrender.com
+    </div>
+  </div>
+</body>
+</html>
+`;
+
+    if (!this.transporter) {
+      this.initTransporter();
+    }
+
+    if (!this.transporter) {
+      return {
+        success: false,
+        message: 'Gmail Transporter chưa được khởi tạo. Vui lòng kiểm tra GMAIL_USER và GMAIL_APP_PASSWORD trong .env.',
+        recipients,
+      };
+    }
+
+    try {
+      const subject = dto.subject || `⚡ [TIÊN LỘ] Thông Báo Khắc Phục Lỗi & Cập Nhật Phiên Bản ${version}`;
+      for (const toEmail of recipients) {
+        await this.transporter.sendMail({
+          from: `"Tiên Lộ Tu Thân" <${fromUser}>`,
+          to: toEmail,
+          cc: adminEmail,
+          subject,
+          html: htmlContent,
+        });
+        this.logger.log(`[UpdateNotice] Đã gửi thông báo cập nhật thành công tới ${toEmail}!`);
+      }
+
+      return {
+        success: true,
+        message: `Đã gửi email thông báo cập nhật sửa lỗi thành công tới ${recipients.join(', ')}!`,
+        recipients,
+      };
+    } catch (err: any) {
+      this.logger.error(`Lỗi gửi email cập nhật: ${err.message}`);
+      return {
+        success: false,
+        message: `Lỗi khi gửi email: ${err.message}`,
+        recipients,
+      };
     }
   }
 

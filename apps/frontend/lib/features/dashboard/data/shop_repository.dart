@@ -39,30 +39,42 @@ class ShopRepository {
 
   Future<List<UserInventoryItemModel>> getInventory() async {
     final token = await _getToken();
+    List<UserInventoryItemModel> backendItems = [];
+    bool backendSuccess = false;
+
     try {
       final res = await _apiClient.get(ApiConstants.shopInventory, token: token);
       if (res is List) {
-        final list = res.map((item) => UserInventoryItemModel.fromJson(item as Map<String, dynamic>)).toList();
-        // Cập nhật local cache
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('local_user_inventory', jsonEncode(list.map((i) => i.toJson()).toList()));
-        return list;
+        backendItems = res.map((item) => UserInventoryItemModel.fromJson(item as Map<String, dynamic>)).toList();
+        backendSuccess = true;
       }
     } catch (e) {
       debugPrint('Error getInventory from backend: $e. Checking local storage.');
     }
 
-    // Fallback: Lấy từ SharedPreferences
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final localJson = prefs.getString('local_user_inventory');
-      if (localJson != null && localJson.isNotEmpty) {
-        final List<dynamic> decoded = jsonDecode(localJson);
-        return decoded.map((i) => UserInventoryItemModel.fromJson(i as Map<String, dynamic>)).toList();
-      }
-    } catch (_) {}
+    final prefs = await SharedPreferences.getInstance();
+    final localJson = prefs.getString('local_user_inventory');
+    List<UserInventoryItemModel> localItems = [];
 
-    return [];
+    if (localJson != null && localJson.isNotEmpty) {
+      try {
+        final List<dynamic> decoded = jsonDecode(localJson);
+        localItems = decoded.map((i) => UserInventoryItemModel.fromJson(i as Map<String, dynamic>)).toList();
+      } catch (_) {}
+    }
+
+    if (backendSuccess && backendItems.isNotEmpty) {
+      // Backend có dữ liệu -> Cập nhật local cache
+      await prefs.setString('local_user_inventory', jsonEncode(backendItems.map((i) => i.toJson()).toList()));
+      return backendItems;
+    } else if (backendSuccess && backendItems.isEmpty && localItems.isNotEmpty) {
+      // Backend trả rỗng nhưng local có đồ -> Giữ lại local đồ, tránh mất đồ người dùng
+      return localItems;
+    } else if (backendItems.isNotEmpty) {
+      return backendItems;
+    }
+
+    return localItems;
   }
 
   Future<Map<String, dynamic>> purchaseItem(String itemId, {int quantity = 1}) async {
@@ -82,6 +94,14 @@ class ShopRepository {
         },
       );
       if (res is Map<String, dynamic>) {
+        // Cập nhật local inventory nếu có inventory trả về
+        if (res['inventory'] is List) {
+          final invList = (res['inventory'] as List)
+              .map((i) => UserInventoryItemModel.fromJson(i as Map<String, dynamic>))
+              .toList();
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('local_user_inventory', jsonEncode(invList.map((i) => i.toJson()).toList()));
+        }
         return res;
       }
     } catch (e) {
@@ -96,6 +116,39 @@ class ShopRepository {
       'quantity': quantity,
       'totalCost': item.price * quantity,
       'message': 'Đã mua thành công ${item.name}!',
+    };
+  }
+
+  Future<Map<String, dynamic>> useItem(String itemId, {int quantity = 1}) async {
+    final token = await _getToken();
+
+    try {
+      final res = await _apiClient.post(
+        ApiConstants.shopUse,
+        token: token,
+        body: {
+          'itemId': itemId,
+          'quantity': quantity,
+        },
+      );
+      if (res is Map<String, dynamic>) {
+        if (res['inventory'] is List) {
+          final invList = (res['inventory'] as List)
+              .map((i) => UserInventoryItemModel.fromJson(i as Map<String, dynamic>))
+              .toList();
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('local_user_inventory', jsonEncode(invList.map((i) => i.toJson()).toList()));
+        }
+        return res;
+      }
+    } catch (e) {
+      debugPrint('Error useItem backend: $e');
+      rethrow;
+    }
+
+    return {
+      'success': true,
+      'message': 'Đã sử dụng vật phẩm thành công!',
     };
   }
 }

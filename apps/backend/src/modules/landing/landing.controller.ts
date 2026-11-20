@@ -117,7 +117,7 @@ export class LandingController {
   @Header('Content-Type', 'text/html; charset=utf-8')
   async getLandingPage(): Promise<string> {
     const versionInfo = await this.appService.getAppVersion();
-    const latestVersion = versionInfo.latestVersion || '1.1.2';
+    const latestVersion = versionInfo.latestVersion || '1.1.3';
     const downloadUrl = '/download';
     const githubReleaseUrl =
       versionInfo.downloadUrl ||

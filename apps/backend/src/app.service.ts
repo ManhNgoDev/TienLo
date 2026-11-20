@@ -41,11 +41,11 @@ export class AppService {
     const repo = process.env.GITHUB_REPO || 'TienLo';
     const defaultDownloadUrl = `https://github.com/${owner}/${repo}/releases/latest/download/TienLo-release.apk`;
 
-    let latestVersion = '1.1.2';
+    let latestVersion = '1.1.3';
     let releaseNotes =
-      '🌐 Link tải thủ công qua Web (nếu máy bản cũ lỗi tự cập nhật):\n👉 https://tienlo.onrender.com\n📥 Tải thẳng APK: https://tienlo.onrender.com/download\n────────────────────\n• Bảo Toàn Session Đăng Xuất / Đăng Nhập: Khắc phục triệt để lỗi mất chiến dịch và nhiệm vụ hàng ngày khi đăng xuất rồi đăng nhập lại\n• Tổng Nhiệm Vụ Hồ Sơ Cá Nhân: Ghi nhận chính xác tổng số nhiệm vụ tích lũy đã hoàn thành\n• Chuỗi Ngày & Khóa Chiến Dịch: Mỗi ngày chỉ cộng tối đa +1 chuỗi ngày và khóa tạo chiến dịch mới cho đến khi hết số ngày mục tiêu';
+      '🌐 Link tải thủ công qua Web:\n👉 https://tienlo.onrender.com\n📥 Tải thẳng APK: https://tienlo.onrender.com/download\n────────────────────\n• Khôi Phục & Bảo Toàn Túi Càn Khôn: Tự động khôi phục 100% tất cả vật phẩm đã mua từ lịch sử giao dịch và lưu trữ vĩnh viễn không bao giờ thất lạc\n• Bổ Sung Nút SỬ DỤNG: Trực tiếp dùng đan dược trong túi đồ để nhận ngay hàng ngàn Linh Lực (EXP) bứt phá cảnh giới tức thì\n• Tinh Chỉnh Hitbox Vùng Bấm & Nút Mua: Mở rộng vùng tương tác toàn thẻ và nút Đổi Bảo cực nhạy, nút tăng giảm số lượng to rõ\n• Bí Kíp Nhập Môn (Hướng Dẫn Tân Thủ): Cẩm nang hướng dẫn mở đầu trực quan cho người mới tiếp cận con đường tu tiên và Solo Leveling\n• Đa Dạng Hóa Hệ Thống Nhiệm Vụ: Bổ sung kho nhiệm vụ phong phú (Làm đẹp/Đẹp trai, Thể lực/Solo Leveling, Kỷ luật thép...), dẹp bỏ hoàn toàn sự trùng lặp đơn điệu, bổ sung thanh tiến độ rực rỡ\n• Thông Báo Cập Nhật Sửa Lỗi Qua Gmail: Tự động gửi email thông báo chi tiết khắc phục sự cố và link tải mới nhất vào Gmail của người dùng';
     let publishedAt = new Date().toISOString();
-    let downloadUrl = `https://github.com/${owner}/${repo}/releases/download/v1.1.2/TienLo-release.apk`;
+    let downloadUrl = `https://github.com/${owner}/${repo}/releases/download/v1.1.3/TienLo-release.apk`;
 
     try {
       const res = await fetch(
@@ -80,7 +80,7 @@ export class AppService {
 
     return {
       latestVersion,
-      latestBuildNumber: 13,
+      latestBuildNumber: 14,
       minSupportedVersion: '1.0.0',
       downloadUrl,
       releaseNotes,

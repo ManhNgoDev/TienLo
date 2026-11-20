@@ -30,4 +30,15 @@ export class ShopController {
   ) {
     return this.shopService.purchaseItem(user.uid, itemId, quantity || 1);
   }
+
+  // Giới hạn 30 lần dùng / phút
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  @Post('use')
+  async useItem(
+    @CurrentUser() user: IAuthUser,
+    @Body('itemId') itemId: string,
+    @Body('quantity') quantity?: number,
+  ) {
+    return this.shopService.useItem(user.uid, itemId, quantity || 1);
+  }
 }
