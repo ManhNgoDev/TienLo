@@ -59,7 +59,7 @@ jobs:
       - name: Build Release APK
         working-directory: apps/frontend
         run: |
-          flutter build apk --release --dart-define=BACKEND_URL=https://tienlo.onrender.com/api
+          flutter build apk --release --dart-define=BACKEND_URL=https://tienlo.onrender.com/api --android-skip-build-dependency-validation
           cp build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/TienLo-release.apk
 
       - name: Determine Tag Name & Release Notes
